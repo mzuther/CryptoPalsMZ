@@ -12,16 +12,16 @@ fn main() {
     let bytes_2 = string_to_bytes(string_hex_2, true);
 
     let bytes_xor = fixed_xor(&bytes_1, &bytes_2);
-    println!("{}", bytes_to_string(bytes_xor, true));
+    println!("{}", bytes_to_string(&bytes_xor, true));
 }
 
-fn bytes_to_string(bytes_input: Vec<u8>, is_hex_string: bool) -> String {
+fn bytes_to_string(bytes_input: &Vec<u8>, is_hex_string: bool) -> String {
     let bytes_as_string;
 
     if is_hex_string {
         bytes_as_string = hex::encode(bytes_input);
     } else {
-        unsafe { bytes_as_string = String::from_utf8_unchecked(bytes_input) }
+        unsafe { bytes_as_string = String::from_utf8_unchecked(bytes_input.clone()) }
     }
 
     bytes_as_string
@@ -46,7 +46,7 @@ fn split_bytes_into_segments(string_bytes: Vec<u8>, bits_per_segment: u8) -> (Ve
     let mut bits_with_value = 0;
     let mut remainder = 0;
 
-    for string_byte in string_bytes {
+    for string_byte in &string_bytes {
         bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
         let bits_with_remainder = bits_per_byte - bits_with_value;
 
@@ -87,8 +87,8 @@ fn string_to_base64(string_input: &str, is_hex_string: bool) -> String {
 
     let mut encoded_string = String::new();
 
-    for segment in segments_to_encode {
-        let mut char_int = segment;
+    for segment in &segments_to_encode {
+        let mut char_int = *segment;
 
         if char_int < 26 {
             char_int += 65
@@ -112,22 +112,12 @@ fn fixed_xor(bytes_1: &Vec<u8>, bytes_2: &Vec<u8>) -> Vec<u8> {
     assert_eq!(bytes_1.len(), bytes_2.len());
 
     let mut bytes_xor = Vec::new();
-    let mut byte_xor: u8;
 
     for n in 0..bytes_1.len() {
-        let byte_1 = bytes_1[n];
-        let byte_2 = bytes_2[n];
+        let byte_1 = &bytes_1[n];
+        let byte_2 = &bytes_2[n];
 
-        byte_xor = 0;
-
-        for current_bit in 0..8 {
-            let current_mask = 1 << current_bit;
-
-            if (byte_1 & current_mask) != (byte_2 & current_mask) {
-                byte_xor += current_mask;
-            }
-        }
-
+        let byte_xor = (byte_1 | byte_2) & !(byte_1 & byte_2);
         bytes_xor.push(byte_xor);
     }
 

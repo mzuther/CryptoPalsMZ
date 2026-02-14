@@ -39,31 +39,39 @@ fn _string_to_base64(string_input: &str, is_hex_string: bool) -> String {
     encoded_string
 }
 
-fn _base64_split_segments(string_bytes: Vec<u8>) -> Vec<u8> {
+fn _split_into_segments(string_bytes: Vec<u8>, bits_per_segment: u8) -> (Vec<u8>, u8, u8) {
     let mut segments_to_encode = Vec::new();
 
+    let bits_per_byte = 8;
     let mut bits_with_value = 0;
     let mut remainder = 0;
 
     for string_byte in string_bytes {
-        bits_with_value = (bits_with_value + 6) % 8;
-        let bits_with_remainder = 8 - bits_with_value;
+        bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
+        let bits_with_remainder = bits_per_byte - bits_with_value;
 
         let mask_remainder = (1 << bits_with_remainder) - 1;
         let mask_value = 0xff - mask_remainder;
 
         let value = ((string_byte & mask_value) >> bits_with_remainder) + remainder;
-        remainder = (string_byte & mask_remainder) << (6 - bits_with_remainder);
+        remainder = (string_byte & mask_remainder) << (bits_per_segment - bits_with_remainder);
 
         segments_to_encode.push(value);
 
-        if bits_with_value == 2 {
-            bits_with_value = (bits_with_value + 6) % 8;
+        if bits_with_value == (bits_per_byte - bits_per_segment) {
+            bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
 
             segments_to_encode.push(remainder);
             remainder = 0;
         }
     }
+
+    (segments_to_encode, bits_with_value, remainder)
+}
+
+fn _base64_split_segments(string_bytes: Vec<u8>) -> Vec<u8> {
+    let (mut segments_to_encode, bits_with_value, remainder) =
+        _split_into_segments(string_bytes, 6);
 
     if bits_with_value > 0 {
         segments_to_encode.push(remainder);

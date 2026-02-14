@@ -33,13 +33,12 @@ fn string_to_base64(string_plain: &str) -> String {
 
 fn _string_to_base64(string_input: &str, is_hex_string: bool) -> String {
     let string_bytes = string_to_bytes(string_input, is_hex_string);
-    let segments_to_encode = _base64_split_segments(string_bytes);
-    let encoded_string = _base64_encode_segments(segments_to_encode);
+    let encoded_string = _base64_encode_bytes(string_bytes);
 
     encoded_string
 }
 
-fn _split_into_segments(string_bytes: Vec<u8>, bits_per_segment: u8) -> (Vec<u8>, u8, u8) {
+fn _split_bytes_into_segments(string_bytes: Vec<u8>, bits_per_segment: u8) -> (Vec<u8>, u8, u8) {
     let mut segments_to_encode = Vec::new();
 
     let bits_per_byte = 8;
@@ -69,22 +68,20 @@ fn _split_into_segments(string_bytes: Vec<u8>, bits_per_segment: u8) -> (Vec<u8>
     (segments_to_encode, bits_with_value, remainder)
 }
 
-fn _base64_split_segments(string_bytes: Vec<u8>) -> Vec<u8> {
+fn _base64_encode_bytes(string_bytes: Vec<u8>) -> String {
     let (mut segments_to_encode, bits_with_value, remainder) =
-        _split_into_segments(string_bytes, 6);
+        _split_bytes_into_segments(string_bytes, 6);
 
+    // add padding character
     if bits_with_value > 0 {
         segments_to_encode.push(remainder);
         segments_to_encode.push(0xff);
+
         if bits_with_value == 6 {
             segments_to_encode.push(0xff);
         }
     }
 
-    segments_to_encode
-}
-
-fn _base64_encode_segments(segments_to_encode: Vec<u8>) -> String {
     let mut encoded_string = String::new();
 
     for segment in segments_to_encode {

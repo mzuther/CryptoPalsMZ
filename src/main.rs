@@ -1,14 +1,30 @@
 use hex;
 
 fn main() {
-    let string_plain = "I'm killing your brain like a poisonous mushroom";
     let string_hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-
-    let encoded_string = hex_string_to_base64(string_hex);
+    let encoded_string = string_to_base64(string_hex, true);
     println!("{encoded_string}");
 
-    let encoded_string = string_to_base64(string_plain);
-    println!("{encoded_string}");
+    let string_hex_1 = "1c0111001f010100061a024b53535009181c";
+    let string_hex_2 = "686974207468652062756c6c277320657965";
+
+    let bytes_1 = string_to_bytes(string_hex_1, true);
+    let bytes_2 = string_to_bytes(string_hex_2, true);
+
+    let bytes_xor = fixed_xor(&bytes_1, &bytes_2);
+    println!("{}", bytes_to_string(bytes_xor, true));
+}
+
+fn bytes_to_string(bytes_input: Vec<u8>, is_hex_string: bool) -> String {
+    let bytes_as_string;
+
+    if is_hex_string {
+        bytes_as_string = hex::encode(bytes_input);
+    } else {
+        unsafe { bytes_as_string = String::from_utf8_unchecked(bytes_input) }
+    }
+
+    bytes_as_string
 }
 
 fn string_to_bytes(string_input: &str, is_hex_string: bool) -> Vec<u8> {
@@ -23,22 +39,7 @@ fn string_to_bytes(string_input: &str, is_hex_string: bool) -> Vec<u8> {
     string_bytes
 }
 
-fn hex_string_to_base64(string_hex: &str) -> String {
-    _string_to_base64(string_hex, true)
-}
-
-fn string_to_base64(string_plain: &str) -> String {
-    _string_to_base64(string_plain, false)
-}
-
-fn _string_to_base64(string_input: &str, is_hex_string: bool) -> String {
-    let string_bytes = string_to_bytes(string_input, is_hex_string);
-    let encoded_string = _base64_encode_bytes(string_bytes);
-
-    encoded_string
-}
-
-fn _split_bytes_into_segments(string_bytes: Vec<u8>, bits_per_segment: u8) -> (Vec<u8>, u8, u8) {
+fn split_bytes_into_segments(string_bytes: Vec<u8>, bits_per_segment: u8) -> (Vec<u8>, u8, u8) {
     let mut segments_to_encode = Vec::new();
 
     let bits_per_byte = 8;
@@ -68,9 +69,11 @@ fn _split_bytes_into_segments(string_bytes: Vec<u8>, bits_per_segment: u8) -> (V
     (segments_to_encode, bits_with_value, remainder)
 }
 
-fn _base64_encode_bytes(string_bytes: Vec<u8>) -> String {
+fn string_to_base64(string_input: &str, is_hex_string: bool) -> String {
+    let string_bytes = string_to_bytes(string_input, is_hex_string);
+
     let (mut segments_to_encode, bits_with_value, remainder) =
-        _split_bytes_into_segments(string_bytes, 6);
+        split_bytes_into_segments(string_bytes, 6);
 
     // add padding character
     if bits_with_value > 0 {
@@ -88,14 +91,14 @@ fn _base64_encode_bytes(string_bytes: Vec<u8>) -> String {
         let mut char_int = segment;
 
         if char_int < 26 {
-            char_int = char_int + 65
+            char_int += 65
         } else if char_int < 52 {
-            char_int = char_int + 71
+            char_int += 71
         // padding character (=)
         } else if char_int == 0xff {
             char_int = 61
         } else {
-            char_int = char_int - 4
+            char_int -= 4
         }
 
         let encoded_character = char_int as char;
@@ -103,4 +106,30 @@ fn _base64_encode_bytes(string_bytes: Vec<u8>) -> String {
     }
 
     encoded_string
+}
+
+fn fixed_xor(bytes_1: &Vec<u8>, bytes_2: &Vec<u8>) -> Vec<u8> {
+    assert_eq!(bytes_1.len(), bytes_2.len());
+
+    let mut bytes_xor = Vec::new();
+    let mut byte_xor: u8;
+
+    for n in 0..bytes_1.len() {
+        let byte_1 = bytes_1[n];
+        let byte_2 = bytes_2[n];
+
+        byte_xor = 0;
+
+        for current_bit in 0..8 {
+            let current_mask = 1 << current_bit;
+
+            if (byte_1 & current_mask) != (byte_2 & current_mask) {
+                byte_xor += current_mask;
+            }
+        }
+
+        bytes_xor.push(byte_xor);
+    }
+
+    bytes_xor
 }

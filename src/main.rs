@@ -1,18 +1,105 @@
 use hex;
+use std::collections::HashMap;
+use std::ops::Range;
+
+const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 12] = [
+    ('e', 0.127),
+    ('t', 0.091),
+    ('a', 0.082),
+    ('o', 0.075),
+    ('i', 0.070),
+    ('n', 0.067),
+    ('s', 0.063),
+    ('h', 0.061),
+    ('r', 0.060),
+    ('d', 0.043),
+    ('l', 0.040),
+    ('u', 0.028),
+];
 
 fn main() {
     let string_hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
     let encoded_string = string_to_base64(string_hex, true);
     println!("{encoded_string}");
 
-    let string_hex_1 = "1c0111001f010100061a024b53535009181c";
-    let string_hex_2 = "686974207468652062756c6c277320657965";
+    let string_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
+    let (letter, score, decoded_string) = find_lowest_score_xor(string_hex, 0x41..0x5b);
 
-    let bytes_1 = string_to_bytes(string_hex_1, true);
-    let bytes_2 = string_to_bytes(string_hex_2, true);
+    println!("{letter}: {decoded_string} -> {score}");
+}
 
-    let bytes_xor = fixed_xor(&bytes_1, &bytes_2);
-    println!("{}", bytes_to_string(&bytes_xor, true));
+fn find_lowest_score_xor(string_hex_1: &str, codes_int: Range<u32>) -> (char, f64, String) {
+    let mut best_code = '*';
+    let mut best_score = 1000.0;
+    let mut decoded_string = String::new();
+
+    for code_int in codes_int {
+        let code_char = char::from_u32(code_int).expect("invalid character");
+        let code_hex = hex::encode(code_char.to_string());
+        let string_hex_2 = code_hex.repeat(string_hex_1.len() / 2);
+
+        let bytes_1 = string_to_bytes(string_hex_1, true);
+        let bytes_2 = string_to_bytes(&string_hex_2, true);
+
+        let bytes_xor = fixed_xor(&bytes_1, &bytes_2);
+        let score = score_letter_frequencies(&bytes_xor);
+
+        if score < best_score {
+            best_code = code_char;
+            best_score = score;
+            decoded_string = bytes_to_string(&bytes_xor, false);
+        }
+    }
+
+    (best_code, best_score, decoded_string)
+}
+
+fn score_letter_frequencies(bytes_input: &Vec<u8>) -> f64 {
+    let mut letter_frequencies = HashMap::new();
+    let percent_per_letter = 1.0 / (bytes_input.len() as f64);
+
+    for &byte in bytes_input {
+        let mut key = byte;
+
+        // also count upper-case letters (convert to lower-case)
+        if key >= 0x41 && key <= 0x5a {
+            key += 0x20;
+        }
+
+        let count = letter_frequencies.entry(key).or_insert(0.0);
+        *count += percent_per_letter;
+    }
+
+    let mut english_letter_frequencies = HashMap::new();
+
+    for letter in ENGLISH_LETTER_FREQUENCIES {
+        let key = letter.0 as u8;
+        english_letter_frequencies.insert(key, letter.1);
+    }
+
+    let mut score = 0.0;
+
+    // bonus for letters matching expected frequency
+    for (letter, percentage_expected) in english_letter_frequencies {
+        let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
+        let score_diff = percentage_expected - percentage_found;
+
+        // higher frequencies are just as bad as lower frequencies
+        score += score_diff.abs();
+    }
+
+    // malus for non-letters
+    for (letter, percentage_found) in letter_frequencies {
+        // any character except lower-case letters
+        if letter < 0x61 || letter > 0x7a {
+            // with the exception of space, comma, and dot
+            if letter != 0x20 && letter != 0x2c && letter != 0x2e {
+                score += percentage_found;
+            }
+        }
+    }
+
+    score
 }
 
 fn bytes_to_string(bytes_input: &Vec<u8>, is_hex_string: bool) -> String {

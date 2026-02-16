@@ -1,6 +1,13 @@
 pub fn string_to_base64(string_input: &str, is_hex_string: bool) -> String {
     let string_bytes = crate::helpers::string_to_bytes(string_input, is_hex_string);
+    let encoded_bytes = bytes_to_base64(&string_bytes);
 
+    let encoded_string = bytes_to_string(&encoded_bytes, false);
+
+    encoded_string
+}
+
+pub fn bytes_to_base64(string_bytes: &Vec<u8>) -> Vec<u8> {
     let (mut segments_to_encode, bits_with_value, remainder) =
         crate::helpers::split_bytes_into_segments(string_bytes, 6);
 
@@ -14,7 +21,7 @@ pub fn string_to_base64(string_input: &str, is_hex_string: bool) -> String {
         }
     }
 
-    let mut encoded_string = String::new();
+    let mut encoded_bytes = Vec::new();
 
     for segment in &segments_to_encode {
         let mut char_int = *segment;
@@ -30,20 +37,22 @@ pub fn string_to_base64(string_input: &str, is_hex_string: bool) -> String {
             char_int -= 4
         }
 
-        let encoded_character = char_int as char;
-        encoded_string.push(encoded_character);
+        encoded_bytes.push(char_int);
     }
 
-    encoded_string
+    encoded_bytes
 }
 
 pub fn bytes_to_string(bytes_input: &Vec<u8>, is_hex_string: bool) -> String {
-    let bytes_as_string;
+    let mut bytes_as_string = String::new();
 
     if is_hex_string {
         bytes_as_string = hex::encode(bytes_input);
     } else {
-        unsafe { bytes_as_string = String::from_utf8_unchecked(bytes_input.clone()) }
+        for &byte in bytes_input {
+            let encoded_character = byte as char;
+            bytes_as_string.push(encoded_character);
+        }
     }
 
     bytes_as_string
@@ -61,14 +70,17 @@ pub fn string_to_bytes(string_input: &str, is_hex_string: bool) -> Vec<u8> {
     string_bytes
 }
 
-pub fn split_bytes_into_segments(string_bytes: Vec<u8>, bits_per_segment: u8) -> (Vec<u8>, u8, u8) {
+pub fn split_bytes_into_segments(
+    string_bytes: &Vec<u8>,
+    bits_per_segment: u8,
+) -> (Vec<u8>, u8, u8) {
     let mut segments_to_encode = Vec::new();
 
     let bits_per_byte = 8;
     let mut bits_with_value = 0;
     let mut remainder = 0;
 
-    for string_byte in &string_bytes {
+    for &string_byte in string_bytes {
         bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
         let bits_with_remainder = bits_per_byte - bits_with_value;
 

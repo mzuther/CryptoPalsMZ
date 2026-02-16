@@ -18,14 +18,57 @@ const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 12] = [
 ];
 
 fn main() {
+    println!("\n[Cryptopals]\n");
+
+    cryptopals_01_01();
+    cryptopals_01_02();
+    cryptopals_01_03();
+
+    println!("");
+}
+
+fn print_header(set: u64, challenge: u64) {
+    print!("Set {set}, challenge {challenge} ...  ")
+}
+
+fn cryptopals_01_01() {
+    print_header(1, 1);
+    let expected_result = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
+
     let string_hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-    let encoded_string = string_to_base64(string_hex, true);
-    println!("{encoded_string}");
+    let result = string_to_base64(string_hex, true);
+
+    assert_eq!(result, expected_result);
+    println!("ok")
+}
+
+fn cryptopals_01_02() {
+    print_header(1, 2);
+    let expected_result = "746865206b696420646f6e277420706c6179";
+
+    let string_hex_1 = "1c0111001f010100061a024b53535009181c";
+    let string_hex_2 = "686974207468652062756c6c277320657965";
+
+    let bytes_xor = fixed_xor(
+        &string_to_bytes(string_hex_1, true),
+        &string_to_bytes(string_hex_2, true),
+    );
+
+    let result = bytes_to_string(&bytes_xor, true);
+
+    assert_eq!(result, expected_result);
+    println!("ok")
+}
+
+fn cryptopals_01_03() {
+    print_header(1, 3);
+    let expected_result = "Cooking MC's like a pound of bacon";
 
     let string_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
-    let (letter, score, decoded_string) = find_lowest_score_xor(string_hex, 0x41..0x5b);
+    let (_, _, result) = find_lowest_score_xor(string_hex, 0x41..0x5b);
 
-    println!("{letter}: {decoded_string} -> {score}");
+    assert_eq!(result, expected_result);
+    println!("ok")
 }
 
 fn find_lowest_score_xor(string_hex_1: &str, codes_int: Range<u32>) -> (char, f64, String) {

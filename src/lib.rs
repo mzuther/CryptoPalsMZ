@@ -133,3 +133,24 @@ fn score_letter_frequencies(bytes_input: &Vec<u8>) -> f64 {
 
     score
 }
+
+pub fn hamming_distance_bits(string_1: &str, string_2: &str) -> u64 {
+    let bytes_xor = fixed_xor(
+        &crate::helpers::string_to_bytes(string_1, false),
+        &crate::helpers::string_to_bytes(string_2, false),
+    );
+
+    let mut differing_bits = 0;
+
+    for &byte in &bytes_xor {
+        for current_bit in 0..8 {
+            let current_mask = 1 << current_bit;
+
+            if byte & current_mask == current_mask {
+                differing_bits += 1;
+            }
+        }
+    }
+
+    differing_bits
+}

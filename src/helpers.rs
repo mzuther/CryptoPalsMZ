@@ -1,3 +1,42 @@
+pub fn string_to_base64(string_input: &str, is_hex_string: bool) -> String {
+    let string_bytes = crate::helpers::string_to_bytes(string_input, is_hex_string);
+
+    let (mut segments_to_encode, bits_with_value, remainder) =
+        crate::helpers::split_bytes_into_segments(string_bytes, 6);
+
+    // add padding character
+    if bits_with_value > 0 {
+        segments_to_encode.push(remainder);
+        segments_to_encode.push(0xff);
+
+        if bits_with_value == 6 {
+            segments_to_encode.push(0xff);
+        }
+    }
+
+    let mut encoded_string = String::new();
+
+    for segment in &segments_to_encode {
+        let mut char_int = *segment;
+
+        if char_int < 26 {
+            char_int += 65
+        } else if char_int < 52 {
+            char_int += 71
+        // padding character (=)
+        } else if char_int == 0xff {
+            char_int = 61
+        } else {
+            char_int -= 4
+        }
+
+        let encoded_character = char_int as char;
+        encoded_string.push(encoded_character);
+    }
+
+    encoded_string
+}
+
 pub fn bytes_to_string(bytes_input: &Vec<u8>, is_hex_string: bool) -> String {
     let bytes_as_string;
 

@@ -1,8 +1,10 @@
 use hex;
 use std::collections::HashMap;
+use std::fs;
 use std::ops::Range;
 
-const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 12] = [
+const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 27] = [
+    (' ', 0.250),
     ('e', 0.127),
     ('t', 0.091),
     ('a', 0.082),
@@ -14,7 +16,21 @@ const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 12] = [
     ('r', 0.060),
     ('d', 0.043),
     ('l', 0.040),
+    ('c', 0.028),
     ('u', 0.028),
+    ('m', 0.024),
+    ('w', 0.024),
+    ('f', 0.022),
+    ('g', 0.020),
+    ('y', 0.020),
+    ('p', 0.019),
+    ('b', 0.015),
+    ('v', 0.0098),
+    ('k', 0.0077),
+    ('j', 0.0016),
+    ('x', 0.0015),
+    ('q', 0.0012),
+    ('z', 0.0007),
 ];
 
 fn main() {
@@ -23,6 +39,7 @@ fn main() {
     cryptopals_01_01();
     cryptopals_01_02();
     cryptopals_01_03();
+    cryptopals_01_04();
 
     println!("");
 }
@@ -39,7 +56,7 @@ fn cryptopals_01_01() {
     let result = string_to_base64(string_hex, true);
 
     assert_eq!(result, expected_result);
-    println!("ok")
+    println!("ok");
 }
 
 fn cryptopals_01_02() {
@@ -57,7 +74,7 @@ fn cryptopals_01_02() {
     let result = bytes_to_string(&bytes_xor, true);
 
     assert_eq!(result, expected_result);
-    println!("ok")
+    println!("ok");
 }
 
 fn cryptopals_01_03() {
@@ -65,10 +82,33 @@ fn cryptopals_01_03() {
     let expected_result = "Cooking MC's like a pound of bacon";
 
     let string_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
-    let (_, _, result) = find_lowest_score_xor(string_hex, 0x41..0x5b);
+    let (_, _, result) = find_lowest_score_xor(string_hex, 0x00..0x80);
 
     assert_eq!(result, expected_result);
-    println!("ok")
+    println!("ok");
+}
+
+fn cryptopals_01_04() {
+    print_header(1, 4);
+    let expected_result = "Now that the party is jumping\n";
+
+    let all_strings_hex: String =
+        fs::read_to_string("original/4.txt").expect("could not read file");
+
+    let mut best_score = 1000.0;
+    let mut best_result = String::new();
+
+    for string_hex in all_strings_hex.lines() {
+        let (_, score, result) = find_lowest_score_xor(string_hex, 0x00..0x80);
+
+        if score < best_score {
+            best_score = score;
+            best_result = result;
+        }
+    }
+
+    assert_eq!(best_result, expected_result);
+    println!("ok");
 }
 
 fn find_lowest_score_xor(string_hex_1: &str, codes_int: Range<u32>) -> (char, f64, String) {

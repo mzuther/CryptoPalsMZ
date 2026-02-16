@@ -40,11 +40,11 @@ pub mod set_01 {
         let string_hex_2 = "686974207468652062756c6c277320657965";
 
         let bytes_xor = cryptopals::fixed_xor(
-            &cryptopals::string_to_bytes(string_hex_1, true),
-            &cryptopals::string_to_bytes(string_hex_2, true),
+            &cryptopals::helpers::string_to_bytes(string_hex_1, true),
+            &cryptopals::helpers::string_to_bytes(string_hex_2, true),
         );
 
-        let result = cryptopals::bytes_to_string(&bytes_xor, true);
+        let result = cryptopals::helpers::bytes_to_string(&bytes_xor, true);
 
         assert_eq!(result, expected_result);
         println!("ok");

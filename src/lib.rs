@@ -1,7 +1,8 @@
-use std::ops::Range;
 use std::collections::HashMap;
+use std::ops::Range;
 
 pub mod constants;
+pub mod helpers;
 
 pub fn fixed_xor(bytes_input: &Vec<u8>, bytes_key: &Vec<u8>) -> Vec<u8> {
     let mut bytes_xor = Vec::new();
@@ -18,74 +19,20 @@ pub fn fixed_xor(bytes_input: &Vec<u8>, bytes_key: &Vec<u8>) -> Vec<u8> {
 }
 
 pub fn repeating_key_xor(plain_text: &str, key: &str) -> String {
-    let plain_text_bytes = string_to_bytes(plain_text, false);
-    let key_bytes = string_to_bytes(key, false);
+    let plain_text_bytes = crate::helpers::string_to_bytes(plain_text, false);
+    let key_bytes = crate::helpers::string_to_bytes(key, false);
 
     let bytes_xor = fixed_xor(&plain_text_bytes, &key_bytes);
-    let string_encoded = bytes_to_string(&bytes_xor, true);
+    let string_encoded = crate::helpers::bytes_to_string(&bytes_xor, true);
 
     string_encoded
 }
 
-pub fn bytes_to_string(bytes_input: &Vec<u8>, is_hex_string: bool) -> String {
-    let bytes_as_string;
-
-    if is_hex_string {
-        bytes_as_string = hex::encode(bytes_input);
-    } else {
-        unsafe { bytes_as_string = String::from_utf8_unchecked(bytes_input.clone()) }
-    }
-
-    bytes_as_string
-}
-
-pub fn string_to_bytes(string_input: &str, is_hex_string: bool) -> Vec<u8> {
-    let string_bytes;
-
-    if is_hex_string {
-        string_bytes = hex::decode(string_input).expect("Broken conversion");
-    } else {
-        string_bytes = Vec::from(string_input);
-    }
-
-    string_bytes
-}
-
-fn split_bytes_into_segments(string_bytes: Vec<u8>, bits_per_segment: u8) -> (Vec<u8>, u8, u8) {
-    let mut segments_to_encode = Vec::new();
-
-    let bits_per_byte = 8;
-    let mut bits_with_value = 0;
-    let mut remainder = 0;
-
-    for string_byte in &string_bytes {
-        bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
-        let bits_with_remainder = bits_per_byte - bits_with_value;
-
-        let mask_remainder = (1 << bits_with_remainder) - 1;
-        let mask_value = 0xff - mask_remainder;
-
-        let value = ((string_byte & mask_value) >> bits_with_remainder) + remainder;
-        remainder = (string_byte & mask_remainder) << (bits_per_segment - bits_with_remainder);
-
-        segments_to_encode.push(value);
-
-        if bits_with_value == (bits_per_byte - bits_per_segment) {
-            bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
-
-            segments_to_encode.push(remainder);
-            remainder = 0;
-        }
-    }
-
-    (segments_to_encode, bits_with_value, remainder)
-}
-
 pub fn string_to_base64(string_input: &str, is_hex_string: bool) -> String {
-    let string_bytes = string_to_bytes(string_input, is_hex_string);
+    let string_bytes = crate::helpers::string_to_bytes(string_input, is_hex_string);
 
     let (mut segments_to_encode, bits_with_value, remainder) =
-        split_bytes_into_segments(string_bytes, 6);
+        crate::helpers::split_bytes_into_segments(string_bytes, 6);
 
     // add padding character
     if bits_with_value > 0 {
@@ -120,7 +67,6 @@ pub fn string_to_base64(string_input: &str, is_hex_string: bool) -> String {
     encoded_string
 }
 
-
 pub fn find_lowest_score_xor(string_encoded: &str, keys_int: Range<u32>) -> (char, f64, String) {
     let mut best_code = '*';
     let mut best_score = 1000.0;
@@ -130,8 +76,8 @@ pub fn find_lowest_score_xor(string_encoded: &str, keys_int: Range<u32>) -> (cha
         let key_char = char::from_u32(key_int).expect("invalid character");
         let key_hex = hex::encode(key_char.to_string());
 
-        let bytes_encoded = string_to_bytes(string_encoded, true);
-        let bytes_key = string_to_bytes(&key_hex, true);
+        let bytes_encoded = crate::helpers::string_to_bytes(string_encoded, true);
+        let bytes_key = crate::helpers::string_to_bytes(&key_hex, true);
 
         let bytes_xor = fixed_xor(&bytes_encoded, &bytes_key);
         let score = score_letter_frequencies(&bytes_xor);
@@ -139,7 +85,7 @@ pub fn find_lowest_score_xor(string_encoded: &str, keys_int: Range<u32>) -> (cha
         if score < best_score {
             best_code = key_char;
             best_score = score;
-            string_decoded = bytes_to_string(&bytes_xor, false);
+            string_decoded = crate::helpers::bytes_to_string(&bytes_xor, false);
         }
     }
 

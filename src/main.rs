@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use hex;
 use std::collections::HashMap;
 use std::fs;
@@ -111,30 +113,29 @@ fn cryptopals_01_04() {
     println!("ok");
 }
 
-fn find_lowest_score_xor(string_hex_1: &str, codes_int: Range<u32>) -> (char, f64, String) {
+fn find_lowest_score_xor(string_encoded: &str, keys_int: Range<u32>) -> (char, f64, String) {
     let mut best_code = '*';
     let mut best_score = 1000.0;
-    let mut decoded_string = String::new();
+    let mut string_decoded = String::new();
 
-    for code_int in codes_int {
-        let code_char = char::from_u32(code_int).expect("invalid character");
-        let code_hex = hex::encode(code_char.to_string());
-        let string_hex_2 = code_hex.repeat(string_hex_1.len() / 2);
+    for key_int in keys_int {
+        let key_char = char::from_u32(key_int).expect("invalid character");
+        let key_hex = hex::encode(key_char.to_string());
 
-        let bytes_1 = string_to_bytes(string_hex_1, true);
-        let bytes_2 = string_to_bytes(&string_hex_2, true);
+        let bytes_encoded = string_to_bytes(string_encoded, true);
+        let bytes_key = string_to_bytes(&key_hex, true);
 
-        let bytes_xor = fixed_xor(&bytes_1, &bytes_2);
+        let bytes_xor = fixed_xor(&bytes_encoded, &bytes_key);
         let score = score_letter_frequencies(&bytes_xor);
 
         if score < best_score {
-            best_code = code_char;
+            best_code = key_char;
             best_score = score;
-            decoded_string = bytes_to_string(&bytes_xor, false);
+            string_decoded = bytes_to_string(&bytes_xor, false);
         }
     }
 
-    (best_code, best_score, decoded_string)
+    (best_code, best_score, string_decoded)
 }
 
 fn score_letter_frequencies(bytes_input: &Vec<u8>) -> f64 {
@@ -278,16 +279,14 @@ fn string_to_base64(string_input: &str, is_hex_string: bool) -> String {
     encoded_string
 }
 
-fn fixed_xor(bytes_1: &Vec<u8>, bytes_2: &Vec<u8>) -> Vec<u8> {
-    assert_eq!(bytes_1.len(), bytes_2.len());
-
+fn fixed_xor(bytes_input: &Vec<u8>, bytes_key: &Vec<u8>) -> Vec<u8> {
     let mut bytes_xor = Vec::new();
+    let mut key_iter = bytes_key.iter().cycle();
 
-    for n in 0..bytes_1.len() {
-        let byte_1 = &bytes_1[n];
-        let byte_2 = &bytes_2[n];
+    for &byte_input in bytes_input {
+        let byte_key = key_iter.next().expect("no key left");
+        let byte_xor = (byte_input | byte_key) & !(byte_input & byte_key);
 
-        let byte_xor = (byte_1 | byte_2) & !(byte_1 & byte_2);
         bytes_xor.push(byte_xor);
     }
 

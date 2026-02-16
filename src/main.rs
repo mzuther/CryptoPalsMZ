@@ -2,8 +2,8 @@
 
 use hex;
 use std::collections::HashMap;
-use std::fs;
 use std::ops::Range;
+use std::{fs, result};
 
 const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 27] = [
     (' ', 0.250),
@@ -42,6 +42,7 @@ fn main() {
     cryptopals_01_02();
     cryptopals_01_03();
     cryptopals_01_04();
+    cryptopals_01_05();
 
     println!("");
 }
@@ -111,6 +112,29 @@ fn cryptopals_01_04() {
 
     assert_eq!(best_result, expected_result);
     println!("ok");
+}
+
+fn cryptopals_01_05() {
+    print_header(1, 5);
+    let expected_result = "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f";
+
+    let plain_text = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
+    let key = "ICE";
+
+    let result = repeating_key_xor(&plain_text, &key);
+
+    assert_eq!(result, expected_result);
+    println!("ok");
+}
+
+fn repeating_key_xor(plain_text: &str, key: &str) -> String {
+    let plain_text_bytes = string_to_bytes(plain_text, false);
+    let key_bytes = string_to_bytes(key, false);
+
+    let bytes_xor = fixed_xor(&plain_text_bytes, &key_bytes);
+    let string_encoded = bytes_to_string(&bytes_xor, true);
+
+    string_encoded
 }
 
 fn find_lowest_score_xor(string_encoded: &str, keys_int: Range<u32>) -> (char, f64, String) {

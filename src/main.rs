@@ -7,6 +7,7 @@ fn main() {
 
     set_01::challenge_01_1();
     set_01::challenge_01_2();
+    set_01::challenge_01_3();
     set_01::challenge_02();
     set_01::challenge_03();
     set_01::challenge_04();
@@ -59,7 +60,7 @@ pub mod set_01 {
 
         assert_eq!(result, expected_result);
 
-        let string_encoded = result;
+        let string_encoded = expected_result;
         let expected_result_back = string_hex;
         let result_back = cryptopals::helpers::base64_to_hex(&string_encoded);
 
@@ -77,9 +78,27 @@ pub mod set_01 {
 
         assert_eq!(result, expected_result);
 
-        let string_encoded = result;
+        let string_encoded = expected_result;
         let expected_result_back = string_hex;
         let result_back = cryptopals::helpers::base64_to_hex(&string_encoded);
+
+        assert_eq!(result_back, expected_result_back);
+        println!("ok");
+    }
+
+    pub fn challenge_01_3() {
+        super::print_header(1, 1.3);
+        let expected_result =
+            "SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==";
+
+        let plain_text = "Hi. Servus. Grüezi. 你好.";
+        let result = cryptopals::helpers::unicode_to_base64(plain_text);
+
+        assert_eq!(result, expected_result);
+
+        let string_encoded = expected_result;
+        let expected_result_back = plain_text;
+        let result_back = cryptopals::helpers::base64_to_unicode(&string_encoded);
 
         assert_eq!(result_back, expected_result_back);
         println!("ok");

@@ -25,7 +25,10 @@ pub fn fixed_xor_bytes(bytes_input: &[u8], bytes_key: &[u8]) -> Vec<u8> {
     bytes_xor
 }
 
-pub fn find_lowest_score_xor_hex(hex_encoded: &str, keys_range_bytes: Range<u8>) -> (char, f64, Vec<u8>) {
+pub fn find_lowest_score_xor_hex(
+    hex_encoded: &str,
+    keys_range_bytes: Range<u8>,
+) -> (char, f64, Vec<u8>) {
     let mut best_key = '*';
     let mut best_score = 1000.0;
     let mut best_decoded = Vec::new();
@@ -94,10 +97,14 @@ fn score_letter_frequencies(bytes: &[u8]) -> f64 {
 }
 
 pub fn hamming_distance_bits(string_1: &str, string_2: &str) -> u64 {
-    let bytes_with_differing_bits = fixed_xor_bytes(
+    hamming_distance_bits_bytes(
         &&crate::helpers::unicode_to_bytes(string_1),
         &crate::helpers::unicode_to_bytes(string_2),
-    );
+    )
+}
+
+pub fn hamming_distance_bits_bytes(bytes_1: &[u8], bytes_2: &[u8]) -> u64 {
+    let bytes_with_differing_bits = fixed_xor_bytes(&bytes_1, &bytes_2);
 
     let mut differing_bits = 0;
 

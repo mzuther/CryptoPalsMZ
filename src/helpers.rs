@@ -35,9 +35,9 @@ pub fn hex_to_base64(string_hex: &str) -> String {
     bytes_to_ascii(&encoded_bytes)
 }
 
-pub fn bytes_to_base64(string_bytes: &[u8]) -> Vec<u8> {
+pub fn bytes_to_base64(bytes_raw: &[u8]) -> Vec<u8> {
     let (mut segments_to_encode, bits_with_value, remainder) =
-        crate::helpers::split_bytes_into_segments(string_bytes, 6);
+        crate::helpers::split_bytes_into_segments(bytes_raw, 6);
 
     // add padding character
     if bits_with_value > 0 {
@@ -54,13 +54,16 @@ pub fn bytes_to_base64(string_bytes: &[u8]) -> Vec<u8> {
     for segment in &segments_to_encode {
         let mut char_int = *segment;
 
+        // upper case letter
         if char_int < 26 {
             char_int += 65
+        // lower case letter
         } else if char_int < 52 {
             char_int += 71
         // padding character (=)
         } else if char_int == 0xff {
             char_int = 61
+        // digit
         } else {
             char_int -= 4
         }
@@ -71,25 +74,22 @@ pub fn bytes_to_base64(string_bytes: &[u8]) -> Vec<u8> {
     encoded_bytes
 }
 
-fn split_bytes_into_segments(
-    string_bytes: &[u8],
-    bits_per_segment: u8,
-) -> (Vec<u8>, u8, u8) {
+fn split_bytes_into_segments(bytes: &[u8], bits_per_segment: u8) -> (Vec<u8>, u8, u8) {
     let mut segments_to_encode = Vec::new();
 
     let bits_per_byte = 8;
     let mut bits_with_value = 0;
     let mut remainder = 0;
 
-    for &string_byte in string_bytes {
+    for &byte in bytes {
         bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
         let bits_with_remainder = bits_per_byte - bits_with_value;
 
         let mask_remainder = (1 << bits_with_remainder) - 1;
         let mask_value = 0xff - mask_remainder;
 
-        let value = ((string_byte & mask_value) >> bits_with_remainder) + remainder;
-        remainder = (string_byte & mask_remainder) << (bits_per_segment - bits_with_remainder);
+        let value = ((byte & mask_value) >> bits_with_remainder) + remainder;
+        remainder = (byte & mask_remainder) << (bits_per_segment - bits_with_remainder);
 
         segments_to_encode.push(value);
 

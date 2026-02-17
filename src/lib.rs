@@ -11,7 +11,7 @@ pub fn fixed_xor_unicode(plain_text: &str, key: &str) -> Vec<u8> {
     )
 }
 
-pub fn fixed_xor_bytes(bytes_input: &Vec<u8>, bytes_key: &Vec<u8>) -> Vec<u8> {
+pub fn fixed_xor_bytes(bytes_input: &[u8], bytes_key: &[u8]) -> Vec<u8> {
     let mut bytes_xor = Vec::new();
     let mut key_iter = bytes_key.iter().cycle();
 
@@ -51,7 +51,7 @@ pub fn find_lowest_score_xor_hex(hex_encoded: &str, keys_range_bytes: Range<u8>)
     (best_key, best_score, best_decoded)
 }
 
-fn score_letter_frequencies(bytes: &Vec<u8>) -> f64 {
+fn score_letter_frequencies(bytes: &[u8]) -> f64 {
     let mut letter_frequencies = HashMap::new();
     let percent_per_letter = 1.0 / (bytes.len() as f64);
 

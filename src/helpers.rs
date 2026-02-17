@@ -6,11 +6,11 @@ pub fn hex_to_bytes(string_hex: &str) -> Vec<u8> {
     hex::decode(string_hex).expect("Broken conversion")
 }
 
-pub fn bytes_to_hex(bytes: &Vec<u8>) -> String {
+pub fn bytes_to_hex(bytes: &[u8]) -> String {
     hex::encode(bytes)
 }
 
-pub fn bytes_to_ascii(bytes: &Vec<u8>) -> String {
+pub fn bytes_to_ascii(bytes: &[u8]) -> String {
     let mut bytes_as_string = String::new();
 
     for &byte in bytes {
@@ -35,7 +35,7 @@ pub fn hex_to_base64(string_hex: &str) -> String {
     bytes_to_ascii(&encoded_bytes)
 }
 
-pub fn bytes_to_base64(string_bytes: &Vec<u8>) -> Vec<u8> {
+pub fn bytes_to_base64(string_bytes: &[u8]) -> Vec<u8> {
     let (mut segments_to_encode, bits_with_value, remainder) =
         crate::helpers::split_bytes_into_segments(string_bytes, 6);
 
@@ -72,7 +72,7 @@ pub fn bytes_to_base64(string_bytes: &Vec<u8>) -> Vec<u8> {
 }
 
 fn split_bytes_into_segments(
-    string_bytes: &Vec<u8>,
+    string_bytes: &[u8],
     bits_per_segment: u8,
 ) -> (Vec<u8>, u8, u8) {
     let mut segments_to_encode = Vec::new();

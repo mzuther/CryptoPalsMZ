@@ -45,7 +45,7 @@ pub mod set_01 {
             &cryptopals::helpers::string_to_bytes(string_hex_2, true),
         );
 
-        let result = cryptopals::helpers::bytes_to_string(&bytes_xor, true);
+        let result = cryptopals::helpers::bytes_to_hex(&bytes_xor);
 
         assert_eq!(result, expected_result);
         println!("ok");

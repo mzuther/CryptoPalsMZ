@@ -2,7 +2,7 @@ pub fn string_to_base64(string_input: &str, is_hex_string: bool) -> String {
     let string_bytes = crate::helpers::string_to_bytes(string_input, is_hex_string);
     let encoded_bytes = bytes_to_base64(&string_bytes);
 
-    let encoded_string = bytes_to_string(&encoded_bytes, false);
+    let encoded_string = bytes_to_ascii(&encoded_bytes);
 
     encoded_string
 }
@@ -43,16 +43,16 @@ pub fn bytes_to_base64(string_bytes: &Vec<u8>) -> Vec<u8> {
     encoded_bytes
 }
 
-pub fn bytes_to_string(bytes_input: &Vec<u8>, is_hex_string: bool) -> String {
+pub fn bytes_to_hex(bytes: &Vec<u8>) -> String {
+    hex::encode(bytes)
+}
+
+pub fn bytes_to_ascii(bytes: &Vec<u8>) -> String {
     let mut bytes_as_string = String::new();
 
-    if is_hex_string {
-        bytes_as_string = hex::encode(bytes_input);
-    } else {
-        for &byte in bytes_input {
-            let encoded_character = byte as char;
-            bytes_as_string.push(encoded_character);
-        }
+    for &byte in bytes {
+        let ascii_character = byte as char;
+        bytes_as_string.push(ascii_character);
     }
 
     bytes_as_string

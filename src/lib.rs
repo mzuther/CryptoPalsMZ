@@ -23,7 +23,7 @@ pub fn repeating_key_xor(plain_text: &str, key: &str) -> String {
     let key_bytes = crate::helpers::string_to_bytes(key, false);
 
     let bytes_xor = fixed_xor(&plain_text_bytes, &key_bytes);
-    let string_encoded = crate::helpers::bytes_to_string(&bytes_xor, true);
+    let string_encoded = crate::helpers::bytes_to_hex(&bytes_xor);
 
     string_encoded
 }
@@ -46,7 +46,7 @@ pub fn find_lowest_score_xor(string_encoded: &str, keys_int: Range<u32>) -> (cha
         if score < best_score {
             best_code = key_char;
             best_score = score;
-            string_decoded = crate::helpers::bytes_to_string(&bytes_xor, false);
+            string_decoded = crate::helpers::bytes_to_ascii(&bytes_xor);
         }
     }
 

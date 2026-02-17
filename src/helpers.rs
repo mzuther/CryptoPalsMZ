@@ -164,6 +164,11 @@ fn assemble_bytes_from_segments(bytes: &[u8], bits_per_segment: u8) -> Vec<u8> {
     let mut byte_in_progress = 0;
 
     for &byte_input in bytes {
+        // padding
+        if byte_input == 0xff {
+            return assembled_segments;
+        }
+
         for inverted_bit_input in 0..bits_per_segment {
             let current_bit_input = bits_per_segment - inverted_bit_input - 1;
             let current_bit_output: u8 = bits_per_byte - inverted_bit_output - 1;

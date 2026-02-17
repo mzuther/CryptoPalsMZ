@@ -109,3 +109,80 @@ fn split_bytes_into_segments(bytes: &[u8], bits_per_segment: u8) -> (Vec<u8>, u8
 
     (segments_to_encode, bits_with_value, remainder)
 }
+
+pub fn base64_to_ascii(string_base64: &str) -> String {
+    let bytes = crate::helpers::unicode_to_bytes(&string_base64);
+    let decoded_bytes = base64_to_bytes(&bytes);
+
+    bytes_to_ascii(&decoded_bytes)
+}
+
+pub fn base64_to_hex(string_base64: &str) -> String {
+    let bytes = crate::helpers::unicode_to_bytes(&string_base64);
+    let decoded_bytes = base64_to_bytes(&bytes);
+
+    bytes_to_hex(&decoded_bytes)
+}
+
+pub fn base64_to_bytes(bytes_base64: &[u8]) -> Vec<u8> {
+    let mut decoded_bytes = Vec::new();
+
+    for &byte_base64 in bytes_base64 {
+        let mut char_int = byte_base64;
+
+        // plus
+        if char_int == 43 {
+            char_int = 62
+        // slash
+        } else if char_int == 47 {
+            char_int = 63
+        // padding character (=)
+        } else if char_int == 61 {
+            char_int = 0xff
+        // digit
+        } else if char_int <= 57 {
+            char_int += 4
+        // upper case letter
+        } else if char_int <= 90 {
+            char_int -= 65
+        // lower case letter
+        } else {
+            char_int -= 71
+        }
+
+        decoded_bytes.push(char_int);
+    }
+
+    assemble_bytes_from_segments(&decoded_bytes, 6)
+}
+
+fn assemble_bytes_from_segments(bytes: &[u8], bits_per_segment: u8) -> Vec<u8> {
+    let mut assembled_segments = Vec::new();
+
+    let bits_per_byte = 8;
+    let mut inverted_bit_output = 0;
+    let mut byte_in_progress = 0;
+
+    for &byte_input in bytes {
+        for inverted_bit_input in 0..bits_per_segment {
+            let current_bit_input = bits_per_segment - inverted_bit_input - 1;
+            let current_bit_output: u8 = bits_per_byte - inverted_bit_output - 1;
+
+            let current_mask_input = 1 << current_bit_input;
+            let current_mask_output = 1 << current_bit_output;
+
+            if (byte_input & current_mask_input) > 0 {
+                byte_in_progress += current_mask_output;
+            }
+
+            inverted_bit_output = (inverted_bit_output + 1) % bits_per_byte;
+
+            if inverted_bit_output == 0 {
+                assembled_segments.push(byte_in_progress);
+                byte_in_progress = 0;
+            }
+        }
+    }
+
+    assembled_segments
+}

@@ -5,7 +5,8 @@ use cryptopals;
 fn main() {
     println!("\n[Cryptopals]\n");
 
-    set_01::challenge_01();
+    set_01::challenge_01_1();
+    set_01::challenge_01_2();
     set_01::challenge_02();
     set_01::challenge_03();
     set_01::challenge_04();
@@ -22,12 +23,23 @@ fn print_header(set: u64, challenge: f64) {
 pub mod set_01 {
     use std::fs;
 
-    pub fn challenge_01() {
-        super::print_header(1, 1.0);
+    pub fn challenge_01_1() {
+        super::print_header(1, 1.1);
         let expected_result = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
 
         let string_hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
         let result = cryptopals::helpers::hex_to_base64(string_hex);
+
+        assert_eq!(result, expected_result);
+        println!("ok");
+    }
+
+    pub fn challenge_01_2() {
+        super::print_header(1, 1.2);
+        let expected_result = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
+
+        let string_base64 = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
+        let result = cryptopals::helpers::base64_to_hex(&string_base64);
 
         assert_eq!(result, expected_result);
         println!("ok");

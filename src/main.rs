@@ -88,8 +88,7 @@ pub mod set_01 {
 
     pub fn challenge_01_3() {
         super::print_header(1, 1.3);
-        let expected_result =
-            "SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==";
+        let expected_result = "SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==";
 
         let plain_text = "Hi. Servus. Grüezi. 你好.";
         let result = cryptopals::helpers::unicode_to_base64(plain_text);
@@ -128,8 +127,10 @@ pub mod set_01 {
 
         let string_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
         let keys_range_bytes = 0x00..0x80;
-        let (_, _, result_bytes) =
-            cryptopals::find_lowest_score_xor_hex(&string_hex, keys_range_bytes);
+        let (_, _, result_bytes) = cryptopals::find_lowest_score_xor_bytes(
+            &cryptopals::helpers::hex_to_bytes(&string_hex),
+            keys_range_bytes,
+        );
 
         let result = cryptopals::helpers::bytes_to_ascii(&result_bytes);
 
@@ -149,8 +150,10 @@ pub mod set_01 {
 
         for string_hex in all_strings_hex.lines() {
             let keys_range_bytes = 0x00..0x80;
-            let (_, score, result_bytes) =
-                cryptopals::find_lowest_score_xor_hex(&string_hex, keys_range_bytes);
+            let (_, score, result_bytes) = cryptopals::find_lowest_score_xor_bytes(
+                &cryptopals::helpers::hex_to_bytes(&string_hex),
+                keys_range_bytes,
+            );
 
             if score < best_score {
                 best_score = score;

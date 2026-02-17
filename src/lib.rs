@@ -25,27 +25,21 @@ pub fn fixed_xor_bytes(bytes_input: &[u8], bytes_key: &[u8]) -> Vec<u8> {
     bytes_xor
 }
 
-pub fn find_lowest_score_xor_hex(
-    hex_encoded: &str,
+pub fn find_lowest_score_xor_bytes(
+    bytes: &[u8],
     keys_range_bytes: Range<u8>,
-) -> (char, f64, Vec<u8>) {
-    let mut best_key = '*';
+) -> (u8, f64, Vec<u8>) {
+    let mut best_key = 0xff;
     let mut best_score = 1000.0;
     let mut best_decoded = Vec::new();
 
     for key_byte in keys_range_bytes {
-        let key_char = key_byte as char;
-        let key_hex = hex::encode(key_char.to_string());
-
-        let bytes_xor = fixed_xor_bytes(
-            &crate::helpers::hex_to_bytes(&hex_encoded),
-            &crate::helpers::hex_to_bytes(&key_hex),
-        );
-
+        let key_vector = vec![key_byte];
+        let bytes_xor = fixed_xor_bytes(&bytes, &key_vector);
         let score = score_letter_frequencies(&bytes_xor);
 
         if score < best_score {
-            best_key = key_char;
+            best_key = key_byte;
             best_score = score;
             best_decoded = bytes_xor;
         }

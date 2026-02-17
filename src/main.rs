@@ -7,8 +7,6 @@ fn main() {
 
     set_01::challenge_01_1();
     set_01::challenge_01_2();
-    set_01::challenge_01_3();
-    set_01::challenge_01_4();
     set_01::challenge_02();
     set_01::challenge_03();
     set_01::challenge_04();
@@ -33,39 +31,30 @@ pub mod set_01 {
         let result = cryptopals::helpers::hex_to_base64(string_hex);
 
         assert_eq!(result, expected_result);
+
+        let string_encoded = result;
+        let expected_result_back = string_hex;
+        let result_back = cryptopals::helpers::base64_to_hex(&string_encoded);
+
+        assert_eq!(result_back, expected_result_back);
         println!("ok");
     }
 
     pub fn challenge_01_2() {
         super::print_header(1, 1.2);
-        let expected_result = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29tLi4=";
+        let expected_result =
+            "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29tLi4=";
 
         let string_hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d2e2e";
         let result = cryptopals::helpers::hex_to_base64(string_hex);
 
         assert_eq!(result, expected_result);
-        println!("ok");
-    }
 
-    pub fn challenge_01_3() {
-        super::print_header(1, 1.3);
-        let expected_result = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
+        let string_encoded = result;
+        let expected_result_back = string_hex;
+        let result_back = cryptopals::helpers::base64_to_hex(&string_encoded);
 
-        let string_base64 = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
-        let result = cryptopals::helpers::base64_to_hex(&string_base64);
-
-        assert_eq!(result, expected_result);
-        println!("ok");
-    }
-
-    pub fn challenge_01_4() {
-        super::print_header(1, 1.4);
-        let expected_result = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d2e2e";
-
-        let string_base64 = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29tLi4=";
-        let result = cryptopals::helpers::base64_to_hex(&string_base64);
-
-        assert_eq!(result, expected_result);
+        assert_eq!(result_back, expected_result_back);
         println!("ok");
     }
 

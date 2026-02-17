@@ -10,6 +10,10 @@ pub fn bytes_to_hex(bytes: &[u8]) -> String {
     hex::encode(bytes)
 }
 
+pub fn bytes_to_unicode(bytes: &[u8]) -> String {
+    String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string")
+}
+
 pub fn bytes_to_ascii(bytes: &[u8]) -> String {
     let mut bytes_as_string = String::new();
 
@@ -110,11 +114,11 @@ fn split_bytes_into_segments(bytes: &[u8], bits_per_segment: u8) -> (Vec<u8>, u8
     (segments_to_encode, bits_with_value, remainder)
 }
 
-pub fn base64_to_ascii(string_base64: &str) -> String {
+pub fn base64_to_unicode(string_base64: &str) -> String {
     let bytes = crate::helpers::unicode_to_bytes(&string_base64);
     let decoded_bytes = base64_to_bytes(&bytes);
 
-    bytes_to_ascii(&decoded_bytes)
+    bytes_to_unicode(&decoded_bytes)
 }
 
 pub fn base64_to_hex(string_base64: &str) -> String {

@@ -93,21 +93,26 @@ fn score_letter_frequencies(bytes_input: &Vec<u8>) -> f64 {
 }
 
 pub fn hamming_distance_bits(string_1: &str, string_2: &str) -> u64 {
-    let bytes_xor = fixed_xor_bytes(
+    let bytes_with_differing_bits = fixed_xor_bytes(
         &&crate::helpers::unicode_to_bytes(string_1),
         &crate::helpers::unicode_to_bytes(string_2),
     );
 
     let mut differing_bits = 0;
 
-    for &byte in &bytes_xor {
-        for current_bit in 0..8 {
-            let current_mask = 1 << current_bit;
+    for &byte in &bytes_with_differing_bits {
+        let nibble_value_low = (byte as usize) & 0x0f;
+        let nibble_value_high = (byte as usize) >> 4;
 
-            if byte & current_mask == current_mask {
-                differing_bits += 1;
-            }
-        }
+        let differing_bits_low = crate::constants::LOOKUP_BITS_IN_NIBBLE
+            .get(nibble_value_low)
+            .expect("index is between 0 and 15");
+        let differing_bits_high = crate::constants::LOOKUP_BITS_IN_NIBBLE
+            .get(nibble_value_high)
+            .expect("index is between 0 and 15");
+
+        differing_bits += *differing_bits_low as u64;
+        differing_bits += *differing_bits_high as u64;
     }
 
     differing_bits

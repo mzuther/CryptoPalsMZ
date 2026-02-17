@@ -40,3 +40,6 @@ pub fn get_english_letter_frequencies() -> HashMap<u8, f64> {
 
     english_letter_frequencies
 }
+
+pub const LOOKUP_BITS_IN_NIBBLE: [u8; 16] =
+    [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];

@@ -13,11 +13,38 @@ fn main() {
     set_01::challenge_05();
     set_01::challenge_06_1();
 
+    // play_with_xor();
+
     println!("");
 }
 
 fn print_header(set: u64, challenge: f64) {
     print!("Set {set}, challenge {challenge} ...  ")
+}
+
+fn play_with_xor() {
+    let plain_text = "einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein";
+    let plain_text_bytes = cryptopals::helpers::unicode_to_bytes(&plain_text);
+    let plain_text_hex = cryptopals::helpers::bytes_to_hex(&plain_text_bytes);
+    let plain_text_base64 = cryptopals::helpers::unicode_to_base64(&plain_text);
+
+    let key = "ESWAREINMAL";
+    let key_bytes = cryptopals::helpers::unicode_to_bytes(&key);
+
+    let bytes_encoded = cryptopals::fixed_xor_bytes(&plain_text_bytes, &key_bytes);
+    let string_encoded = cryptopals::helpers::bytes_to_hex(&bytes_encoded);
+    let bytes_encoded_base64 = cryptopals::helpers::bytes_to_base64(&bytes_encoded);
+    let encoded_text_base64 = cryptopals::helpers::bytes_to_ascii(&bytes_encoded_base64);
+
+    println!("");
+    println!("TXT: {plain_text}");
+    println!("Hex: {plain_text_hex}");
+    println!("B64: {plain_text_base64}\n");
+
+    println!("Key: {key}");
+
+    println!("Hex: {string_encoded}");
+    println!("B64: {encoded_text_base64}");
 }
 
 pub mod set_01 {

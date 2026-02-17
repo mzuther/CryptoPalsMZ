@@ -1,3 +1,26 @@
+pub fn unicode_to_bytes(string_unicode: &str) -> Vec<u8> {
+    Vec::from(string_unicode)
+}
+
+pub fn hex_to_bytes(string_hex: &str) -> Vec<u8> {
+    hex::decode(string_hex).expect("Broken conversion")
+}
+
+pub fn bytes_to_hex(bytes: &Vec<u8>) -> String {
+    hex::encode(bytes)
+}
+
+pub fn bytes_to_ascii(bytes: &Vec<u8>) -> String {
+    let mut bytes_as_string = String::new();
+
+    for &byte in bytes {
+        let ascii_character = byte as char;
+        bytes_as_string.push(ascii_character);
+    }
+
+    bytes_as_string
+}
+
 pub fn unicode_to_base64(string_unicode: &str) -> String {
     let bytes = crate::helpers::unicode_to_bytes(&string_unicode);
     let encoded_bytes = bytes_to_base64(&bytes);
@@ -48,30 +71,7 @@ pub fn bytes_to_base64(string_bytes: &Vec<u8>) -> Vec<u8> {
     encoded_bytes
 }
 
-pub fn bytes_to_hex(bytes: &Vec<u8>) -> String {
-    hex::encode(bytes)
-}
-
-pub fn bytes_to_ascii(bytes: &Vec<u8>) -> String {
-    let mut bytes_as_string = String::new();
-
-    for &byte in bytes {
-        let ascii_character = byte as char;
-        bytes_as_string.push(ascii_character);
-    }
-
-    bytes_as_string
-}
-
-pub fn unicode_to_bytes(string_unicode: &str) -> Vec<u8> {
-    Vec::from(string_unicode)
-}
-
-pub fn hex_to_bytes(string_hex: &str) -> Vec<u8> {
-    hex::decode(string_hex).expect("Broken conversion")
-}
-
-pub fn split_bytes_into_segments(
+fn split_bytes_into_segments(
     string_bytes: &Vec<u8>,
     bits_per_segment: u8,
 ) -> (Vec<u8>, u8, u8) {

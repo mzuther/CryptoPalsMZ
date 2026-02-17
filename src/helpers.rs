@@ -60,6 +60,12 @@ pub fn bytes_to_base64(bytes_raw: &[u8]) -> Vec<u8> {
         // lower case letter
         } else if char_int < 52 {
             char_int += 71
+        // plus
+        } else if char_int == 62 {
+            char_int = 43
+        // slash
+        } else if char_int == 63 {
+            char_int = 47
         // padding character (=)
         } else if char_int == 0xff {
             char_int = 61

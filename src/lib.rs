@@ -25,36 +25,37 @@ pub fn fixed_xor_bytes(bytes_input: &Vec<u8>, bytes_key: &Vec<u8>) -> Vec<u8> {
     bytes_xor
 }
 
-pub fn find_lowest_score_xor(string_encoded: &str, keys_int: Range<u32>) -> (char, f64, String) {
-    let mut best_code = '*';
+pub fn find_lowest_score_xor_hex(hex_encoded: &str, keys_range_bytes: Range<u8>) -> (char, f64, Vec<u8>) {
+    let mut best_key = '*';
     let mut best_score = 1000.0;
-    let mut string_decoded = String::new();
+    let mut best_decoded = Vec::new();
 
-    for key_int in keys_int {
-        let key_char = char::from_u32(key_int).expect("invalid character");
+    for key_byte in keys_range_bytes {
+        let key_char = key_byte as char;
         let key_hex = hex::encode(key_char.to_string());
 
-        let bytes_encoded = crate::helpers::hex_to_bytes(string_encoded);
-        let bytes_key = crate::helpers::hex_to_bytes(&key_hex);
+        let bytes_xor = fixed_xor_bytes(
+            &crate::helpers::hex_to_bytes(&hex_encoded),
+            &crate::helpers::hex_to_bytes(&key_hex),
+        );
 
-        let bytes_xor = fixed_xor_bytes(&bytes_encoded, &bytes_key);
         let score = score_letter_frequencies(&bytes_xor);
 
         if score < best_score {
-            best_code = key_char;
+            best_key = key_char;
             best_score = score;
-            string_decoded = crate::helpers::bytes_to_ascii(&bytes_xor);
+            best_decoded = bytes_xor;
         }
     }
 
-    (best_code, best_score, string_decoded)
+    (best_key, best_score, best_decoded)
 }
 
-fn score_letter_frequencies(bytes_input: &Vec<u8>) -> f64 {
+fn score_letter_frequencies(bytes: &Vec<u8>) -> f64 {
     let mut letter_frequencies = HashMap::new();
-    let percent_per_letter = 1.0 / (bytes_input.len() as f64);
+    let percent_per_letter = 1.0 / (bytes.len() as f64);
 
-    for &byte in bytes_input {
+    for &byte in bytes {
         let mut key = byte;
 
         // also count upper-case letters (convert to lower-case)

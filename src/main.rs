@@ -56,7 +56,11 @@ pub mod set_01 {
         let expected_result = "Cooking MC's like a pound of bacon";
 
         let string_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
-        let (_, _, result) = cryptopals::find_lowest_score_xor(string_hex, 0x00..0x80);
+        let keys_range_bytes = 0x00..0x80;
+        let (_, _, result_bytes) =
+            cryptopals::find_lowest_score_xor_hex(&string_hex, keys_range_bytes);
+
+        let result = cryptopals::helpers::bytes_to_ascii(&result_bytes);
 
         assert_eq!(result, expected_result);
         println!("ok");
@@ -73,11 +77,13 @@ pub mod set_01 {
         let mut best_result = String::new();
 
         for string_hex in all_strings_hex.lines() {
-            let (_, score, result) = cryptopals::find_lowest_score_xor(string_hex, 0x00..0x80);
+            let keys_range_bytes = 0x00..0x80;
+            let (_, score, result_bytes) =
+                cryptopals::find_lowest_score_xor_hex(&string_hex, keys_range_bytes);
 
             if score < best_score {
                 best_score = score;
-                best_result = result;
+                best_result = cryptopals::helpers::bytes_to_ascii(&result_bytes);
             }
         }
 

@@ -13,6 +13,7 @@ fn main() {
     set_01::challenge_04();
     set_01::challenge_05();
     set_01::challenge_06_1();
+    set_01::challenge_06_2();
 
     // play_with_xor();
 
@@ -191,5 +192,38 @@ pub mod set_01 {
 
         assert_eq!(result, expected_result);
         println!("ok");
+    }
+
+    pub fn challenge_06_2() {
+        super::print_header(1, 6.2);
+        println!("???\n");
+
+        let cypher_text_base64: String =
+            fs::read_to_string("original/6.txt").expect("could not read file");
+
+        let cypher_text_bytes = cryptopals::helpers::base64_to_bytes(
+            &cryptopals::helpers::unicode_to_bytes(&cypher_text_base64),
+        );
+
+        let keysize: usize = cryptopals::guess_keysize_from_hamming_distance(&cypher_text_bytes);
+        println!("keysize: {keysize}");
+
+        let transposed_vecs = cryptopals::transpose_bytes(&cypher_text_bytes, keysize);
+        let mut proposed_key = Vec::new();
+
+        for block in 0..keysize {
+            let keys_range_bytes = 0x00..0x80;
+            let (key, score, result_bytes) =
+                cryptopals::find_lowest_score_xor_bytes(&transposed_vecs[block], keys_range_bytes);
+
+            proposed_key.push(key);
+            println!("{key}: {score}");
+        }
+
+        let result_bytes = cryptopals::fixed_xor_bytes(&cypher_text_bytes, &proposed_key);
+        let result = cryptopals::helpers::bytes_to_ascii(&result_bytes);
+        println!("{result}");
+
+        // assert_eq!(result, expected_result);
     }
 }

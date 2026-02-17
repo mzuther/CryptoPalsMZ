@@ -119,3 +119,55 @@ pub fn hamming_distance_bits_bytes(bytes_1: &[u8], bytes_2: &[u8]) -> u64 {
 
     differing_bits
 }
+
+pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> usize {
+    let mut best_keysize = 0;
+    let mut best_edit_size = 1000.0;
+
+    let keysize_range = 2..41;
+    for keysize in keysize_range {
+        let mut iter_chunks = bytes.chunks_exact(keysize);
+
+        let chunk_1 = iter_chunks.next().expect("text should be long enough");
+        let chunk_2 = iter_chunks.next().expect("text should be long enough");
+        let chunk_3 = iter_chunks.next().expect("text should be long enough");
+        let chunk_4 = iter_chunks.next().expect("text should be long enough");
+
+        let edit_size_1 = crate::hamming_distance_bits_bytes(&chunk_1, &chunk_2) as f64;
+        let edit_size_2 = crate::hamming_distance_bits_bytes(&chunk_2, &chunk_3) as f64;
+        let edit_size_3 = crate::hamming_distance_bits_bytes(&chunk_3, &chunk_4) as f64;
+
+        let edit_size_normalized = (edit_size_1 + edit_size_2 + edit_size_3) / 3.0;
+        let edit_size_normalized = edit_size_normalized / (keysize as f64);
+
+        if edit_size_normalized < best_edit_size {
+            best_edit_size = edit_size_normalized;
+            best_keysize = keysize;
+        }
+
+        println!("{keysize}: {edit_size_normalized}");
+    }
+
+    assert_ne!(best_keysize, 0);
+
+    best_keysize
+}
+
+pub fn transpose_bytes(bytes: &[u8], keysize: usize) -> Vec<Vec<u8>> {
+    let iter_blocks = bytes.chunks_exact(keysize);
+    let mut transposed_vecs: Vec<Vec<u8>> = Vec::with_capacity(keysize);
+
+    let block_capacity = (bytes.len() / keysize) + 1;
+
+    for _ in 0..keysize {
+        transposed_vecs.push(Vec::with_capacity(block_capacity));
+    }
+
+    for block in iter_blocks {
+        for block_index in 0..keysize {
+            transposed_vecs[block_index].push(block[block_index]);
+        }
+    }
+
+    transposed_vecs
+}

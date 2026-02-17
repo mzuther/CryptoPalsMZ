@@ -1,10 +1,15 @@
-pub fn string_to_base64(string_input: &str, is_hex_string: bool) -> String {
-    let string_bytes = crate::helpers::string_to_bytes(string_input, is_hex_string);
-    let encoded_bytes = bytes_to_base64(&string_bytes);
+pub fn unicode_to_base64(string_unicode: &str) -> String {
+    let bytes = crate::helpers::unicode_to_bytes(&string_unicode);
+    let encoded_bytes = bytes_to_base64(&bytes);
 
-    let encoded_string = bytes_to_ascii(&encoded_bytes);
+    bytes_to_ascii(&encoded_bytes)
+}
 
-    encoded_string
+pub fn hex_to_base64(string_hex: &str) -> String {
+    let bytes = crate::helpers::hex_to_bytes(&string_hex);
+    let encoded_bytes = bytes_to_base64(&bytes);
+
+    bytes_to_ascii(&encoded_bytes)
 }
 
 pub fn bytes_to_base64(string_bytes: &Vec<u8>) -> Vec<u8> {
@@ -58,16 +63,12 @@ pub fn bytes_to_ascii(bytes: &Vec<u8>) -> String {
     bytes_as_string
 }
 
-pub fn string_to_bytes(string_input: &str, is_hex_string: bool) -> Vec<u8> {
-    let string_bytes;
+pub fn unicode_to_bytes(string_unicode: &str) -> Vec<u8> {
+    Vec::from(string_unicode)
+}
 
-    if is_hex_string {
-        string_bytes = hex::decode(string_input).expect("Broken conversion");
-    } else {
-        string_bytes = Vec::from(string_input);
-    }
-
-    string_bytes
+pub fn hex_to_bytes(string_hex: &str) -> Vec<u8> {
+    hex::decode(string_hex).expect("Broken conversion")
 }
 
 pub fn split_bytes_into_segments(

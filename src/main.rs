@@ -27,7 +27,7 @@ pub mod set_01 {
         let expected_result = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
 
         let string_hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-        let result = cryptopals::helpers::string_to_base64(string_hex, true);
+        let result = cryptopals::helpers::hex_to_base64(string_hex);
 
         assert_eq!(result, expected_result);
         println!("ok");
@@ -41,8 +41,8 @@ pub mod set_01 {
         let string_hex_2 = "686974207468652062756c6c277320657965";
 
         let bytes_xor = cryptopals::fixed_xor(
-            &cryptopals::helpers::string_to_bytes(string_hex_1, true),
-            &cryptopals::helpers::string_to_bytes(string_hex_2, true),
+            &cryptopals::helpers::hex_to_bytes(string_hex_1),
+            &cryptopals::helpers::hex_to_bytes(string_hex_2),
         );
 
         let result = cryptopals::helpers::bytes_to_hex(&bytes_xor);

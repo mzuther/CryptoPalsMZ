@@ -19,8 +19,8 @@ pub fn fixed_xor(bytes_input: &Vec<u8>, bytes_key: &Vec<u8>) -> Vec<u8> {
 }
 
 pub fn repeating_key_xor(plain_text: &str, key: &str) -> String {
-    let plain_text_bytes = crate::helpers::string_to_bytes(plain_text, false);
-    let key_bytes = crate::helpers::string_to_bytes(key, false);
+    let plain_text_bytes = crate::helpers::unicode_to_bytes(plain_text);
+    let key_bytes = crate::helpers::unicode_to_bytes(key);
 
     let bytes_xor = fixed_xor(&plain_text_bytes, &key_bytes);
     let string_encoded = crate::helpers::bytes_to_hex(&bytes_xor);
@@ -37,8 +37,8 @@ pub fn find_lowest_score_xor(string_encoded: &str, keys_int: Range<u32>) -> (cha
         let key_char = char::from_u32(key_int).expect("invalid character");
         let key_hex = hex::encode(key_char.to_string());
 
-        let bytes_encoded = crate::helpers::string_to_bytes(string_encoded, true);
-        let bytes_key = crate::helpers::string_to_bytes(&key_hex, true);
+        let bytes_encoded = crate::helpers::hex_to_bytes(string_encoded);
+        let bytes_key = crate::helpers::hex_to_bytes(&key_hex);
 
         let bytes_xor = fixed_xor(&bytes_encoded, &bytes_key);
         let score = score_letter_frequencies(&bytes_xor);
@@ -97,8 +97,8 @@ fn score_letter_frequencies(bytes_input: &Vec<u8>) -> f64 {
 
 pub fn hamming_distance_bits(string_1: &str, string_2: &str) -> u64 {
     let bytes_xor = fixed_xor(
-        &crate::helpers::string_to_bytes(string_1, false),
-        &crate::helpers::string_to_bytes(string_2, false),
+        &&crate::helpers::unicode_to_bytes(string_1),
+        &crate::helpers::unicode_to_bytes(string_2),
     );
 
     let mut differing_bits = 0;

@@ -40,7 +40,7 @@ pub mod set_01 {
         let string_hex_1 = "1c0111001f010100061a024b53535009181c";
         let string_hex_2 = "686974207468652062756c6c277320657965";
 
-        let bytes_xor = cryptopals::fixed_xor(
+        let bytes_xor = cryptopals::fixed_xor_bytes(
             &cryptopals::helpers::hex_to_bytes(string_hex_1),
             &cryptopals::helpers::hex_to_bytes(string_hex_2),
         );
@@ -93,7 +93,8 @@ pub mod set_01 {
             "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
         let key = "ICE";
 
-        let result = cryptopals::repeating_key_xor(&plain_text, &key);
+        let encoded_bytes = cryptopals::fixed_xor_unicode(&plain_text, &key);
+        let result = cryptopals::helpers::bytes_to_hex(&encoded_bytes);
 
         assert_eq!(result, expected_result);
         println!("ok");

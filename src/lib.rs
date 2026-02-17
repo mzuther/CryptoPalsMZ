@@ -4,28 +4,25 @@ use std::ops::Range;
 pub mod constants;
 pub mod helpers;
 
-pub fn fixed_xor(bytes_input: &Vec<u8>, bytes_key: &Vec<u8>) -> Vec<u8> {
+pub fn fixed_xor_unicode(plain_text: &str, key: &str) -> Vec<u8> {
+    fixed_xor_bytes(
+        &crate::helpers::unicode_to_bytes(plain_text),
+        &crate::helpers::unicode_to_bytes(key),
+    )
+}
+
+pub fn fixed_xor_bytes(bytes_input: &Vec<u8>, bytes_key: &Vec<u8>) -> Vec<u8> {
     let mut bytes_xor = Vec::new();
     let mut key_iter = bytes_key.iter().cycle();
 
     for &byte_input in bytes_input {
-        let byte_key = key_iter.next().expect("no key left");
+        let byte_key = key_iter.next().expect("infinite key was finite after all");
         let byte_xor = (byte_input | byte_key) & !(byte_input & byte_key);
 
         bytes_xor.push(byte_xor);
     }
 
     bytes_xor
-}
-
-pub fn repeating_key_xor(plain_text: &str, key: &str) -> String {
-    let plain_text_bytes = crate::helpers::unicode_to_bytes(plain_text);
-    let key_bytes = crate::helpers::unicode_to_bytes(key);
-
-    let bytes_xor = fixed_xor(&plain_text_bytes, &key_bytes);
-    let string_encoded = crate::helpers::bytes_to_hex(&bytes_xor);
-
-    string_encoded
 }
 
 pub fn find_lowest_score_xor(string_encoded: &str, keys_int: Range<u32>) -> (char, f64, String) {
@@ -40,7 +37,7 @@ pub fn find_lowest_score_xor(string_encoded: &str, keys_int: Range<u32>) -> (cha
         let bytes_encoded = crate::helpers::hex_to_bytes(string_encoded);
         let bytes_key = crate::helpers::hex_to_bytes(&key_hex);
 
-        let bytes_xor = fixed_xor(&bytes_encoded, &bytes_key);
+        let bytes_xor = fixed_xor_bytes(&bytes_encoded, &bytes_key);
         let score = score_letter_frequencies(&bytes_xor);
 
         if score < best_score {
@@ -96,7 +93,7 @@ fn score_letter_frequencies(bytes_input: &Vec<u8>) -> f64 {
 }
 
 pub fn hamming_distance_bits(string_1: &str, string_2: &str) -> u64 {
-    let bytes_xor = fixed_xor(
+    let bytes_xor = fixed_xor_bytes(
         &&crate::helpers::unicode_to_bytes(string_1),
         &crate::helpers::unicode_to_bytes(string_2),
     );

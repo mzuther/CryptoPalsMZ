@@ -128,10 +128,11 @@ pub mod set_01 {
 
         let string_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
         let keys_range_bytes = 0x00..0x80;
-        let score = cryptopals::find_lowest_score_xor_bytes(
+        let scores = cryptopals::find_lowest_score_xor_bytes(
             &cryptopals::helpers::hex_to_bytes(&string_hex),
             keys_range_bytes,
         );
+        let score = scores.first().expect("there should always be one element");
 
         let result = cryptopals::helpers::bytes_to_ascii(&score.decoded);
 
@@ -154,10 +155,12 @@ pub mod set_01 {
 
         for string_hex in all_strings_hex.lines() {
             let keys_range_bytes = 0x00..0x80;
-            let score = cryptopals::find_lowest_score_xor_bytes(
+            let mut scores = cryptopals::find_lowest_score_xor_bytes(
                 &cryptopals::helpers::hex_to_bytes(&string_hex),
                 keys_range_bytes,
             );
+            scores.reverse();
+            let score = scores.pop().expect("there should always be one element");
 
             if score.score < best_score.score {
                 best_score = score;
@@ -217,8 +220,9 @@ pub mod set_01 {
 
         for block in 0..score.keysize {
             let keys_range_bytes = 0x00..0x80;
-            let score =
+            let scores =
                 cryptopals::find_lowest_score_xor_bytes(&transposed_vecs[block], keys_range_bytes);
+            let score = scores.first().expect("there should always be one element");
 
             proposed_key.push(score.key);
             println!("{}: {}", score.key, score.score);

@@ -123,13 +123,10 @@ pub fn hamming_distance_bits_bytes(bytes_1: &[u8], bytes_2: &[u8]) -> u64 {
     differing_bits
 }
 
-pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> crate::constants::ScoreKeysize {
-    let mut best_score = crate::constants::ScoreKeysize {
-        keysize: 0,
-        score: 1000.0,
-    };
-
+pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> Vec<crate::constants::ScoreKeysize> {
     let keysize_range = 2..41;
+    let mut scores: Vec<crate::constants::ScoreKeysize> = Vec::with_capacity(keysize_range.len());
+
     for keysize in keysize_range {
         let mut iter_chunks = bytes.chunks_exact(keysize);
 
@@ -151,14 +148,15 @@ pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> crate::constants::Sc
 
         println!("{}: {}", score.keysize, score.score);
 
-        if score.score < best_score.score {
-            best_score = score;
-        }
+        scores.push(score);
     }
 
-    assert_ne!(best_score.keysize, 0);
+    // order by score, with lowest score first
+    scores.sort_by(|a, b| a.score.partial_cmp(&b.score).unwrap());
 
-    best_score
+    assert_ne!(scores.first().expect("there should always be one element").keysize, 0);
+
+    scores
 }
 
 pub fn transpose_bytes(bytes: &[u8], keysize: usize) -> Vec<Vec<u8>> {

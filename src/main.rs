@@ -212,7 +212,8 @@ pub mod set_01 {
             &cryptopals::helpers::unicode_to_bytes(&cypher_text_base64),
         );
 
-        let score = cryptopals::guess_keysize_from_hamming_distance(&cypher_text_bytes);
+        let scores = cryptopals::guess_keysize_from_hamming_distance(&cypher_text_bytes);
+        let score = scores.first().expect("there should always be one element");
         println!("keysize: {}", score.keysize);
 
         let transposed_vecs = cryptopals::transpose_bytes(&cypher_text_bytes, score.keysize);

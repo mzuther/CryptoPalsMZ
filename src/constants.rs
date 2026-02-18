@@ -48,3 +48,8 @@ pub struct ScoreXOR {
     pub score: f64,
     pub decoded: Vec<u8>,
 }
+
+pub struct ScoreKeysize {
+    pub keysize: usize,
+    pub score: f64,
+}

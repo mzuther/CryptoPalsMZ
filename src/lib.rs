@@ -29,7 +29,7 @@ pub fn find_lowest_score_xor_bytes(
     bytes: &[u8],
     keys_range_bytes: Range<u8>,
 ) -> crate::constants::ScoreXOR {
-    let mut best_score = crate::constants::ScoreXOR{
+    let mut best_score = crate::constants::ScoreXOR {
         key: 0xff,
         score: 1000.0,
         decoded: Vec::new(),
@@ -40,7 +40,7 @@ pub fn find_lowest_score_xor_bytes(
         let bytes_xor = fixed_xor_bytes(&bytes, &key_vector);
         let score = score_letter_frequencies(&bytes_xor);
 
-        let score = crate::constants::ScoreXOR{
+        let score = crate::constants::ScoreXOR {
             key: key_byte,
             score: score,
             decoded: bytes_xor,
@@ -126,9 +126,11 @@ pub fn hamming_distance_bits_bytes(bytes_1: &[u8], bytes_2: &[u8]) -> u64 {
     differing_bits
 }
 
-pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> usize {
-    let mut best_keysize = 0;
-    let mut best_edit_size = 1000.0;
+pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> crate::constants::ScoreKeysize {
+    let mut best_score = crate::constants::ScoreKeysize {
+        keysize: 0,
+        score: 1000.0,
+    };
 
     let keysize_range = 2..41;
     for keysize in keysize_range {
@@ -144,19 +146,22 @@ pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> usize {
         let edit_size_3 = crate::hamming_distance_bits_bytes(&chunk_3, &chunk_4) as f64;
 
         let edit_size_normalized = (edit_size_1 + edit_size_2 + edit_size_3) / 3.0;
-        let edit_size_normalized = edit_size_normalized / (keysize as f64);
 
-        if edit_size_normalized < best_edit_size {
-            best_edit_size = edit_size_normalized;
-            best_keysize = keysize;
+        let score = crate::constants::ScoreKeysize {
+            keysize: keysize,
+            score: edit_size_normalized / (keysize as f64),
+        };
+
+        println!("{}: {}", score.keysize, score.score);
+
+        if score.score < best_score.score {
+            best_score = score;
         }
-
-        println!("{keysize}: {edit_size_normalized}");
     }
 
-    assert_ne!(best_keysize, 0);
+    assert_ne!(best_score.keysize, 0);
 
-    best_keysize
+    best_score
 }
 
 pub fn transpose_bytes(bytes: &[u8], keysize: usize) -> Vec<Vec<u8>> {

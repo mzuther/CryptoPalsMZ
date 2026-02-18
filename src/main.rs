@@ -209,13 +209,13 @@ pub mod set_01 {
             &cryptopals::helpers::unicode_to_bytes(&cypher_text_base64),
         );
 
-        let keysize: usize = cryptopals::guess_keysize_from_hamming_distance(&cypher_text_bytes);
-        println!("keysize: {keysize}");
+        let score = cryptopals::guess_keysize_from_hamming_distance(&cypher_text_bytes);
+        println!("keysize: {}", score.keysize);
 
-        let transposed_vecs = cryptopals::transpose_bytes(&cypher_text_bytes, keysize);
+        let transposed_vecs = cryptopals::transpose_bytes(&cypher_text_bytes, score.keysize);
         let mut proposed_key = Vec::new();
 
-        for block in 0..keysize {
+        for block in 0..score.keysize {
             let keys_range_bytes = 0x00..0x80;
             let score =
                 cryptopals::find_lowest_score_xor_bytes(&transposed_vecs[block], keys_range_bytes);

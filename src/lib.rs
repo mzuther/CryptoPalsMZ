@@ -154,6 +154,10 @@ pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> usize {
 }
 
 pub fn transpose_bytes(bytes: &[u8], keysize: usize) -> Vec<Vec<u8>> {
+    if keysize == 1 {
+        return vec![bytes.to_vec()];
+    }
+
     let iter_blocks = bytes.chunks_exact(keysize);
     let mut transposed_vecs: Vec<Vec<u8>> = Vec::with_capacity(keysize);
 

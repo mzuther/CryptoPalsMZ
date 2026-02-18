@@ -148,8 +148,8 @@ pub mod set_01 {
             fs::read_to_string("original/4.txt").expect("could not read file");
 
         let mut best_score = cryptopals::constants::ScoreXOR {
-            key: 0xff,
             score: 1000.0,
+            key: 0xff,
             decoded: Vec::new(),
         };
 
@@ -213,8 +213,15 @@ pub mod set_01 {
         );
 
         let scores = cryptopals::guess_keysize_from_hamming_distance(&cypher_text_bytes);
-        let score = scores.first().expect("there should always be one element");
-        println!("keysize: {}", score.keysize);
+
+        println!("[keysizes]");
+        for score in scores.get(0..5).unwrap() {
+            println!("{}: {}", score.keysize, score.score);
+        }
+        println!("");
+
+        let xth_score = 0;
+        let score = scores.get(xth_score).expect("there should always be one element");
 
         let transposed_vecs = cryptopals::transpose_bytes(&cypher_text_bytes, score.keysize);
         let mut proposed_key = Vec::new();
@@ -223,10 +230,21 @@ pub mod set_01 {
             let keys_range_bytes = 0x00..0x80;
             let scores =
                 cryptopals::find_lowest_score_xor_bytes(&transposed_vecs[block], keys_range_bytes);
+
+            println!("[block {}/{}]", block + 1, score.keysize);
+            for score in scores.get(0..10).unwrap() {
+                println!(
+                    "{}: {} -> {}",
+                    score.key,
+                    score.score,
+                    cryptopals::helpers::bytes_to_ascii(score.decoded.get(0..30).unwrap())
+                );
+            }
+            println!("");
+
             let score = scores.first().expect("there should always be one element");
 
             proposed_key.push(score.key);
-            println!("{}: {}", score.key, score.score);
         }
 
         let result_bytes = cryptopals::fixed_xor_bytes(&cypher_text_bytes, &proposed_key);

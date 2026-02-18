@@ -43,15 +43,15 @@ pub fn get_english_letter_frequencies() -> HashMap<u8, f64> {
 
 pub const LOOKUP_BITS_IN_NIBBLE: [u8; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct ScoreXOR {
-    pub key: u8,
     pub score: f64,
+    pub key: u8,
     pub decoded: Vec<u8>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct ScoreKeysize {
-    pub keysize: usize,
     pub score: f64,
+    pub keysize: usize,
 }

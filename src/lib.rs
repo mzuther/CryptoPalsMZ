@@ -37,8 +37,8 @@ pub fn find_lowest_score_xor_bytes(
         let score = score_letter_frequencies(&bytes_xor);
 
         let score = crate::constants::ScoreXOR {
-            key: key_byte,
             score: score,
+            key: key_byte,
             decoded: bytes_xor,
         };
 
@@ -46,7 +46,7 @@ pub fn find_lowest_score_xor_bytes(
     }
 
     // order by score, with lowest score first
-    scores.sort_by(|a, b| a.score.partial_cmp(&b.score).unwrap());
+    scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
 
     scores
 }
@@ -142,17 +142,15 @@ pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> Vec<crate::constants
         let edit_size_normalized = (edit_size_1 + edit_size_2 + edit_size_3) / 3.0;
 
         let score = crate::constants::ScoreKeysize {
-            keysize: keysize,
             score: edit_size_normalized / (keysize as f64),
+            keysize: keysize,
         };
-
-        println!("{}: {}", score.keysize, score.score);
 
         scores.push(score);
     }
 
     // order by score, with lowest score first
-    scores.sort_by(|a, b| a.score.partial_cmp(&b.score).unwrap());
+    scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
 
     assert_ne!(scores.first().expect("there should always be one element").keysize, 0);
 

@@ -28,24 +28,30 @@ pub fn fixed_xor_bytes(bytes_input: &[u8], bytes_key: &[u8]) -> Vec<u8> {
 pub fn find_lowest_score_xor_bytes(
     bytes: &[u8],
     keys_range_bytes: Range<u8>,
-) -> (u8, f64, Vec<u8>) {
-    let mut best_key = 0xff;
-    let mut best_score = 1000.0;
-    let mut best_decoded = Vec::new();
+) -> crate::constants::ScoreXOR {
+    let mut best_score = crate::constants::ScoreXOR{
+        key: 0xff,
+        score: 1000.0,
+        decoded: Vec::new(),
+    };
 
     for key_byte in keys_range_bytes {
         let key_vector = vec![key_byte];
         let bytes_xor = fixed_xor_bytes(&bytes, &key_vector);
         let score = score_letter_frequencies(&bytes_xor);
 
-        if score < best_score {
-            best_key = key_byte;
+        let score = crate::constants::ScoreXOR{
+            key: key_byte,
+            score: score,
+            decoded: bytes_xor,
+        };
+
+        if score.score < best_score.score {
             best_score = score;
-            best_decoded = bytes_xor;
         }
     }
 
-    (best_key, best_score, best_decoded)
+    best_score
 }
 
 fn score_letter_frequencies(bytes: &[u8]) -> f64 {

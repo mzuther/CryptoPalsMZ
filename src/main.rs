@@ -128,12 +128,12 @@ pub mod set_01 {
 
         let string_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
         let keys_range_bytes = 0x00..0x80;
-        let (_, _, result_bytes) = cryptopals::find_lowest_score_xor_bytes(
+        let score = cryptopals::find_lowest_score_xor_bytes(
             &cryptopals::helpers::hex_to_bytes(&string_hex),
             keys_range_bytes,
         );
 
-        let result = cryptopals::helpers::bytes_to_ascii(&result_bytes);
+        let result = cryptopals::helpers::bytes_to_ascii(&score.decoded);
 
         assert_eq!(result, expected_result);
         println!("ok");
@@ -146,23 +146,27 @@ pub mod set_01 {
         let all_strings_hex: String =
             fs::read_to_string("original/4.txt").expect("could not read file");
 
-        let mut best_score = 1000.0;
-        let mut best_result = String::new();
+        let mut best_score = cryptopals::constants::ScoreXOR {
+            key: 0xff,
+            score: 1000.0,
+            decoded: Vec::new(),
+        };
 
         for string_hex in all_strings_hex.lines() {
             let keys_range_bytes = 0x00..0x80;
-            let (_, score, result_bytes) = cryptopals::find_lowest_score_xor_bytes(
+            let score = cryptopals::find_lowest_score_xor_bytes(
                 &cryptopals::helpers::hex_to_bytes(&string_hex),
                 keys_range_bytes,
             );
 
-            if score < best_score {
+            if score.score < best_score.score {
                 best_score = score;
-                best_result = cryptopals::helpers::bytes_to_ascii(&result_bytes);
             }
         }
 
-        assert_eq!(best_result, expected_result);
+        let result = cryptopals::helpers::bytes_to_ascii(&best_score.decoded);
+
+        assert_eq!(result, expected_result);
         println!("ok");
     }
 
@@ -213,11 +217,11 @@ pub mod set_01 {
 
         for block in 0..keysize {
             let keys_range_bytes = 0x00..0x80;
-            let (key, score, result_bytes) =
+            let score =
                 cryptopals::find_lowest_score_xor_bytes(&transposed_vecs[block], keys_range_bytes);
 
-            proposed_key.push(key);
-            println!("{key}: {score}");
+            proposed_key.push(score.key);
+            println!("{}: {}", score.key, score.score);
         }
 
         let result_bytes = cryptopals::fixed_xor_bytes(&cypher_text_bytes, &proposed_key);

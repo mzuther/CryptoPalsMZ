@@ -130,26 +130,31 @@ pub fn hamming_distance_bits_bytes(bytes_1: &[u8], bytes_2: &[u8]) -> u64 {
     differing_bits
 }
 
-pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> Vec<crate::constants::ScoreKeysize> {
-    let keysize_range = 2..41;
+pub fn guess_keysize_from_hamming_distance(
+    bytes: &[u8],
+    keysize_range: Range<usize>,
+) -> Vec<crate::constants::ScoreKeysize> {
     let mut scores: Vec<crate::constants::ScoreKeysize> = Vec::with_capacity(keysize_range.len());
 
     for keysize in keysize_range {
+        let mut edit_size = 0.0;
+        let number_of_calculations = 3;
+
         let mut iter_chunks = bytes.chunks_exact(keysize);
+        let mut chunk_1 = iter_chunks.next().expect("text should be long enough");
 
-        let chunk_1 = iter_chunks.next().expect("text should be long enough");
-        let chunk_2 = iter_chunks.next().expect("text should be long enough");
-        let chunk_3 = iter_chunks.next().expect("text should be long enough");
-        let chunk_4 = iter_chunks.next().expect("text should be long enough");
+        for _ in 0..number_of_calculations {
+            let chunk_2 = iter_chunks.next().expect("text should be long enough");
+            edit_size += crate::hamming_distance_bits_bytes(&chunk_1, &chunk_2) as f64;
 
-        let edit_size_1 = crate::hamming_distance_bits_bytes(&chunk_1, &chunk_2) as f64;
-        let edit_size_2 = crate::hamming_distance_bits_bytes(&chunk_2, &chunk_3) as f64;
-        let edit_size_3 = crate::hamming_distance_bits_bytes(&chunk_3, &chunk_4) as f64;
+            chunk_1 = chunk_2;
+        }
 
-        let edit_size_normalized = (edit_size_1 + edit_size_2 + edit_size_3) / 3.0;
+        let edit_size_average = edit_size / (number_of_calculations as f64);
+        let edit_size_normalized = edit_size_average / (keysize as f64);
 
         let score = crate::constants::ScoreKeysize {
-            score: edit_size_normalized / (keysize as f64),
+            score: edit_size_normalized,
             keysize: keysize,
         };
 
@@ -158,14 +163,6 @@ pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> Vec<crate::constants
 
     // order by score, with lowest score first
     scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
-
-    assert_ne!(
-        scores
-            .first()
-            .expect("there should always be one element")
-            .keysize,
-        0
-    );
 
     scores
 }

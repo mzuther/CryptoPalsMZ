@@ -13,7 +13,8 @@ fn main() {
         &cryptopals::helpers::unicode_to_bytes(&cypher_text_base64),
     );
 
-    let scores = cryptopals::guess_keysize_from_hamming_distance(&cypher_text_bytes);
+    let keysize_range = 2..41;
+    let scores = cryptopals::guess_keysize_from_hamming_distance(&cypher_text_bytes, keysize_range);
 
     println!("[keysizes]");
     for score in scores.get(0..5).unwrap() {
@@ -21,9 +22,9 @@ fn main() {
     }
     println!("");
 
-    let xth_score = 0;
+    let take_xth_score = 0;
     let score = scores
-        .get(xth_score)
+        .get(take_xth_score)
         .expect("there should always be a few elements");
 
     let transposed_vecs = cryptopals::transpose_bytes(&cypher_text_bytes, score.keysize);

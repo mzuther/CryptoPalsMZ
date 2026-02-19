@@ -279,4 +279,70 @@ mod tests {
 
         assert_eq!(result, expected_result);
     }
+
+    // contains complete base64 alphabet
+    const BASE64_COMPLETE_ALPHABET: &str =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    const BASE64_COMPLETE_ALPHABET_HEX: &str =
+        "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
+
+    #[test]
+    fn conversion_hex_to_base64() {
+        let hex_string = BASE64_COMPLETE_ALPHABET_HEX;
+        let expected_result = BASE64_COMPLETE_ALPHABET;
+
+        let result = hex_to_base64(&hex_string);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_hex_to_base64_padding_1() {
+        let hex_string = format!("{BASE64_COMPLETE_ALPHABET_HEX}0011");
+        let expected_result = format!("{BASE64_COMPLETE_ALPHABET}ABE=");
+
+        let result = hex_to_base64(&hex_string);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_hex_to_base64_padding_2() {
+        let hex_string = format!("{BASE64_COMPLETE_ALPHABET_HEX}00");
+        let expected_result = format!("{BASE64_COMPLETE_ALPHABET}AA==");
+
+        let result = hex_to_base64(&hex_string);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_base64_to_hex() {
+        let base64_string = BASE64_COMPLETE_ALPHABET;
+        let expected_result = BASE64_COMPLETE_ALPHABET_HEX;
+
+        let result = base64_to_hex(&base64_string);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_base64_to_hex_padding_1() {
+        let base64_string = format!("{BASE64_COMPLETE_ALPHABET}ABE=");
+        let expected_result = format!("{BASE64_COMPLETE_ALPHABET_HEX}0011");
+
+        let result = base64_to_hex(&base64_string);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_base64_to_hex_padding_2() {
+        let base64_string = format!("{BASE64_COMPLETE_ALPHABET}AA==");
+        let expected_result = format!("{BASE64_COMPLETE_ALPHABET_HEX}00");
+
+        let result = base64_to_hex(&base64_string);
+
+        assert_eq!(result, expected_result);
+    }
 }

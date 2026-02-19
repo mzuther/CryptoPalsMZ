@@ -192,3 +192,19 @@ pub fn transpose_bytes(bytes: &[u8], keysize: usize) -> Vec<Vec<u8>> {
 
     transposed_vecs
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unit_hamming_distance_bits() {
+        let text_1 = "this is a test";
+        let text_2 = "wokka wokka!!!";
+        let expected_result = 37;
+
+        let result = hamming_distance_bits(text_1, text_2);
+
+        assert_eq!(result, expected_result);
+    }
+}

@@ -51,9 +51,9 @@ pub fn find_lowest_score_xor_bytes(
     scores
 }
 
-fn score_letter_frequencies(bytes: &[u8]) -> f64 {
+fn get_letter_frequencies(bytes: &[u8]) -> HashMap<u8, f64> {
     let mut letter_frequencies = HashMap::new();
-    let percent_per_letter = 1.0 / (bytes.len() as f64);
+    let percent_per_byte = 1.0 / (bytes.len() as f64);
 
     for &byte in bytes {
         let mut key = byte;
@@ -64,11 +64,17 @@ fn score_letter_frequencies(bytes: &[u8]) -> f64 {
         }
 
         let count = letter_frequencies.entry(key).or_insert(0.0);
-        *count += percent_per_letter;
+        *count += percent_per_byte;
     }
 
+    letter_frequencies
+}
+
+fn score_letter_frequencies(bytes: &[u8]) -> f64 {
+    let letter_frequencies = get_letter_frequencies(&bytes);
     let english_letter_frequencies = crate::constants::get_english_letter_frequencies();
-    let mut score = 0.0;
+
+    let mut total_score = 0.0;
 
     // bonus for letters matching expected frequency
     for (letter, percentage_expected) in english_letter_frequencies {
@@ -76,7 +82,7 @@ fn score_letter_frequencies(bytes: &[u8]) -> f64 {
         let score_diff = percentage_expected - percentage_found;
 
         // higher frequencies are just as bad as lower frequencies
-        score += score_diff.abs();
+        total_score += score_diff.abs();
     }
 
     // malus for non-letters
@@ -85,12 +91,12 @@ fn score_letter_frequencies(bytes: &[u8]) -> f64 {
         if letter < 0x61 || letter > 0x7a {
             // with the exception of space, comma, and dot
             if letter != 0x20 && letter != 0x2c && letter != 0x2e {
-                score += percentage_found;
+                total_score += percentage_found;
             }
         }
     }
 
-    score
+    total_score
 }
 
 pub fn hamming_distance_bits(string_1: &str, string_2: &str) -> u64 {
@@ -152,7 +158,13 @@ pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> Vec<crate::constants
     // order by score, with lowest score first
     scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
 
-    assert_ne!(scores.first().expect("there should always be one element").keysize, 0);
+    assert_ne!(
+        scores
+            .first()
+            .expect("there should always be one element")
+            .keysize,
+        0
+    );
 
     scores
 }

@@ -171,30 +171,35 @@ pub fn guess_keysize_from_hamming_distance(bytes: &[u8]) -> Vec<crate::constants
 }
 
 pub fn transpose_bytes(bytes: &[u8], keysize: usize) -> Vec<Vec<u8>> {
+    assert!(keysize > 0);
+
+    // may come in useful for automatic processing (single-byte keys)
     if keysize == 1 {
         return vec![bytes.to_vec()];
     }
 
-    let iter_blocks = bytes.chunks_exact(keysize);
-    let mut transposed_vecs: Vec<Vec<u8>> = Vec::with_capacity(keysize);
-
+    let mut transposed_blocks: Vec<Vec<u8>> = Vec::with_capacity(keysize);
     let block_capacity = (bytes.len() / keysize) + 1;
 
     for _ in 0..keysize {
-        transposed_vecs.push(Vec::with_capacity(block_capacity));
+        transposed_blocks.push(Vec::with_capacity(block_capacity));
     }
 
-    for block in iter_blocks {
-        for block_index in 0..keysize {
-            transposed_vecs[block_index].push(block[block_index]);
+    for block in bytes.chunks(keysize) {
+        // guard rail: may be lower than "keysize"
+        for block_index in 0..block.len() {
+            let element = block[block_index];
+            transposed_blocks[block_index].push(element);
         }
     }
 
-    transposed_vecs
+    transposed_blocks
 }
 
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use super::*;
 
     #[test]
@@ -206,5 +211,55 @@ mod tests {
         let result = hamming_distance_bits(text_1, text_2);
 
         assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_transpose_bytes_no_transposition() {
+        let bytes = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let keysize = 1;
+
+        let transposed_vecs = transpose_bytes(&bytes, keysize);
+
+        assert_eq!(transposed_vecs.len(), keysize);
+        assert_eq!(transposed_vecs[0], bytes);
+    }
+
+    #[test]
+    fn unit_transpose_bytes_equal_distribution() {
+        let bytes = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let keysize = 2;
+
+        let transposed_vecs = transpose_bytes(&bytes, keysize);
+
+        assert_eq!(transposed_vecs.len(), keysize);
+        assert_eq!(transposed_vecs[0], vec![1, 3, 5, 7, 9]);
+        assert_eq!(transposed_vecs[1], vec![2, 4, 6, 8, 10]);
+    }
+
+    #[test]
+    fn unit_transpose_bytes_unequal_distribution() {
+        let bytes = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let keysize = 3;
+
+        let transposed_vecs = transpose_bytes(&bytes, keysize);
+
+        assert_eq!(transposed_vecs.len(), keysize);
+        assert_eq!(transposed_vecs[0], vec![1, 4, 7, 10]);
+        assert_eq!(transposed_vecs[1], vec![2, 5, 8]);
+        assert_eq!(transposed_vecs[2], vec![3, 6, 9]);
+    }
+
+    #[test]
+    fn unit_transpose_bytes_not_enough_elements() {
+        let bytes = vec![1, 2, 3];
+        let keysize = bytes.len() + 1;
+
+        let transposed_vecs = transpose_bytes(&bytes, keysize);
+
+        assert_eq!(transposed_vecs.len(), keysize);
+        assert_eq!(transposed_vecs[0], vec![1]);
+        assert_eq!(transposed_vecs[1], vec![2]);
+        assert_eq!(transposed_vecs[2], vec![3]);
+        assert_eq!(transposed_vecs[3], vec![]);
     }
 }

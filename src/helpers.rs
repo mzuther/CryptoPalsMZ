@@ -201,7 +201,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn conversion_unicode_to_bytes_1() {
+    fn unit_conversion_unicode_to_bytes_1() {
         let unicode_string = "Ab3";
         let expected_result = vec![0x41, 0x62, 0x33];
 
@@ -211,7 +211,7 @@ mod tests {
     }
 
     #[test]
-    fn conversion_unicode_to_bytes_2() {
+    fn unit_conversion_unicode_to_bytes_2() {
         let unicode_string = "Aü你";
         let expected_result = vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0];
 
@@ -221,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn conversion_hex_to_bytes_1() {
+    fn unit_conversion_hex_to_bytes_1() {
         let hex_string = "41c3bce4bda0";
         let expected_result = vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0];
 
@@ -231,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn conversion_hex_to_bytes_2() {
+    fn unit_conversion_hex_to_bytes_2() {
         let hex_string = "21A3DCF4DBA1";
         let expected_result = vec![0x21, 0xa3, 0xdc, 0xf4, 0xdb, 0xa1];
 
@@ -241,7 +241,7 @@ mod tests {
     }
 
     #[test]
-    fn conversion_bytes_to_unicode_1() {
+    fn unit_conversion_bytes_to_unicode_1() {
         let bytes = vec![0x41, 0x62, 0x33];
         let expected_result = "Ab3";
 
@@ -251,7 +251,7 @@ mod tests {
     }
 
     #[test]
-    fn conversion_bytes_to_unicode_2() {
+    fn unit_conversion_bytes_to_unicode_2() {
         let bytes = vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0];
         let expected_result = "Aü你";
 
@@ -261,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn conversion_bytes_to_ascii() {
+    fn unit_conversion_bytes_to_ascii_1() {
         let bytes = vec![0x41, 0x62, 0x33];
         let expected_result = "Ab3";
 
@@ -271,7 +271,17 @@ mod tests {
     }
 
     #[test]
-    fn conversion_bytes_to_hex() {
+    fn unit_conversion_bytes_to_ascii_2() {
+        let bytes = vec![0x46, 0x72, 0xc3, 0xbc, 0x68, 0x6a, 0x61, 0x68, 0x72];
+        let expected_result = "FrÃ¼hjahr";
+
+        let result = bytes_to_ascii(&bytes);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_to_hex() {
         let bytes = vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0];
         let expected_result = "41c3bce4bda0";
 
@@ -287,7 +297,27 @@ mod tests {
         "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
 
     #[test]
-    fn conversion_hex_to_base64() {
+    fn unit_conversion_bytes_to_base64() {
+        let plain_bytes = hex_to_bytes(&BASE64_COMPLETE_ALPHABET_HEX);
+        let expected_result = unicode_to_bytes(&BASE64_COMPLETE_ALPHABET);
+
+        let result = bytes_to_base64(&plain_bytes);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_base64_to_bytes() {
+        let base64_bytes = unicode_to_bytes(&BASE64_COMPLETE_ALPHABET);
+        let expected_result = hex_to_bytes(&BASE64_COMPLETE_ALPHABET_HEX);
+
+        let result = base64_to_bytes(&base64_bytes);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_hex_to_base64() {
         let hex_string = BASE64_COMPLETE_ALPHABET_HEX;
         let expected_result = BASE64_COMPLETE_ALPHABET;
 
@@ -297,7 +327,7 @@ mod tests {
     }
 
     #[test]
-    fn conversion_hex_to_base64_padding_1() {
+    fn unit_conversion_hex_to_base64_padding_1() {
         let hex_string = format!("{BASE64_COMPLETE_ALPHABET_HEX}0011");
         let expected_result = format!("{BASE64_COMPLETE_ALPHABET}ABE=");
 
@@ -307,7 +337,7 @@ mod tests {
     }
 
     #[test]
-    fn conversion_hex_to_base64_padding_2() {
+    fn unit_conversion_hex_to_base64_padding_2() {
         let hex_string = format!("{BASE64_COMPLETE_ALPHABET_HEX}00");
         let expected_result = format!("{BASE64_COMPLETE_ALPHABET}AA==");
 
@@ -317,7 +347,7 @@ mod tests {
     }
 
     #[test]
-    fn conversion_base64_to_hex() {
+    fn unit_conversion_base64_to_hex() {
         let base64_string = BASE64_COMPLETE_ALPHABET;
         let expected_result = BASE64_COMPLETE_ALPHABET_HEX;
 
@@ -327,7 +357,7 @@ mod tests {
     }
 
     #[test]
-    fn conversion_base64_to_hex_padding_1() {
+    fn unit_conversion_base64_to_hex_padding_1() {
         let base64_string = format!("{BASE64_COMPLETE_ALPHABET}ABE=");
         let expected_result = format!("{BASE64_COMPLETE_ALPHABET_HEX}0011");
 
@@ -337,11 +367,31 @@ mod tests {
     }
 
     #[test]
-    fn conversion_base64_to_hex_padding_2() {
+    fn unit_conversion_base64_to_hex_padding_2() {
         let base64_string = format!("{BASE64_COMPLETE_ALPHABET}AA==");
         let expected_result = format!("{BASE64_COMPLETE_ALPHABET_HEX}00");
 
         let result = base64_to_hex(&base64_string);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_unicode_to_base64() {
+        let unicode_string = "Hi. Servus. Grüezi. 你好.";
+        let expected_result = "SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==";
+
+        let result = unicode_to_base64(&unicode_string);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_base64_to_unicode() {
+        let base64_string = "SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==";
+        let expected_result = "Hi. Servus. Grüezi. 你好.";
+
+        let result = base64_to_unicode(&base64_string);
 
         assert_eq!(result, expected_result);
     }

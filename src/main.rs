@@ -5,9 +5,7 @@ use cryptopals;
 fn main() {
     println!("\n[Cryptopals]\n");
 
-    set_01::challenge_01_1();
-    set_01::challenge_01_2();
-    set_01::challenge_01_3();
+    set_01::challenge_01();
     set_01::challenge_02();
     set_01::challenge_03();
     set_01::challenge_04();
@@ -52,8 +50,8 @@ fn play_with_xor() {
 pub mod set_01 {
     use std::fs;
 
-    pub fn challenge_01_1() {
-        super::print_header(1, 1.1);
+    pub fn challenge_01() {
+        super::print_header(1, 1.0);
         let expected_result = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
 
         let string_hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
@@ -64,41 +62,6 @@ pub mod set_01 {
         let string_encoded = expected_result;
         let expected_result_back = string_hex;
         let result_back = cryptopals::helpers::base64_to_hex(&string_encoded);
-
-        assert_eq!(result_back, expected_result_back);
-        println!("ok");
-    }
-
-    pub fn challenge_01_2() {
-        super::print_header(1, 1.2);
-        let expected_result =
-            "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29tLi4=";
-
-        let string_hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d2e2e";
-        let result = cryptopals::helpers::hex_to_base64(string_hex);
-
-        assert_eq!(result, expected_result);
-
-        let string_encoded = expected_result;
-        let expected_result_back = string_hex;
-        let result_back = cryptopals::helpers::base64_to_hex(&string_encoded);
-
-        assert_eq!(result_back, expected_result_back);
-        println!("ok");
-    }
-
-    pub fn challenge_01_3() {
-        super::print_header(1, 1.3);
-        let expected_result = "SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==";
-
-        let plain_text = "Hi. Servus. Grüezi. 你好.";
-        let result = cryptopals::helpers::unicode_to_base64(plain_text);
-
-        assert_eq!(result, expected_result);
-
-        let string_encoded = expected_result;
-        let expected_result_back = plain_text;
-        let result_back = cryptopals::helpers::base64_to_unicode(&string_encoded);
 
         assert_eq!(result_back, expected_result_back);
         println!("ok");

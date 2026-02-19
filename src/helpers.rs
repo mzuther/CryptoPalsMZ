@@ -6,10 +6,6 @@ pub fn hex_to_bytes(string_hex: &str) -> Vec<u8> {
     hex::decode(string_hex).expect("Broken conversion")
 }
 
-pub fn bytes_to_hex(bytes: &[u8]) -> String {
-    hex::encode(bytes)
-}
-
 pub fn bytes_to_unicode(bytes: &[u8]) -> String {
     String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string")
 }
@@ -23,6 +19,10 @@ pub fn bytes_to_ascii(bytes: &[u8]) -> String {
     }
 
     bytes_as_string
+}
+
+pub fn bytes_to_hex(bytes: &[u8]) -> String {
+    hex::encode(bytes)
 }
 
 pub fn unicode_to_base64(string_unicode: &str) -> String {
@@ -194,4 +194,89 @@ fn assemble_bytes_from_segments(bytes: &[u8], bits_per_segment: u8) -> Vec<u8> {
     }
 
     assembled_segments
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn conversion_unicode_to_bytes_1() {
+        let unicode_string = "Ab3";
+        let expected_result = vec![0x41, 0x62, 0x33];
+
+        let result = unicode_to_bytes(&unicode_string);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_unicode_to_bytes_2() {
+        let unicode_string = "Aü你";
+        let expected_result = vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0];
+
+        let result = unicode_to_bytes(&unicode_string);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_hex_to_bytes_1() {
+        let hex_string = "41c3bce4bda0";
+        let expected_result = vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0];
+
+        let result = hex_to_bytes(&hex_string);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_hex_to_bytes_2() {
+        let hex_string = "21A3DCF4DBA1";
+        let expected_result = vec![0x21, 0xa3, 0xdc, 0xf4, 0xdb, 0xa1];
+
+        let result = hex_to_bytes(&hex_string);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_bytes_to_unicode_1() {
+        let bytes = vec![0x41, 0x62, 0x33];
+        let expected_result = "Ab3";
+
+        let result = bytes_to_unicode(&bytes);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_bytes_to_unicode_2() {
+        let bytes = vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0];
+        let expected_result = "Aü你";
+
+        let result = bytes_to_unicode(&bytes);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_bytes_to_ascii() {
+        let bytes = vec![0x41, 0x62, 0x33];
+        let expected_result = "Ab3";
+
+        let result = bytes_to_ascii(&bytes);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn conversion_bytes_to_hex() {
+        let bytes = vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0];
+        let expected_result = "41c3bce4bda0";
+
+        let result = bytes_to_hex(&bytes);
+
+        assert_eq!(result, expected_result);
+    }
 }

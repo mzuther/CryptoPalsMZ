@@ -221,12 +221,12 @@ pub mod set_01 {
         println!("");
 
         let xth_score = 0;
-        let score = scores.get(xth_score).expect("there should always be one element");
+        let score = scores.get(xth_score).expect("there should always be a few elements");
 
         let transposed_vecs = cryptopals::transpose_bytes(&cypher_text_bytes, score.keysize);
         let mut proposed_key = Vec::new();
 
-        for block in 0..score.keysize {
+        for block in 0..transposed_vecs.len() {
             let keys_range_bytes = 0x00..0x80;
             let scores =
                 cryptopals::find_lowest_score_xor_bytes(&transposed_vecs[block], keys_range_bytes);
@@ -243,7 +243,6 @@ pub mod set_01 {
             println!("");
 
             let score = scores.first().expect("there should always be one element");
-
             proposed_key.push(score.key);
         }
 

@@ -45,7 +45,7 @@ pub fn find_lowest_score_xor_bytes(
         scores.push(score);
     }
 
-    // order by score, with lowest score first
+    // sort by score, resulting in lowest score first
     scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
 
     scores
@@ -76,13 +76,14 @@ fn score_letter_frequencies(bytes: &[u8]) -> f64 {
 
     let mut total_score = 0.0;
 
-    // bonus for letters matching expected frequency
+    // bonus for letters matching expected frequency (lower is better)
     for (letter, percentage_expected) in english_letter_frequencies {
         let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
-        let score_diff = percentage_expected - percentage_found;
-
         // higher frequencies are just as bad as lower frequencies
-        total_score += score_diff.abs();
+        let score_diff = (percentage_expected - percentage_found).abs();
+        let score_diff = score_diff.powi(4);
+
+        total_score += score_diff;
     }
 
     // malus for non-letters
@@ -91,7 +92,7 @@ fn score_letter_frequencies(bytes: &[u8]) -> f64 {
         if letter < 0x61 || letter > 0x7a {
             // with the exception of space, comma, and dot
             if letter != 0x20 && letter != 0x2c && letter != 0x2e {
-                total_score += percentage_found;
+                total_score += 2.0 * percentage_found;
             }
         }
     }

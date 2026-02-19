@@ -6,6 +6,12 @@ use std::fs;
 fn main() {
     println!("");
 
+    challenge_06();
+
+    println!("");
+}
+
+fn challenge_06() {
     let cypher_text_base64: String =
         fs::read_to_string("original/6.txt").expect("could not read file");
 
@@ -31,18 +37,21 @@ fn main() {
     let mut proposed_key = Vec::new();
 
     for block in 0..transposed_vecs.len() {
-        let keys_range_bytes = 0x00..0x80;
-        let scores =
+        let keys_range_bytes = 0x00..0xff;
+        let mut scores =
             cryptopals::find_lowest_score_xor_bytes(&transposed_vecs[block], keys_range_bytes);
 
         println!("[block {}/{}]", block + 1, score.keysize);
-        for score in scores.get(0..10).unwrap() {
+        scores.sort_by_key(|a| a.key);
+        for score in &scores {
             println!(
                 "{}: {} -> {}",
                 score.key,
                 score.score,
                 cryptopals::helpers::bytes_to_ascii(score.decoded.get(0..30).unwrap())
             );
+
+            cryptopals::print_histogram(&vec![score.key], &score.decoded, 0.01, 4);
         }
         println!("");
 
@@ -57,6 +66,47 @@ fn main() {
     println!("");
 
     // assert_eq!(result, expected_result);
+}
+
+fn challenge_04() {
+    let all_strings_hex: String =
+        fs::read_to_string("original/4.txt").expect("could not read file");
+
+    let mut best_score = cryptopals::constants::ScoreXOR {
+        score: 1000.0,
+        key: 0xff,
+        decoded: Vec::new(),
+    };
+
+    let lines = all_strings_hex.lines();
+    for line_hex in lines {
+        println!("\n[{line_hex}]\n");
+        let keys_range_bytes = 0x00..0x80;
+        let mut scores = cryptopals::find_lowest_score_xor_bytes(
+            &cryptopals::helpers::hex_to_bytes(&line_hex),
+            keys_range_bytes,
+        );
+        scores.sort_by_key(|a| a.key);
+
+        for score in &scores {
+            cryptopals::print_histogram(&vec![score.key], &score.decoded, 0.05, 5);
+        }
+    }
+}
+
+fn challenge_03() {
+    let string_hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
+
+    let keys_range_bytes = 0x00..0x80;
+    let mut scores = cryptopals::find_lowest_score_xor_bytes(
+        &cryptopals::helpers::hex_to_bytes(&string_hex),
+        keys_range_bytes,
+    );
+    scores.sort_by_key(|a| a.key);
+
+    for score in &scores {
+        cryptopals::print_histogram(&vec![score.key], &score.decoded, 0.025, 5);
+    }
 }
 
 fn play_with_xor() {

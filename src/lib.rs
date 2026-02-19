@@ -1,3 +1,4 @@
+use std::cmp;
 use std::collections::HashMap;
 use std::ops::Range;
 
@@ -68,6 +69,68 @@ fn get_letter_frequencies(bytes: &[u8]) -> HashMap<u8, f64> {
     }
 
     letter_frequencies
+}
+
+pub fn print_histogram(
+    key: &[u8],
+    bytes: &[u8],
+    min_percentage_spaces: f64,
+    min_important_letters: usize,
+) {
+    let letter_frequencies = get_letter_frequencies(&bytes);
+
+    if min_percentage_spaces > 0.0 {
+        let space = ' ' as u8;
+        let percentage_space = letter_frequencies.get(&space).copied().unwrap_or(0.0);
+
+        if percentage_space < min_percentage_spaces {
+            return;
+        }
+    }
+
+    if min_important_letters > 0 {
+        let important_letters = vec!['e', 't', 'a', 'o', 'n', 's', 'h', 'r'];
+        let mut found_count = 0;
+
+        for letter_char in important_letters {
+            let letter = letter_char as u8;
+            let percentage_letter = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
+
+            if percentage_letter > 0.0 {
+                found_count += 1;
+            }
+        }
+
+        if found_count < min_important_letters {
+            return;
+        }
+    }
+
+    println!("[0x{}]", crate::helpers::bytes_to_hex(key));
+    let english_letter_frequencies = crate::constants::get_english_letter_frequencies();
+
+    for (letter, percentage_expected) in english_letter_frequencies {
+        let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
+        let magnification = 350.0;
+
+        let histogram_found = (percentage_found * magnification).round() as i32;
+        let histogram_expected = (percentage_expected * magnification).round() as i32;
+
+        let histogram_low = cmp::min(histogram_found, histogram_expected);
+        let histogram_med = cmp::max(histogram_expected - histogram_found, 0);
+        let histogram_high = cmp::max(histogram_found - histogram_expected, 0);
+
+        println!(
+            "{}: {}{}{}",
+            letter as char,
+            "|".repeat(histogram_low as usize),
+            "-".repeat(histogram_med as usize),
+            "*".repeat(histogram_high as usize)
+        );
+    }
+
+    // println!("{}", crate::helpers::bytes_to_ascii(&bytes));
+    println!("");
 }
 
 fn score_letter_frequencies(bytes: &[u8]) -> f64 {

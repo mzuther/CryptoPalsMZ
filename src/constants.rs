@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use indexmap::IndexMap;
 
 const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 27] = [
     (' ', 0.250),
@@ -30,8 +30,8 @@ const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 27] = [
     ('z', 0.0007),
 ];
 
-pub fn get_english_letter_frequencies() -> HashMap<u8, f64> {
-    let mut english_letter_frequencies = HashMap::new();
+pub fn get_english_letter_frequencies() -> IndexMap<u8, f64> {
+    let mut english_letter_frequencies = IndexMap::new();
 
     for letter in ENGLISH_LETTER_FREQUENCIES {
         let key = letter.0 as u8;

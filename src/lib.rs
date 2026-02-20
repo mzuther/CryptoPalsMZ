@@ -338,6 +338,39 @@ mod tests {
     }
 
     #[test]
+    fn unit_hamming_distance_bits_bytes_3() {
+        let bytes_1 = vec![0x1d, 0x42];
+        let bytes_2 = vec![0x1f, 0x4d];
+        let expected_result = 5;
+
+        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_hamming_distance_bits_bytes_4() {
+        let bytes_1 = vec![0x1d, 0x42, 0x1f];
+        let bytes_2 = vec![0x4d, 0x0b, 0x0f];
+        let expected_result = 6;
+
+        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_hamming_distance_bits_bytes_5() {
+        let bytes_1 = vec![0x1d, 0x42, 0x1f, 0x4d, 0x0b];
+        let bytes_2 = vec![0x0f, 0x02, 0x1f, 0x4f, 0x13];
+        let expected_result = 6;
+
+        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
     fn unit_hamming_distance_bits() {
         let text_1 = "this is a test";
         let text_2 = "wokka wokka!!!";

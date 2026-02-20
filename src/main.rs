@@ -19,6 +19,67 @@ fn challenge_06() {
         &cryptopals::helpers::unicode_to_bytes(&cypher_text_base64),
     );
 
+    let (cypher_text_start, _) = cypher_text_bytes.split_at(8);
+    assert_eq!(
+        cryptopals::helpers::bytes_to_hex(&cypher_text_start),
+        "1d421f4d0b0f021f"
+    );
+
+    let keysize = 2;
+    let edit_size_2 =
+        cryptopals::hamming_distance_bits_bytes(&cypher_text_bytes[0..2], &cypher_text_bytes[2..4]);
+    let edit_size_2_normalized = (edit_size_2 as f64) / (keysize as f64);
+    assert_eq!(edit_size_2_normalized, 2.5);
+
+    let keysize = 3;
+    let edit_size_2 =
+        cryptopals::hamming_distance_bits_bytes(&cypher_text_bytes[0..3], &cypher_text_bytes[3..6]);
+    let edit_size_2_normalized = (edit_size_2 as f64) / (keysize as f64);
+    assert_eq!(edit_size_2_normalized, 2.0);
+
+    let keysize = 5;
+    let edit_size_2 = cryptopals::hamming_distance_bits_bytes(
+        &cypher_text_bytes[0..5],
+        &cypher_text_bytes[5..10],
+    );
+    let edit_size_2_normalized = (edit_size_2 as f64) / (keysize as f64);
+    assert_eq!(edit_size_2_normalized, 1.2);
+
+    let keysize = 2;
+    let transposed_vecs = cryptopals::transpose_bytes(&cypher_text_bytes, keysize);
+    let (cypher_start_1, _) = transposed_vecs[0].split_at(4);
+    let (cypher_start_2, _) = transposed_vecs[1].split_at(4);
+    assert_eq!(
+        cryptopals::helpers::bytes_to_hex(&cypher_start_1),
+        "1d1f0b02"
+    );
+    assert_eq!(
+        cryptopals::helpers::bytes_to_hex(&cypher_start_2),
+        "424d0f1f"
+    );
+
+    let keysize = 3;
+    let transposed_vecs = cryptopals::transpose_bytes(&cypher_text_bytes, keysize);
+    let (cypher_start_1, _) = transposed_vecs[0].split_at(3);
+    let (cypher_start_2, _) = transposed_vecs[1].split_at(3);
+    let (cypher_start_3, _) = transposed_vecs[2].split_at(2);
+    assert_eq!(cryptopals::helpers::bytes_to_hex(&cypher_start_1), "1d4d02");
+    assert_eq!(cryptopals::helpers::bytes_to_hex(&cypher_start_2), "420b1f");
+    assert_eq!(cryptopals::helpers::bytes_to_hex(&cypher_start_3), "1f0f");
+
+    let keysize = 5;
+    let transposed_vecs = cryptopals::transpose_bytes(&cypher_text_bytes, keysize);
+    let (cypher_start_1, _) = transposed_vecs[0].split_at(2);
+    let (cypher_start_2, _) = transposed_vecs[1].split_at(2);
+    let (cypher_start_3, _) = transposed_vecs[2].split_at(2);
+    let (cypher_start_4, _) = transposed_vecs[3].split_at(1);
+    let (cypher_start_5, _) = transposed_vecs[4].split_at(1);
+    assert_eq!(cryptopals::helpers::bytes_to_hex(&cypher_start_1), "1d0f");
+    assert_eq!(cryptopals::helpers::bytes_to_hex(&cypher_start_2), "4202");
+    assert_eq!(cryptopals::helpers::bytes_to_hex(&cypher_start_3), "1f1f");
+    assert_eq!(cryptopals::helpers::bytes_to_hex(&cypher_start_4), "4d");
+    assert_eq!(cryptopals::helpers::bytes_to_hex(&cypher_start_5), "0b");
+
     let keysize_range = 2..41;
     let scores = cryptopals::guess_keysize_from_hamming_distance(&cypher_text_bytes, keysize_range);
 

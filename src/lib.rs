@@ -107,26 +107,35 @@ pub fn print_histogram(
     }
 
     println!("[0x{}]", crate::helpers::bytes_to_hex(key));
+    let magnification_factor = 340.0;
+    let max_bin_size = (magnification_factor / 3.80) as i32;
+
     let english_letter_frequencies = crate::constants::get_english_letter_frequencies();
+    let mut bins = Vec::with_capacity(english_letter_frequencies.len());
 
     for (letter, percentage_expected) in english_letter_frequencies {
         let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
-        let magnification = 350.0;
 
-        let histogram_found = (percentage_found * magnification).round() as i32;
-        let histogram_expected = (percentage_expected * magnification).round() as i32;
+        let value_found = (percentage_found * magnification_factor).round() as i32;
+        let value_expected = (percentage_expected * magnification_factor).round() as i32;
 
-        let histogram_low = cmp::min(histogram_found, histogram_expected);
-        let histogram_med = cmp::max(histogram_expected - histogram_found, 0);
-        let histogram_high = cmp::max(histogram_found - histogram_expected, 0);
+        let bin_bottom = cmp::min(value_found, value_expected);
+        let bin_middle = cmp::max(value_expected - value_found, 0);
+        let bin_top = cmp::min(cmp::max(value_found - value_expected, 0), max_bin_size);
+        let bin_fill_to_border = max_bin_size - cmp::max(value_found, value_expected);
 
-        println!(
-            "{}: {}{}{}",
+        bins.push(format!(
+            "{}  {}{}{}{}",
             letter as char,
-            "|".repeat(histogram_low as usize),
-            "-".repeat(histogram_med as usize),
-            "*".repeat(histogram_high as usize)
-        );
+            "|".repeat(bin_bottom as usize),
+            "-".repeat(bin_middle as usize),
+            "*".repeat(bin_top as usize),
+            " ".repeat(bin_fill_to_border as usize)
+        ));
+    }
+
+    for bin in bins {
+        println!("{bin}");
     }
 
     // println!("{}", crate::helpers::bytes_to_ascii(&bytes));

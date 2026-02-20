@@ -245,12 +245,10 @@ pub fn transpose_bytes(bytes: &[u8], keysize: usize) -> Vec<Vec<u8>> {
         transposed_blocks.push(Vec::with_capacity(block_capacity));
     }
 
-    for block in bytes.chunks(keysize) {
+    for (index, &byte) in bytes.iter().enumerate() {
         // guard rail: may be lower than "keysize"
-        for block_index in 0..block.len() {
-            let element = block[block_index];
-            transposed_blocks[block_index].push(element);
-        }
+        let block_index = index % keysize;
+        transposed_blocks[block_index].push(byte);
     }
 
     transposed_blocks

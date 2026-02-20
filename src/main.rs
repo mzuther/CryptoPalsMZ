@@ -4,11 +4,7 @@ use cryptopals;
 use std::fs;
 
 fn main() {
-    println!("");
-
     challenge_06();
-
-    println!("");
 }
 
 fn challenge_06() {
@@ -83,11 +79,11 @@ fn challenge_06() {
     let keysize_range = 2..41;
     let scores = cryptopals::guess_keysize_from_hamming_distance(&cypher_text_bytes, keysize_range);
 
-    println!("[keysizes]");
-    for score in scores.get(0..5).unwrap() {
-        println!("{}: {}", score.keysize, score.score);
-    }
-    println!("");
+    // println!("[keysizes]");
+    // for score in scores.get(0..5).unwrap() {
+    //     println!("{}: {}", score.keysize, score.score);
+    // }
+    // println!("");
 
     let take_xth_score = 0;
     let score = scores
@@ -105,14 +101,14 @@ fn challenge_06() {
         println!("[block {}/{}]", block + 1, score.keysize);
         scores.sort_by_key(|a| a.key);
         for score in &scores {
-            println!(
-                "{}: {} -> {}",
-                score.key,
-                score.score,
-                cryptopals::helpers::bytes_to_ascii(score.decoded.get(0..30).unwrap())
-            );
+            // println!(
+            //     "{}: {} -> {}",
+            //     score.key,
+            //     score.score,
+            //     cryptopals::helpers::bytes_to_ascii(score.decoded.get(0..30).unwrap())
+            // );
 
-            cryptopals::print_histogram(&vec![score.key], &score.decoded, 0.01, 4);
+            cryptopals::print_histogram(&vec![score.key], &score.decoded, 195.0, true, 0.0, 0);
         }
         println!("");
 
@@ -141,7 +137,6 @@ fn challenge_04() {
 
     let lines = all_strings_hex.lines();
     for line_hex in lines {
-        println!("\n[{line_hex}]\n");
         let keys_range_bytes = 0x00..0x80;
         let mut scores = cryptopals::find_lowest_score_xor_bytes(
             &cryptopals::helpers::hex_to_bytes(&line_hex),
@@ -149,8 +144,10 @@ fn challenge_04() {
         );
         scores.sort_by_key(|a| a.key);
 
+        // println!("\n[{line_hex}]\n");
+
         for score in &scores {
-            cryptopals::print_histogram(&vec![score.key], &score.decoded, 0.05, 5);
+            cryptopals::print_histogram(&vec![score.key], &score.decoded, 195.0, true, 0.05, 5);
         }
     }
 }
@@ -166,7 +163,7 @@ fn challenge_03() {
     scores.sort_by_key(|a| a.key);
 
     for score in &scores {
-        cryptopals::print_histogram(&vec![score.key], &score.decoded, 0.025, 5);
+        cryptopals::print_histogram(&vec![score.key], &score.decoded, 195.0, true, 0.025, 5);
     }
 }
 

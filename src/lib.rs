@@ -74,6 +74,8 @@ fn get_letter_frequencies(bytes: &[u8]) -> HashMap<u8, f64> {
 pub fn print_histogram(
     key: &[u8],
     bytes: &[u8],
+    magnification_factor: f64,
+    rotate_histogram: bool,
     min_percentage_spaces: f64,
     min_important_letters: usize,
 ) {
@@ -107,13 +109,12 @@ pub fn print_histogram(
     }
 
     println!("[0x{}]", crate::helpers::bytes_to_hex(key));
-    let magnification_factor = 340.0;
     let max_bin_size = (magnification_factor / 3.80) as i32;
 
     let english_letter_frequencies = crate::constants::get_english_letter_frequencies();
     let mut bins = Vec::with_capacity(english_letter_frequencies.len());
 
-    for (letter, percentage_expected) in english_letter_frequencies {
+    for (mut letter, percentage_expected) in english_letter_frequencies {
         let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
 
         let value_found = (percentage_found * magnification_factor).round() as i32;
@@ -124,14 +125,29 @@ pub fn print_histogram(
         let bin_top = cmp::min(cmp::max(value_found - value_expected, 0), max_bin_size);
         let bin_fill_to_border = max_bin_size - cmp::max(value_found, value_expected);
 
-        bins.push(format!(
-            "{}  {}{}{}{}",
+        if letter == (' ' as u8) {
+            letter = '_' as u8;
+        }
+
+        let bin = format!(
+            "{} {}{}{}{}",
             letter as char,
-            "|".repeat(bin_bottom as usize),
-            "-".repeat(bin_middle as usize),
-            "*".repeat(bin_top as usize),
+            "█".repeat(bin_bottom as usize),
+            "░".repeat(bin_middle as usize),
+            "🮮".repeat(bin_top as usize),
             " ".repeat(bin_fill_to_border as usize)
-        ));
+        );
+
+        bins.push(bin);
+
+        if rotate_histogram {
+            let filler = " ".repeat((max_bin_size + 2) as usize);
+            bins.push(filler);
+        }
+    }
+
+    if rotate_histogram {
+        bins = crate::transpose_strings_counterclockwise(&bins);
     }
 
     for bin in bins {
@@ -261,6 +277,54 @@ pub fn transpose_bytes(bytes: &[u8], keysize: usize) -> Vec<Vec<u8>> {
     }
 
     transposed_blocks
+}
+
+pub fn transpose_strings_clockwise(strings: &Vec<String>) -> Vec<String> {
+    transpose_strings(strings, true)
+}
+
+pub fn transpose_strings_counterclockwise(strings: &Vec<String>) -> Vec<String> {
+    transpose_strings(strings, false)
+}
+
+fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<String> {
+    assert!(strings.len() > 0);
+
+    let height = strings.len();
+
+    let mut lines: Vec<Vec<char>> = Vec::with_capacity(height);
+    for string in strings {
+        lines.push(string.chars().collect());
+    }
+
+    let width = lines[0].len();
+
+    let mut lines_transposed: Vec<Vec<char>> = Vec::with_capacity(width);
+    for _ in 0..width {
+        lines_transposed.push(Vec::with_capacity(height));
+    }
+
+    for line in lines {
+        assert_eq!(line.len(), width);
+
+        for (index, &letter) in line.iter().enumerate() {
+            lines_transposed[index].push(letter);
+        }
+    }
+
+    let mut strings_transposed: Vec<String> = Vec::with_capacity(width);
+
+    if transpose_clockwise {
+        for line in lines_transposed {
+            strings_transposed.push(String::from_iter(line.iter().rev()));
+        }
+    } else {
+        for line in lines_transposed.iter().rev() {
+            strings_transposed.push(String::from_iter(line));
+        }
+    }
+
+    strings_transposed
 }
 
 #[cfg(test)]
@@ -438,5 +502,33 @@ mod tests {
         assert_eq!(transposed_vecs[1], vec![2]);
         assert_eq!(transposed_vecs[2], vec![3]);
         assert_eq!(transposed_vecs[3], vec![]);
+    }
+
+    #[test]
+    fn unit_transpose_strings_clockwise() {
+        let strings = vec![
+            String::from("äßcd"),
+            String::from("efgh"),
+            String::from("ijkl"),
+        ];
+        let expected_result = vec!["ieä", "jfß", "kgc", "lhd"];
+
+        let result = transpose_strings_clockwise(&strings);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_transpose_strings_counterclockwise() {
+        let strings = vec![
+            String::from("äßcd"),
+            String::from("efgh"),
+            String::from("ijkl"),
+        ];
+        let expected_result = vec!["dhl", "cgk", "ßfj", "äei"];
+
+        let result = transpose_strings_counterclockwise(&strings);
+
+        assert_eq!(result, expected_result);
     }
 }

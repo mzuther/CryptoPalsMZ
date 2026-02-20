@@ -40,42 +40,35 @@ pub fn hex_to_base64(string_hex: &str) -> String {
 }
 
 pub fn bytes_to_base64(bytes_raw: &[u8]) -> Vec<u8> {
-    let (mut segments_to_encode, bits_with_value, remainder) =
-        crate::helpers::split_bytes_into_segments(bytes_raw, 6);
-
-    // add padding character
-    if bits_with_value > 0 {
-        segments_to_encode.push(remainder);
-        segments_to_encode.push(0xff);
-
-        if bits_with_value == 6 {
-            segments_to_encode.push(0xff);
-        }
-    }
+    let segments_to_encode = crate::helpers::split_bytes_into_segments(bytes_raw, 6);
 
     let mut encoded_bytes = Vec::new();
 
     for segment in &segments_to_encode {
-        let mut char_int = *segment;
+        let mut char_int: u8;
 
-        // upper case letter
-        if char_int < 26 {
-            char_int += 65
-        // lower case letter
-        } else if char_int < 52 {
-            char_int += 71
-        // plus
-        } else if char_int == 62 {
-            char_int = 43
-        // slash
-        } else if char_int == 63 {
-            char_int = 47
         // padding character (=)
-        } else if char_int == 0xff {
-            char_int = 61
-        // digit
+        if segment.is_none() {
+            char_int = 61;
         } else {
-            char_int -= 4
+            char_int = segment.unwrap();
+
+            // upper case letter
+            if char_int < 26 {
+                char_int += 65
+            // lower case letter
+            } else if char_int < 52 {
+                char_int += 71
+            // plus
+            } else if char_int == 62 {
+                char_int = 43
+            // slash
+            } else if char_int == 63 {
+                char_int = 47
+            // digit
+            } else {
+                char_int -= 4
+            }
         }
 
         encoded_bytes.push(char_int);
@@ -84,7 +77,7 @@ pub fn bytes_to_base64(bytes_raw: &[u8]) -> Vec<u8> {
     encoded_bytes
 }
 
-fn split_bytes_into_segments(bytes: &[u8], bits_per_segment: u8) -> (Vec<u8>, u8, u8) {
+fn split_bytes_into_segments(bytes: &[u8], bits_per_segment: u8) -> Vec<Option<u8>> {
     let mut segments_to_encode = Vec::new();
 
     let bits_per_byte = 8;
@@ -101,17 +94,27 @@ fn split_bytes_into_segments(bytes: &[u8], bits_per_segment: u8) -> (Vec<u8>, u8
         let value = ((byte & mask_value) >> bits_with_remainder) + remainder;
         remainder = (byte & mask_remainder) << (bits_per_segment - bits_with_remainder);
 
-        segments_to_encode.push(value);
+        segments_to_encode.push(Some(value));
 
         if bits_with_value == (bits_per_byte - bits_per_segment) {
             bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
 
-            segments_to_encode.push(remainder);
+            segments_to_encode.push(Some(remainder));
             remainder = 0;
         }
     }
 
-    (segments_to_encode, bits_with_value, remainder)
+    // add padding characters
+    if bits_with_value > 0 {
+        segments_to_encode.push(Some(remainder));
+        segments_to_encode.push(None);
+
+        if bits_with_value == 6 {
+            segments_to_encode.push(None);
+        }
+    }
+
+    segments_to_encode
 }
 
 pub fn base64_to_unicode(string_base64: &str) -> String {
@@ -131,36 +134,42 @@ pub fn base64_to_hex(string_base64: &str) -> String {
 pub fn base64_to_bytes(bytes_base64: &[u8]) -> Vec<u8> {
     let mut decoded_bytes = Vec::new();
 
-    for &byte_base64 in bytes_base64 {
-        let mut char_int = byte_base64;
+    for &char_int in bytes_base64 {
+        let char_option;
 
         // plus
         if char_int == 43 {
-            char_int = 62
+            char_option = Some(62);
         // slash
         } else if char_int == 47 {
-            char_int = 63
+            char_option = Some(63);
         // padding character (=)
         } else if char_int == 61 {
-            char_int = 0xff
+            char_option = None;
         // digit
         } else if char_int <= 57 {
-            char_int += 4
+            char_option = Some(char_int + 4);
         // upper case letter
         } else if char_int <= 90 {
-            char_int -= 65
+            char_option = Some(char_int - 65);
         // lower case letter
         } else {
-            char_int -= 71
+            char_option = Some(char_int - 71);
         }
 
-        decoded_bytes.push(char_int);
+        assert!(
+            char_option.is_none_or(|x| x < 64),
+            "{} is not valid base64",
+            char_option.unwrap()
+        );
+
+        decoded_bytes.push(char_option);
     }
 
     assemble_bytes_from_segments(&decoded_bytes, 6)
 }
 
-fn assemble_bytes_from_segments(bytes: &[u8], bits_per_segment: u8) -> Vec<u8> {
+fn assemble_bytes_from_segments(bytes: &Vec<Option<u8>>, bits_per_segment: u8) -> Vec<u8> {
     let mut assembled_segments = Vec::new();
 
     let bits_per_byte = 8;
@@ -169,7 +178,7 @@ fn assemble_bytes_from_segments(bytes: &[u8], bits_per_segment: u8) -> Vec<u8> {
 
     for &byte_input in bytes {
         // padding
-        if byte_input == 0xff {
+        if byte_input.is_none() {
             return assembled_segments;
         }
 
@@ -180,7 +189,7 @@ fn assemble_bytes_from_segments(bytes: &[u8], bits_per_segment: u8) -> Vec<u8> {
             let current_mask_input = 1 << current_bit_input;
             let current_mask_output = 1 << current_bit_output;
 
-            if (byte_input & current_mask_input) > 0 {
+            if (byte_input.unwrap() & current_mask_input) > 0 {
                 byte_in_progress += current_mask_output;
             }
 
@@ -293,8 +302,7 @@ mod tests {
     // contains complete base64 alphabet
     const BASE64_COMPLETE_ALPHABET: &str =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    const BASE64_COMPLETE_ALPHABET_HEX: &str =
-        "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
+    const BASE64_COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
 
     #[test]
     fn unit_conversion_bytes_to_base64() {

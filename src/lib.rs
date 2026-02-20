@@ -263,12 +263,45 @@ mod tests {
     use super::*;
 
     #[test]
+    fn unit_hamming_distance_bits_bytes_empty() {
+        let bytes_1 = vec![];
+        let bytes_2 = vec![];
+        let expected_result = 0;
+
+        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_hamming_distance_bits_bytes_1() {
+        let bytes_1 = vec![0x02];
+        let bytes_2 = vec![0xa0];
+        let expected_result = 3;
+
+        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_hamming_distance_bits_bytes_2() {
+        let bytes_1 = vec![0x02, 0xb0];
+        let bytes_2 = vec![0xa0, 0x01];
+        let expected_result = 7;
+
+        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
     fn unit_hamming_distance_bits() {
         let text_1 = "this is a test";
         let text_2 = "wokka wokka!!!";
         let expected_result = 37;
 
-        let result = hamming_distance_bits(text_1, text_2);
+        let result = hamming_distance_bits(&text_1, &text_2);
 
         assert_eq!(result, expected_result);
     }

@@ -59,9 +59,22 @@ fn get_letter_frequencies(bytes: &[u8]) -> HashMap<u8, f64> {
     for &byte in bytes {
         let mut key = byte;
 
-        // also count upper-case letters (convert to lower-case)
-        if key >= 0x41 && key <= 0x5a {
+        // space
+        if key == 0x20 {}
+        // digits (convert to "0")
+        else if key >= 0x30 && key <= 0x39 {
+            key = 0x30;
+        }
+        // upper-case letters (convert to lower-case)
+        else if key >= 0x41 && key <= 0x5a {
             key += 0x20;
+        }
+        // lower-case letters
+        else if key >= 0x61 && key <= 0x7a {
+        }
+        // remaining characters (convert to "*")
+        else {
+            key = 0x2a;
         }
 
         let count = letter_frequencies.entry(key).or_insert(0.0);

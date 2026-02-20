@@ -1,7 +1,8 @@
 use indexmap::IndexMap;
 
-const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 27] = [
-    (' ', 0.250),
+const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 28] = [
+    // https://web.archive.org/web/20170918020907/http://www.data-compression.com/english.html
+    (' ', 0.200),
     ('e', 0.127),
     ('t', 0.091),
     ('a', 0.082),
@@ -28,6 +29,8 @@ const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 27] = [
     ('x', 0.0015),
     ('q', 0.0012),
     ('z', 0.0007),
+    // https://en.wikipedia.org/wiki/Letter_frequency#Relative_frequencies_of_the_first_letters_of_a_word_in_English_language
+    ('*', 0.085),
 ];
 
 pub fn get_english_letter_frequencies() -> IndexMap<u8, f64> {

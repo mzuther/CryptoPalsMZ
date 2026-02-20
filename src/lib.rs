@@ -117,7 +117,10 @@ pub fn print_histogram(
     for (mut letter, percentage_expected) in english_letter_frequencies {
         let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
 
-        let value_found = (percentage_found * magnification_factor).round() as i32;
+        let value_found = cmp::min(
+            (percentage_found * magnification_factor).round() as i32,
+            max_bin_size,
+        );
         let value_expected = (percentage_expected * magnification_factor).round() as i32;
 
         let bin_bottom = cmp::min(value_found, value_expected);
@@ -304,8 +307,8 @@ fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<St
         lines_transposed.push(Vec::with_capacity(height));
     }
 
-    for line in lines {
-        assert_eq!(line.len(), width);
+    for (index, line) in lines.iter().enumerate() {
+        assert_eq!(line.len(), width, "string #{} has incorrect size", index);
 
         for (index, &letter) in line.iter().enumerate() {
             lines_transposed[index].push(letter);

@@ -213,6 +213,19 @@ pub struct Unicode {
     unicode_string: String,
 }
 
+impl Unicode {
+    fn get_iso_8859_1(self) -> String {
+        let mut bytes_as_string = String::new();
+
+        for byte in self.to_bytes() {
+            let iso_character = byte as char;
+            bytes_as_string.push(iso_character);
+        }
+
+        bytes_as_string
+    }
+}
+
 impl From<String> for Unicode {
     fn from(unicode_string: String) -> Self {
         Unicode {
@@ -246,160 +259,6 @@ impl FromToBytes for Unicode {
 impl ToString for Unicode {
     fn to_string(&self) -> String {
         self.unicode_string.clone()
-    }
-}
-
-// ----------------
-
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub enum CryptoVec {
-    Bytes(Bytes),
-    Hexadecimal(Hexadecimal),
-    Base64(Base64),
-    Unicode(Unicode),
-}
-
-impl From<Bytes> for CryptoVec {
-    fn from(bytes: Bytes) -> Self {
-        CryptoVec::Bytes(bytes)
-    }
-}
-
-impl From<Hexadecimal> for CryptoVec {
-    fn from(hex_string: Hexadecimal) -> Self {
-        CryptoVec::Hexadecimal(hex_string)
-    }
-}
-
-impl From<Base64> for CryptoVec {
-    fn from(base64_string: Base64) -> Self {
-        CryptoVec::Base64(base64_string)
-    }
-}
-
-impl From<Unicode> for CryptoVec {
-    fn from(unicode_string: Unicode) -> Self {
-        CryptoVec::Unicode(unicode_string)
-    }
-}
-
-// ----------------
-
-impl CryptoVec {
-    fn to_bytes(self) -> CryptoVec {
-        match self {
-            CryptoVec::Bytes(ref _b) => self,
-            CryptoVec::Hexadecimal(s) => CryptoVec::Bytes(s.to_bytes_struct()),
-            CryptoVec::Base64(s) => CryptoVec::Bytes(s.to_bytes_struct()),
-            CryptoVec::Unicode(s) => CryptoVec::Bytes(s.to_bytes_struct()),
-        }
-    }
-
-    fn to_hex(self) -> CryptoVec {
-        match self {
-            CryptoVec::Hexadecimal(ref _s) => self,
-            other => {
-                let bytes = other.get_bytes();
-                let hex_string = hex::encode(bytes);
-
-                CryptoVec::from(Hexadecimal::from(hex_string))
-            }
-        }
-    }
-
-    fn to_base64(self) -> CryptoVec {
-        match self {
-            CryptoVec::Base64(ref _s) => self,
-            other => {
-                let bytes = other.get_bytes();
-                let segments_to_encode = split_bytes_into_segments(&bytes, 6);
-
-                let mut encoded_string = String::new();
-
-                for segment in &segments_to_encode {
-                    let mut char_int: u8;
-
-                    // padding character (=)
-                    if segment.is_none() {
-                        char_int = 61;
-                    } else {
-                        char_int = segment.unwrap();
-
-                        // upper case letter
-                        if char_int < 26 {
-                            char_int += 65
-                        // lower case letter
-                        } else if char_int < 52 {
-                            char_int += 71
-                        // plus
-                        } else if char_int == 62 {
-                            char_int = 43
-                        // slash
-                        } else if char_int == 63 {
-                            char_int = 47
-                        // digit
-                        } else {
-                            char_int -= 4
-                        }
-                    }
-
-                    encoded_string.push(char_int as char);
-                }
-
-                CryptoVec::from(Base64::from(encoded_string))
-            }
-        }
-    }
-
-    fn to_unicode(self) -> CryptoVec {
-        match self {
-            CryptoVec::Unicode(ref _s) => self,
-            other => {
-                let bytes = other.get_bytes();
-                let unicode_string = String::from_utf8(bytes).expect("invalid UTF-8 string");
-
-                CryptoVec::from(Unicode::from(unicode_string))
-            }
-        }
-    }
-
-    fn get_bytes(self) -> Vec<u8> {
-        match self {
-            CryptoVec::Bytes(b) => b.bytes,
-            other => other.to_bytes().get_bytes(),
-        }
-    }
-
-    fn get_hex(self) -> String {
-        match self {
-            CryptoVec::Hexadecimal(s) => s.hex_string,
-            other => other.to_hex().get_hex(),
-        }
-    }
-
-    fn get_base64(self) -> String {
-        match self {
-            CryptoVec::Base64(s) => s.base64_string,
-            other => other.to_base64().get_base64(),
-        }
-    }
-
-    fn get_unicode(self) -> String {
-        match self {
-            CryptoVec::Unicode(s) => s.unicode_string,
-            other => other.to_unicode().get_unicode(),
-        }
-    }
-
-    fn get_iso_8859_1(self) -> String {
-        let mut bytes_as_string = String::new();
-
-        for byte in self.get_bytes() {
-            let iso_character = byte as char;
-            bytes_as_string.push(iso_character);
-        }
-
-        bytes_as_string
     }
 }
 
@@ -489,83 +348,80 @@ mod tests {
 
     #[test]
     fn unit_conversion_bytes_to_bytes() {
-        let bytes = CryptoVec::from(Bytes::from(vec![0x41, 0x62, 0x33]));
-        let expected_result = CryptoVec::from(Bytes::from(vec![0x41, 0x62, 0x33]));
+        let bytes = Bytes::from(vec![0x41, 0x62, 0x33]);
+        let expected_result = Bytes::from(vec![0x41, 0x62, 0x33]);
 
-        let result = bytes.to_bytes();
+        let result = bytes.to_bytes_struct();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_unicode_to_bytes_1() {
-        let unicode_string = CryptoVec::from(Unicode::from("Ab3"));
-        let expected_result = CryptoVec::from(Bytes::from(vec![0x41, 0x62, 0x33]));
+        let unicode_string = Unicode::from("Ab3");
+        let expected_result = Bytes::from(vec![0x41, 0x62, 0x33]);
 
-        let result = unicode_string.to_bytes();
+        let result = unicode_string.to_bytes_struct();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_unicode_to_bytes_2() {
-        let unicode_string = CryptoVec::from(Unicode::from("Aü你"));
-        let expected_result =
-            CryptoVec::from(Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]));
+        let unicode_string = Unicode::from("Aü你");
+        let expected_result = Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
-        let result = unicode_string.to_bytes();
+        let result = unicode_string.to_bytes_struct();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_hex_to_bytes_1() {
-        let hex_string = CryptoVec::from(Hexadecimal::from("41c3bce4bda0"));
-        let expected_result =
-            CryptoVec::from(Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]));
+        let hex_string = Hexadecimal::from("41c3bce4bda0");
+        let expected_result = Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
-        let result = hex_string.to_bytes();
+        let result = hex_string.to_bytes_struct();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_hex_to_bytes_2() {
-        let hex_string = CryptoVec::from(Hexadecimal::from("21A3DCF4DBA1"));
-        let expected_result =
-            CryptoVec::from(Bytes::from(vec![0x21, 0xa3, 0xdc, 0xf4, 0xdb, 0xa1]));
+        let hex_string = Hexadecimal::from("21A3DCF4DBA1");
+        let expected_result = Bytes::from(vec![0x21, 0xa3, 0xdc, 0xf4, 0xdb, 0xa1]);
 
-        let result = hex_string.to_bytes();
+        let result = hex_string.to_bytes_struct();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_bytes_to_unicode_1() {
-        let bytes = CryptoVec::from(Bytes::from(vec![0x41, 0x62, 0x33]));
-        let expected_result = CryptoVec::from(Unicode::from("Ab3"));
+        let bytes = Bytes::from(vec![0x41, 0x62, 0x33]);
+        let expected_result = Unicode::from("Ab3");
 
-        let result = bytes.to_unicode();
+        let result = Unicode::from_bytes_struct(&bytes.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_bytes_to_unicode_2() {
-        let bytes = CryptoVec::from(Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]));
-        let expected_result = CryptoVec::from(Unicode::from("Aü你"));
+        let bytes = Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let expected_result = Unicode::from("Aü你");
 
-        let result = bytes.to_unicode();
+        let result = Unicode::from_bytes_struct(&bytes.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_bytes_to_hex() {
-        let bytes = CryptoVec::from(Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]));
-        let expected_result = CryptoVec::from(Hexadecimal::from("41c3bce4bda0"));
+        let bytes = Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let expected_result = Hexadecimal::from("41c3bce4bda0");
 
-        let result = bytes.to_hex();
+        let result = Hexadecimal::from_bytes_struct(&bytes.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
@@ -575,187 +431,171 @@ mod tests {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     const BASE64_COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
 
-    fn get_base64_complete_alphabet_as_bytes() -> CryptoVec {
-        CryptoVec::from(Bytes::from(vec![
+    fn get_base64_complete_alphabet_as_bytes() -> Bytes {
+        Bytes::from(vec![
             0x00, 0x10, 0x83, 0x10, 0x51, 0x87, 0x20, 0x92, 0x8b, 0x30, 0xd3, 0x8f, 0x41, 0x14,
             0x93, 0x51, 0x55, 0x97, 0x61, 0x96, 0x9b, 0x71, 0xd7, 0x9f, 0x82, 0x18, 0xa3, 0x92,
             0x59, 0xa7, 0xa2, 0x9a, 0xab, 0xb2, 0xdb, 0xaf, 0xc3, 0x1c, 0xb3, 0xd3, 0x5d, 0xb7,
             0xe3, 0x9e, 0xbb, 0xf3, 0xdf, 0xbf,
-        ]))
+        ])
     }
 
     #[test]
     fn unit_conversion_bytes_to_base64() {
         let bytes = get_base64_complete_alphabet_as_bytes();
-        let expected_result = CryptoVec::from(Base64::from(BASE64_COMPLETE_ALPHABET));
+        let expected_result = Base64::from(BASE64_COMPLETE_ALPHABET);
 
-        let result = bytes.to_base64();
+        let result = Base64::from_bytes_struct(&bytes.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_base64_to_bytes() {
-        let base64_bytes = CryptoVec::from(Base64::from(BASE64_COMPLETE_ALPHABET));
+        let base64_bytes = Base64::from(BASE64_COMPLETE_ALPHABET);
         let expected_result = get_base64_complete_alphabet_as_bytes();
 
-        let result = base64_bytes.to_bytes();
+        let result = base64_bytes.to_bytes_struct();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_hex_to_base64() {
-        let hex_string = CryptoVec::from(Hexadecimal::from(BASE64_COMPLETE_ALPHABET_HEX));
-        let expected_result = CryptoVec::from(Base64::from(BASE64_COMPLETE_ALPHABET));
+        let hex_string = Hexadecimal::from(BASE64_COMPLETE_ALPHABET_HEX);
+        let expected_result = Base64::from(BASE64_COMPLETE_ALPHABET);
 
-        let result = hex_string.to_base64();
+        let result = Base64::from_bytes_struct(&hex_string.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_hex_to_base64_padding_1() {
-        let hex_string = CryptoVec::from(Hexadecimal::from(format!(
-            "{BASE64_COMPLETE_ALPHABET_HEX}0011"
-        )));
-        let expected_result =
-            CryptoVec::from(Base64::from(format!("{BASE64_COMPLETE_ALPHABET}ABE=")));
+        let hex_string = Hexadecimal::from(format!("{BASE64_COMPLETE_ALPHABET_HEX}0011"));
+        let expected_result = Base64::from(format!("{BASE64_COMPLETE_ALPHABET}ABE="));
 
-        let result = hex_string.to_base64();
+        let result = Base64::from_bytes_struct(&hex_string.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_hex_to_base64_padding_2() {
-        let hex_string = CryptoVec::from(Hexadecimal::from(format!(
-            "{BASE64_COMPLETE_ALPHABET_HEX}00"
-        )));
-        let expected_result =
-            CryptoVec::from(Base64::from(format!("{BASE64_COMPLETE_ALPHABET}AA==")));
+        let hex_string = Hexadecimal::from(format!("{BASE64_COMPLETE_ALPHABET_HEX}00"));
+        let expected_result = Base64::from(format!("{BASE64_COMPLETE_ALPHABET}AA=="));
 
-        let result = hex_string.to_base64();
+        let result = Base64::from_bytes_struct(&hex_string.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_base64_to_hex() {
-        let base64_string = CryptoVec::from(Base64::from(BASE64_COMPLETE_ALPHABET));
-        let expected_result = CryptoVec::from(Hexadecimal::from(BASE64_COMPLETE_ALPHABET_HEX));
+        let base64_string = Base64::from(BASE64_COMPLETE_ALPHABET);
+        let expected_result = Hexadecimal::from(BASE64_COMPLETE_ALPHABET_HEX);
 
-        let result = base64_string.to_hex();
+        let result = Hexadecimal::from_bytes_struct(&base64_string.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_base64_to_hex_padding_1() {
-        let base64_string =
-            CryptoVec::from(Base64::from(format!("{BASE64_COMPLETE_ALPHABET}ABE=")));
-        let expected_result = CryptoVec::from(Hexadecimal::from(format!(
-            "{BASE64_COMPLETE_ALPHABET_HEX}0011"
-        )));
+        let base64_string = Base64::from(format!("{BASE64_COMPLETE_ALPHABET}ABE="));
+        let expected_result = Hexadecimal::from(format!("{BASE64_COMPLETE_ALPHABET_HEX}0011"));
 
-        let result = base64_string.to_hex();
+        let result = Hexadecimal::from_bytes_struct(&base64_string.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_base64_to_hex_padding_2() {
-        let base64_string =
-            CryptoVec::from(Base64::from(format!("{BASE64_COMPLETE_ALPHABET}AA==")));
-        let expected_result = CryptoVec::from(Hexadecimal::from(format!(
-            "{BASE64_COMPLETE_ALPHABET_HEX}00"
-        )));
+        let base64_string = Base64::from(format!("{BASE64_COMPLETE_ALPHABET}AA=="));
+        let expected_result = Hexadecimal::from(format!("{BASE64_COMPLETE_ALPHABET_HEX}00"));
 
-        let result = base64_string.to_hex();
+        let result = Hexadecimal::from_bytes_struct(&base64_string.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_unicode_to_base64() {
-        let unicode_string = CryptoVec::from(Unicode::from("Hi. Servus. Grüezi. 你好."));
-        let expected_result =
-            CryptoVec::from(Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg=="));
+        let unicode_string = Unicode::from("Hi. Servus. Grüezi. 你好.");
+        let expected_result = Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
 
-        let result = unicode_string.to_base64();
+        let result = Base64::from_bytes_struct(&unicode_string.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_base64_to_unicode() {
-        let base64_string =
-            CryptoVec::from(Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg=="));
-        let expected_result = CryptoVec::from(Unicode::from("Hi. Servus. Grüezi. 你好."));
+        let base64_string = Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
+        let expected_result = Unicode::from("Hi. Servus. Grüezi. 你好.");
 
-        let result = base64_string.to_unicode();
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_conversion_get_bytes() {
-        let cryptovec_bytes = CryptoVec::from(Bytes::from(vec![0x51, 0x55, 0x97, 0x61, 0x96]));
-        let expected_result: Vec<u8> = vec![0x51, 0x55, 0x97, 0x61, 0x96];
-
-        let result = cryptovec_bytes.get_bytes();
+        let result = Unicode::from_bytes_struct(&base64_string.to_bytes_struct());
 
         assert_eq!(result, expected_result);
     }
 
-    #[test]
-    fn unit_conversion_get_hex() {
-        let cryptovec_hex = CryptoVec::from(Hexadecimal::from("a01bc5ef"));
-        let expected_result = String::from("a01bc5ef");
+    // #[test]
+    // fn unit_conversion_get_bytes() {
+    //     let cryptovec_bytes = CryptoVec::from(Bytes::from(vec![0x51, 0x55, 0x97, 0x61, 0x96]));
+    //     let expected_result: Vec<u8> = vec![0x51, 0x55, 0x97, 0x61, 0x96];
 
-        let result = cryptovec_hex.get_hex();
+    //     let result = cryptovec_bytes.get_bytes();
 
-        assert_eq!(result, expected_result);
-    }
+    //     assert_eq!(result, expected_result);
+    // }
 
-    #[test]
-    fn unit_conversion_get_base64() {
-        let cryptovec_base64 = CryptoVec::from(Base64::from("HUIfTQ"));
-        let expected_result = String::from("HUIfTQ");
+    // #[test]
+    // fn unit_conversion_get_hex() {
+    //     let cryptovec_hex = CryptoVec::from(Hexadecimal::from("a01bc5ef"));
+    //     let expected_result = String::from("a01bc5ef");
 
-        let result = cryptovec_base64.get_base64();
+    //     let result = cryptovec_hex.get_hex();
 
-        assert_eq!(result, expected_result);
-    }
+    //     assert_eq!(result, expected_result);
+    // }
 
-    #[test]
-    fn unit_conversion_get_unicode() {
-        let cryptovec_unicode = CryptoVec::from(Unicode::from("Hi. Servus. Grüezi. 你好."));
-        let expected_result = String::from("Hi. Servus. Grüezi. 你好.");
+    // #[test]
+    // fn unit_conversion_get_base64() {
+    //     let cryptovec_base64 = CryptoVec::from(Base64::from("HUIfTQ"));
+    //     let expected_result = String::from("HUIfTQ");
 
-        let result = cryptovec_unicode.get_unicode();
+    //     let result = cryptovec_base64.get_base64();
 
-        assert_eq!(result, expected_result);
-    }
+    //     assert_eq!(result, expected_result);
+    // }
+
+    // #[test]
+    // fn unit_conversion_get_unicode() {
+    //     let cryptovec_unicode = CryptoVec::from(Unicode::from("Hi. Servus. Grüezi. 你好."));
+    //     let expected_result = String::from("Hi. Servus. Grüezi. 你好.");
+
+    //     let result = cryptovec_unicode.get_unicode();
+
+    //     assert_eq!(result, expected_result);
+    // }
 
     #[test]
     fn unit_conversion_get_iso_8859_1_01() {
-        let bytes = CryptoVec::from(Bytes::from(vec![0x41, 0x62, 0x33]));
+        let bytes = Bytes::from(vec![0x41, 0x62, 0x33]);
         let expected_result = String::from("Ab3");
 
-        let result = bytes.get_iso_8859_1();
+        let result = Unicode::from_bytes_struct(&bytes).get_iso_8859_1();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_get_iso_8859_1_02() {
-        let bytes = CryptoVec::from(Bytes::from(vec![
-            0x46, 0x72, 0xc3, 0xbc, 0x68, 0x6a, 0x61, 0x68, 0x72,
-        ]));
+        let bytes = Bytes::from(vec![0x46, 0x72, 0xc3, 0xbc, 0x68, 0x6a, 0x61, 0x68, 0x72]);
         let expected_result = String::from("FrÃ¼hjahr");
 
-        let result = bytes.get_iso_8859_1();
+        let result = Unicode::from_bytes_struct(&bytes).get_iso_8859_1();
 
         assert_eq!(result, expected_result);
     }

@@ -124,7 +124,7 @@ fn challenge_06() {
             //     cryptopals::helpers::bytes_to_ascii(score.decoded.get(0..30).unwrap())
             // );
 
-            cryptopals::print_histogram(&vec![score.key], &score.decoded, 195.0, true, 0.0, 0);
+            cryptopals::print_histogram(&vec![score.key], &score.decoded, 195.0, true, 0.005, 5);
         }
         println!("");
 

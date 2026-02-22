@@ -4,44 +4,56 @@ use std::ops::Range;
 
 pub mod constants;
 pub mod crypto_vecs;
-pub mod helpers;
 
-pub fn fixed_xor_unicode(plain_text: &str, key: &str) -> Vec<u8> {
-    fixed_xor_bytes(
-        &crate::helpers::unicode_to_bytes(plain_text),
-        &crate::helpers::unicode_to_bytes(key),
-    )
+pub fn fixed_xor_cryptovecs<T, U>(plain_text: &T, key: &U) -> crypto_vecs::Bytes
+where
+    T: crypto_vecs::ToBytes,
+    U: crypto_vecs::ToBytes,
+{
+    self::fixed_xor(&plain_text.to_bytes(), &key.to_bytes())
 }
 
-pub fn fixed_xor_bytes(bytes_input: &[u8], bytes_key: &[u8]) -> Vec<u8> {
+pub fn fixed_xor(plain_text: &crypto_vecs::Bytes, key: &crypto_vecs::Bytes) -> crypto_vecs::Bytes {
     let mut bytes_xor = Vec::new();
-    let mut key_iter = bytes_key.iter().cycle();
 
-    for &byte_input in bytes_input {
+    let key_bytes = key.to_vec();
+    let mut key_iter = key_bytes.iter().cycle();
+
+    for byte_plain in plain_text.to_vec() {
         let byte_key = key_iter.next().expect("infinite key was finite after all");
-        let byte_xor = (byte_input | byte_key) & !(byte_input & byte_key);
+        let byte_xor = (byte_plain | byte_key) & !(byte_plain & byte_key);
 
         bytes_xor.push(byte_xor);
     }
 
-    bytes_xor
+    crypto_vecs::Bytes::from(bytes_xor)
 }
 
-pub fn find_lowest_score_xor_bytes(
-    bytes: &[u8],
-    keys_range_bytes: Range<u8>,
-) -> Vec<crate::constants::ScoreXOR> {
-    let mut scores: Vec<crate::constants::ScoreXOR> = Vec::with_capacity(keys_range_bytes.len());
+pub fn find_lowest_score_xor_cryptovecs<T>(
+    cryptovec: &T,
+    keys_range_bytes: &Range<u8>,
+) -> Vec<constants::ScoreXOR>
+where
+    T: crypto_vecs::ToBytes,
+{
+    self::find_lowest_score_xor(&cryptovec.to_bytes(), &keys_range_bytes)
+}
 
-    for key_byte in keys_range_bytes {
-        let key_vector = vec![key_byte];
-        let bytes_xor = fixed_xor_bytes(&bytes, &key_vector);
-        let score = score_letter_frequencies(&bytes_xor);
+pub fn find_lowest_score_xor(
+    bytes: &crypto_vecs::Bytes,
+    keys_range_bytes: &Range<u8>,
+) -> Vec<constants::ScoreXOR> {
+    let mut scores: Vec<constants::ScoreXOR> = Vec::with_capacity(keys_range_bytes.len());
 
-        let score = crate::constants::ScoreXOR {
+    for key_byte in keys_range_bytes.clone() {
+        let key = crypto_vecs::Bytes::from(key_byte);
+        let bytes_xor = self::fixed_xor(&bytes, &key);
+        let score = self::score_letter_frequencies(&bytes_xor);
+
+        let score = constants::ScoreXOR {
             score: score,
-            key: key_byte,
-            decoded: bytes_xor,
+            key: key,
+            plain_text: bytes_xor,
         };
 
         scores.push(score);
@@ -53,15 +65,16 @@ pub fn find_lowest_score_xor_bytes(
     scores
 }
 
-fn get_letter_frequencies(bytes: &[u8]) -> HashMap<u8, f64> {
+fn get_letter_frequencies(bytes: &crypto_vecs::Bytes) -> HashMap<u8, f64> {
     let mut letter_frequencies = HashMap::new();
     let percent_per_byte = 1.0 / (bytes.len() as f64);
 
-    for &byte in bytes {
+    for byte in bytes.to_vec() {
         let mut key = byte;
 
         // space
-        if key == 0x20 {}
+        if key == 0x20 {
+        }
         // upper-case letters (convert to lower-case)
         else if key >= 0x41 && key <= 0x5a {
             key += 0x20;
@@ -82,14 +95,14 @@ fn get_letter_frequencies(bytes: &[u8]) -> HashMap<u8, f64> {
 }
 
 pub fn print_histogram(
-    key: &[u8],
-    bytes: &[u8],
+    key: &crypto_vecs::Bytes,
+    bytes: &crypto_vecs::Bytes,
     magnification_factor: f64,
     rotate_histogram: bool,
     min_percentage_spaces: f64,
     min_important_letters: usize,
 ) {
-    let letter_frequencies = get_letter_frequencies(&bytes);
+    let letter_frequencies = self::get_letter_frequencies(&bytes);
 
     if min_percentage_spaces > 0.0 {
         let space = ' ' as u8;
@@ -118,10 +131,10 @@ pub fn print_histogram(
         }
     }
 
-    println!("[0x{}]", crate::helpers::bytes_to_hex(key));
+    println!("{}", key.to_string());
     let max_bin_size = (magnification_factor / 3.80) as i32;
 
-    let english_letter_frequencies = crate::constants::get_english_letter_frequencies();
+    let english_letter_frequencies = constants::get_english_letter_frequencies();
     let mut bins = Vec::with_capacity(english_letter_frequencies.len());
 
     for (mut letter, percentage_expected) in english_letter_frequencies {
@@ -160,20 +173,20 @@ pub fn print_histogram(
     }
 
     if rotate_histogram {
-        bins = crate::transpose_strings_counterclockwise(&bins);
+        bins = self::transpose_strings_counterclockwise(&bins);
     }
 
     for bin in bins {
         println!("{bin}");
     }
 
-    // println!("{}", crate::helpers::bytes_to_ascii(&bytes));
+    // println!("{}", crypto_vecs::Unicode::from(bytes.clone()));
     println!("");
 }
 
-fn score_letter_frequencies(bytes: &[u8]) -> f64 {
+fn score_letter_frequencies(bytes: &crypto_vecs::Bytes) -> f64 {
     let letter_frequencies = get_letter_frequencies(&bytes);
-    let english_letter_frequencies = crate::constants::get_english_letter_frequencies();
+    let english_letter_frequencies = constants::get_english_letter_frequencies();
 
     let mut total_score = 0.0;
 
@@ -201,26 +214,27 @@ fn score_letter_frequencies(bytes: &[u8]) -> f64 {
     total_score
 }
 
-pub fn hamming_distance_bits(string_1: &str, string_2: &str) -> u64 {
-    hamming_distance_bits_bytes(
-        &&crate::helpers::unicode_to_bytes(string_1),
-        &crate::helpers::unicode_to_bytes(string_2),
-    )
+pub fn hamming_distance_bits_cryptovecs<T, U>(cryptovec_1: &T, cryptovec_2: &U) -> u64
+where
+    T: crypto_vecs::ToBytes,
+    U: crypto_vecs::ToBytes,
+{
+    self::hamming_distance_bits(&cryptovec_1.to_bytes(), &cryptovec_2.to_bytes())
 }
 
-pub fn hamming_distance_bits_bytes(bytes_1: &[u8], bytes_2: &[u8]) -> u64 {
-    let bytes_with_differing_bits = fixed_xor_bytes(&bytes_1, &bytes_2);
+pub fn hamming_distance_bits(bytes_1: &crypto_vecs::Bytes, bytes_2: &crypto_vecs::Bytes) -> u64 {
+    let bytes_with_differing_bits = self::fixed_xor(&bytes_1, &bytes_2);
 
     let mut differing_bits = 0;
 
-    for &byte in &bytes_with_differing_bits {
+    for byte in bytes_with_differing_bits.to_vec() {
         let nibble_value_low = (byte as usize) & 0x0f;
         let nibble_value_high = (byte as usize) >> 4;
 
-        let differing_bits_low = crate::constants::LOOKUP_BITS_IN_NIBBLE
+        let differing_bits_low = constants::LOOKUP_BITS_IN_NIBBLE
             .get(nibble_value_low)
             .expect("index is between 0 and 15");
-        let differing_bits_high = crate::constants::LOOKUP_BITS_IN_NIBBLE
+        let differing_bits_high = constants::LOOKUP_BITS_IN_NIBBLE
             .get(nibble_value_high)
             .expect("index is between 0 and 15");
 
@@ -232,29 +246,34 @@ pub fn hamming_distance_bits_bytes(bytes_1: &[u8], bytes_2: &[u8]) -> u64 {
 }
 
 pub fn guess_keysize_from_hamming_distance(
-    bytes: &[u8],
-    keysize_range: Range<usize>,
-) -> Vec<crate::constants::ScoreKeysize> {
-    let mut scores: Vec<crate::constants::ScoreKeysize> = Vec::with_capacity(keysize_range.len());
+    bytes: &crypto_vecs::Bytes,
+    keysize_range: &Range<usize>,
+    number_of_calculations: u32,
+) -> Vec<constants::ScoreKeysize> {
+    let mut scores: Vec<constants::ScoreKeysize> = Vec::with_capacity(keysize_range.len());
 
-    for keysize in keysize_range {
+    for keysize in keysize_range.clone() {
         let mut edit_size = 0.0;
-        let number_of_calculations = 3;
 
-        let mut iter_chunks = bytes.chunks_exact(keysize);
-        let mut chunk_1 = iter_chunks.next().expect("text should be long enough");
+        let bytes_vec = bytes.to_vec();
+        let mut iter_chunks = bytes_vec.chunks_exact(keysize);
+        let mut chunk_vec_1 = iter_chunks.next().expect("text should be long enough");
 
         for _ in 0..number_of_calculations {
-            let chunk_2 = iter_chunks.next().expect("text should be long enough");
-            edit_size += crate::hamming_distance_bits_bytes(&chunk_1, &chunk_2) as f64;
+            let chunk_vec_2 = iter_chunks.next().expect("text should be long enough");
 
-            chunk_1 = chunk_2;
+            edit_size += self::hamming_distance_bits(
+                &crypto_vecs::Bytes::from(chunk_vec_1),
+                &crypto_vecs::Bytes::from(chunk_vec_2),
+            ) as f64;
+
+            chunk_vec_1 = chunk_vec_2;
         }
 
         let edit_size_average = edit_size / (number_of_calculations as f64);
         let edit_size_normalized = edit_size_average / (keysize as f64);
 
-        let score = crate::constants::ScoreKeysize {
+        let score = constants::ScoreKeysize {
             score: edit_size_normalized,
             keysize: keysize,
         };
@@ -268,36 +287,46 @@ pub fn guess_keysize_from_hamming_distance(
     scores
 }
 
-pub fn transpose_bytes(bytes: &[u8], keysize: usize) -> Vec<Vec<u8>> {
-    assert!(keysize > 0);
+pub fn transpose_bytes(
+    bytes: &crypto_vecs::Bytes,
+    number_of_blocks: usize,
+) -> Vec<crypto_vecs::Bytes> {
+    assert!(number_of_blocks > 0);
 
     // may come in useful for automatic processing (single-byte keys)
-    if keysize == 1 {
-        return vec![bytes.to_vec()];
+    if number_of_blocks == 1 {
+        return vec![bytes.clone()];
     }
 
-    let mut transposed_blocks: Vec<Vec<u8>> = Vec::with_capacity(keysize);
-    let block_capacity = (bytes.len() / keysize) + 1;
+    let mut transposed_blocks_raw: Vec<Vec<u8>> = Vec::with_capacity(number_of_blocks);
+    let block_capacity = (bytes.len() / number_of_blocks) + 1;
 
-    for _ in 0..keysize {
-        transposed_blocks.push(Vec::with_capacity(block_capacity));
+    for _ in 0..number_of_blocks {
+        transposed_blocks_raw.push(Vec::with_capacity(block_capacity));
     }
 
-    for (index, &byte) in bytes.iter().enumerate() {
+    for (index, &byte) in bytes.to_vec().iter().enumerate() {
         // guard rail: may be lower than "keysize"
-        let block_index = index % keysize;
-        transposed_blocks[block_index].push(byte);
+        let block_index = index % number_of_blocks;
+        transposed_blocks_raw[block_index].push(byte);
+    }
+
+    let mut transposed_blocks: Vec<crypto_vecs::Bytes> = Vec::with_capacity(number_of_blocks);
+
+    for block in transposed_blocks_raw {
+        let bytes = crypto_vecs::Bytes::from(block);
+        transposed_blocks.push(bytes);
     }
 
     transposed_blocks
 }
 
 pub fn transpose_strings_clockwise(strings: &Vec<String>) -> Vec<String> {
-    transpose_strings(strings, true)
+    self::transpose_strings(strings, true)
 }
 
 pub fn transpose_strings_counterclockwise(strings: &Vec<String>) -> Vec<String> {
-    transpose_strings(strings, false)
+    self::transpose_strings(strings, false)
 }
 
 fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<String> {
@@ -342,137 +371,145 @@ fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<St
 
 #[cfg(test)]
 mod tests {
-    use std::vec;
-
     use super::*;
 
     #[test]
-    fn unit_fixed_xor_bytes_single_byte() {
-        let bytes_1 = vec![0x1c, 0x01, 0x11, 0x00, 0x1f, 0xa2, 0x4b, 0x53, 0x98, 0xc5];
-        let bytes_2 = vec![0x74];
-        let expected_result = vec![0x68, 0x75, 0x65, 0x74, 0x6b, 0xd6, 0x3f, 0x27, 0xec, 0xb1];
+    fn unit_fixed_xor_single_byte_key() {
+        let bytes_1 = crypto_vecs::Bytes::from(vec![
+            0x1c, 0x01, 0x11, 0x00, 0x1f, 0xa2, 0x4b, 0x53, 0x98, 0xc5,
+        ]);
+        let bytes_2 = crypto_vecs::Bytes::from(0x74);
+        let expected_result = crypto_vecs::Bytes::from(vec![
+            0x68, 0x75, 0x65, 0x74, 0x6b, 0xd6, 0x3f, 0x27, 0xec, 0xb1,
+        ]);
 
-        let result = fixed_xor_bytes(&bytes_1, &bytes_2);
+        let result = self::fixed_xor(&bytes_1, &bytes_2);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_fixed_xor_bytes_full_length() {
-        let bytes_1 = vec![
+    fn unit_fixed_xor_full_length_key() {
+        let bytes_1 = crypto_vecs::Bytes::from(vec![
             0x1c, 0x01, 0x11, 0x00, 0x1f, 0x01, 0x01, 0x00, 0x06, 0x1a, 0x02, 0x4b, 0x53, 0x53,
             0x50, 0x09, 0x18, 0x1c,
-        ];
-        let bytes_2 = vec![
+        ]);
+        let bytes_2 = crypto_vecs::Bytes::from(vec![
             0x68, 0x69, 0x74, 0x20, 0x74, 0x68, 0x65, 0x20, 0x62, 0x75, 0x6c, 0x6c, 0x27, 0x73,
             0x20, 0x65, 0x79, 0x65,
-        ];
-        let expected_result = vec![
+        ]);
+        let expected_result = crypto_vecs::Bytes::from(vec![
             0x74, 0x68, 0x65, 0x20, 0x6b, 0x69, 0x64, 0x20, 0x64, 0x6f, 0x6e, 0x27, 0x74, 0x20,
             0x70, 0x6c, 0x61, 0x79,
-        ];
+        ]);
 
-        let result = fixed_xor_bytes(&bytes_1, &bytes_2);
+        let result = self::fixed_xor(&bytes_1, &bytes_2);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_fixed_xor_unicode() {
-        let string_unicode = "Cooking MCs";
-        let key = "X";
-        let expected_result = vec![
+        let unicode = crypto_vecs::Unicode::from("Cooking MCs");
+        let key_unicode = crypto_vecs::Unicode::from("X");
+        let expected_result = crypto_vecs::Bytes::from(vec![
             0x1b, 0x37, 0x37, 0x33, 0x31, 0x36, 0x3f, 0x78, 0x15, 0x1b, 0x2b,
-        ];
+        ]);
 
-        let result = fixed_xor_unicode(&string_unicode, &key);
+        let result = self::fixed_xor_cryptovecs(&unicode, &key_unicode);
 
         assert_eq!(result, expected_result);
     }
 
+    // ----------------
+
     #[test]
-    fn unit_hamming_distance_bits_bytes_empty() {
-        let bytes_1 = vec![];
-        let bytes_2 = vec![];
+    fn unit_hamming_distance_bits_empty() {
+        let bytes_1 = crypto_vecs::Bytes::new();
+        let bytes_2 = crypto_vecs::Bytes::new();
         let expected_result = 0;
 
-        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_hamming_distance_bits_bytes_1() {
-        let bytes_1 = vec![0x02];
-        let bytes_2 = vec![0xa0];
+    fn unit_hamming_distance_bits_1() {
+        // from u8
+        let bytes_1 = crypto_vecs::Bytes::from(0x02);
+        // from Vec<u8>
+        let bytes_2 = crypto_vecs::Bytes::from(vec![0xa0]);
         let expected_result = 3;
 
-        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_hamming_distance_bits_bytes_2() {
-        let bytes_1 = vec![0x02, 0xb0];
-        let bytes_2 = vec![0xa0, 0x01];
+    fn unit_hamming_distance_bits_2() {
+        let bytes_1 = crypto_vecs::Bytes::from(vec![0x02, 0xb0]);
+        let bytes_2 = crypto_vecs::Bytes::from(vec![0xa0, 0x01]);
         let expected_result = 7;
 
-        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_hamming_distance_bits_bytes_3() {
-        let bytes_1 = vec![0x1d, 0x42];
-        let bytes_2 = vec![0x1f, 0x4d];
+    fn unit_hamming_distance_bits_3() {
+        let bytes_1 = crypto_vecs::Bytes::from(vec![0x1d, 0x42]);
+        let bytes_2 = crypto_vecs::Bytes::from(vec![0x1f, 0x4d]);
         let expected_result = 5;
 
-        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_hamming_distance_bits_bytes_4() {
-        let bytes_1 = vec![0x1d, 0x42, 0x1f];
-        let bytes_2 = vec![0x4d, 0x0b, 0x0f];
+    fn unit_hamming_distance_bits_4() {
+        let bytes_1 = crypto_vecs::Bytes::from(vec![0x1d, 0x42, 0x1f]);
+        let bytes_2 = crypto_vecs::Bytes::from(vec![0x4d, 0x0b, 0x0f]);
         let expected_result = 6;
 
-        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_hamming_distance_bits_bytes_5() {
-        let bytes_1 = vec![0x1d, 0x42, 0x1f, 0x4d, 0x0b];
-        let bytes_2 = vec![0x0f, 0x02, 0x1f, 0x4f, 0x13];
+    fn unit_hamming_distance_bits_5() {
+        let bytes_1 = crypto_vecs::Bytes::from(vec![0x1d, 0x42, 0x1f, 0x4d, 0x0b]);
+        let bytes_2 = crypto_vecs::Bytes::from(vec![0x0f, 0x02, 0x1f, 0x4f, 0x13]);
         let expected_result = 6;
 
-        let result = hamming_distance_bits_bytes(&bytes_1, &bytes_2);
+        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_hamming_distance_bits() {
-        let text_1 = "this is a test";
-        let text_2 = "wokka wokka!!!";
+    fn unit_hamming_distance_bits_unicode() {
+        let unicode_1 = crypto_vecs::Unicode::from("this is a test");
+        let unicode_2 = crypto_vecs::Unicode::from("wokka wokka!!!");
         let expected_result = 37;
 
-        let result = hamming_distance_bits(&text_1, &text_2);
+        let result = self::hamming_distance_bits_cryptovecs(&unicode_1, &unicode_2);
 
         assert_eq!(result, expected_result);
     }
+
+    // ----------------
 
     #[test]
     fn unit_transpose_bytes_no_transposition() {
-        let bytes = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let bytes = crypto_vecs::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 1;
 
-        let transposed_vecs = transpose_bytes(&bytes, keysize);
+        let transposed_vecs = self::transpose_bytes(&bytes, keysize);
 
         assert_eq!(transposed_vecs.len(), keysize);
         assert_eq!(transposed_vecs[0], bytes);
@@ -480,42 +517,53 @@ mod tests {
 
     #[test]
     fn unit_transpose_bytes_equal_distribution() {
-        let bytes = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let bytes = crypto_vecs::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 2;
 
-        let transposed_vecs = transpose_bytes(&bytes, keysize);
+        let transposed_vecs = self::transpose_bytes(&bytes, keysize);
 
         assert_eq!(transposed_vecs.len(), keysize);
-        assert_eq!(transposed_vecs[0], vec![1, 3, 5, 7, 9]);
-        assert_eq!(transposed_vecs[1], vec![2, 4, 6, 8, 10]);
+        assert_eq!(
+            transposed_vecs[0],
+            crypto_vecs::Bytes::from(vec![1, 3, 5, 7, 9])
+        );
+        assert_eq!(
+            transposed_vecs[1],
+            crypto_vecs::Bytes::from(vec![2, 4, 6, 8, 10])
+        );
     }
 
     #[test]
     fn unit_transpose_bytes_unequal_distribution() {
-        let bytes = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let bytes = crypto_vecs::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 3;
 
-        let transposed_vecs = transpose_bytes(&bytes, keysize);
+        let transposed_vecs = self::transpose_bytes(&bytes, keysize);
 
         assert_eq!(transposed_vecs.len(), keysize);
-        assert_eq!(transposed_vecs[0], vec![1, 4, 7, 10]);
-        assert_eq!(transposed_vecs[1], vec![2, 5, 8]);
-        assert_eq!(transposed_vecs[2], vec![3, 6, 9]);
+        assert_eq!(
+            transposed_vecs[0],
+            crypto_vecs::Bytes::from(vec![1, 4, 7, 10])
+        );
+        assert_eq!(transposed_vecs[1], crypto_vecs::Bytes::from(vec![2, 5, 8]));
+        assert_eq!(transposed_vecs[2], crypto_vecs::Bytes::from(vec![3, 6, 9]));
     }
 
     #[test]
     fn unit_transpose_bytes_not_enough_elements() {
-        let bytes = vec![1, 2, 3];
+        let bytes = crypto_vecs::Bytes::from(vec![1, 2, 3]);
         let keysize = bytes.len() + 1;
 
-        let transposed_vecs = transpose_bytes(&bytes, keysize);
+        let transposed_vecs = self::transpose_bytes(&bytes, keysize);
 
         assert_eq!(transposed_vecs.len(), keysize);
-        assert_eq!(transposed_vecs[0], vec![1]);
-        assert_eq!(transposed_vecs[1], vec![2]);
-        assert_eq!(transposed_vecs[2], vec![3]);
-        assert_eq!(transposed_vecs[3], vec![]);
+        assert_eq!(transposed_vecs[0], crypto_vecs::Bytes::from(1));
+        assert_eq!(transposed_vecs[1], crypto_vecs::Bytes::from(2));
+        assert_eq!(transposed_vecs[2], crypto_vecs::Bytes::from(3));
+        assert_eq!(transposed_vecs[3], crypto_vecs::Bytes::new());
     }
+
+    // ----------------
 
     #[test]
     fn unit_transpose_strings_clockwise() {
@@ -526,7 +574,7 @@ mod tests {
         ];
         let expected_result = vec!["ieä", "jfß", "kgc", "lhd"];
 
-        let result = transpose_strings_clockwise(&strings);
+        let result = self::transpose_strings_clockwise(&strings);
 
         assert_eq!(result, expected_result);
     }
@@ -540,7 +588,7 @@ mod tests {
         ];
         let expected_result = vec!["dhl", "cgk", "ßfj", "äei"];
 
-        let result = transpose_strings_counterclockwise(&strings);
+        let result = self::transpose_strings_counterclockwise(&strings);
 
         assert_eq!(result, expected_result);
     }

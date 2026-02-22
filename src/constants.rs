@@ -1,3 +1,5 @@
+use crate::crypto_vecs;
+
 use indexmap::IndexMap;
 
 const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 28] = [
@@ -49,8 +51,8 @@ pub const LOOKUP_BITS_IN_NIBBLE: [u8; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3,
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct ScoreXOR {
     pub score: f64,
-    pub key: u8,
-    pub decoded: Vec<u8>,
+    pub key: crypto_vecs::Bytes,
+    pub plain_text: crypto_vecs::Bytes,
 }
 
 #[derive(Debug, PartialEq, PartialOrd)]

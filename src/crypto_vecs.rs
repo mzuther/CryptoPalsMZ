@@ -52,6 +52,10 @@ impl convert::From<u8> for self::Bytes {
 }
 
 impl self::Bytes {
+    pub fn new() -> Self {
+        Self { bytes: Vec::new() }
+    }
+
     pub const fn len(&self) -> usize {
         self.bytes.len()
     }
@@ -359,6 +363,15 @@ fn assemble_bytes_from_segments(bytes: &Vec<Option<u8>>, bits_per_segment: u8) -
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unit_conversion_bytes_new() {
+        let expected_result = self::Bytes::from(Vec::new());
+
+        let result = self::Bytes::new();
+
+        assert_eq!(result, expected_result);
+    }
 
     #[test]
     fn unit_conversion_single_byte_to_bytes() {

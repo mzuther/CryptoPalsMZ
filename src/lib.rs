@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::ops::Range;
 
 pub mod constants;
-pub mod cryptovec;
+pub mod crypto_vecs;
 pub mod helpers;
 
 pub fn fixed_xor_unicode(plain_text: &str, key: &str) -> Vec<u8> {

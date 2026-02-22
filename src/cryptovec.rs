@@ -1,18 +1,22 @@
 use hex;
+use std::convert;
 
 // ----------------
 
-pub trait FromToBytes {
+pub trait ToBytes {
     fn to_bytes_struct(&self) -> Bytes;
-    fn from_bytes_struct(b: &Bytes) -> Self;
 
     fn to_bytes(&self) -> Vec<u8> {
         let b = self.to_bytes_struct();
 
         b.bytes
     }
+}
 
-    fn from_bytes<T: FromToBytes>(bytes: &Vec<u8>) -> T {
+pub trait FromBytes {
+    fn from_bytes_struct(b: &Bytes) -> Self;
+
+    fn from_bytes<T: FromBytes>(bytes: &Vec<u8>) -> T {
         let b = Bytes {
             bytes: bytes.clone(),
         };
@@ -28,13 +32,13 @@ pub struct Bytes {
     bytes: Vec<u8>,
 }
 
-impl From<Vec<u8>> for Bytes {
+impl convert::From<Vec<u8>> for Bytes {
     fn from(bytes: Vec<u8>) -> Self {
         Bytes { bytes: bytes }
     }
 }
 
-impl From<&[u8]> for Bytes {
+impl convert::From<&[u8]> for Bytes {
     fn from(bytes: &[u8]) -> Self {
         Bytes {
             bytes: bytes.to_vec(),
@@ -42,17 +46,19 @@ impl From<&[u8]> for Bytes {
     }
 }
 
-impl From<u8> for Bytes {
+impl convert::From<u8> for Bytes {
     fn from(byte: u8) -> Self {
         Bytes { bytes: vec![byte] }
     }
 }
 
-impl FromToBytes for Bytes {
+impl ToBytes for Bytes {
     fn to_bytes_struct(&self) -> Bytes {
         self.clone()
     }
+}
 
+impl FromBytes for Bytes {
     fn from_bytes_struct(b: &Bytes) -> Self {
         b.clone()
     }
@@ -65,7 +71,7 @@ pub struct Hexadecimal {
     hex_string: String,
 }
 
-impl From<String> for Hexadecimal {
+impl convert::From<String> for Hexadecimal {
     fn from(hex_string: String) -> Self {
         Hexadecimal {
             hex_string: hex_string,
@@ -73,7 +79,7 @@ impl From<String> for Hexadecimal {
     }
 }
 
-impl From<&str> for Hexadecimal {
+impl convert::From<&str> for Hexadecimal {
     fn from(hex_string: &str) -> Self {
         Hexadecimal {
             hex_string: String::from(hex_string),
@@ -81,13 +87,15 @@ impl From<&str> for Hexadecimal {
     }
 }
 
-impl FromToBytes for Hexadecimal {
+impl ToBytes for Hexadecimal {
     fn to_bytes_struct(&self) -> Bytes {
         Bytes {
             bytes: hex::decode(&self.to_string()).expect("Broken conversion"),
         }
     }
+}
 
+impl FromBytes for Hexadecimal {
     fn from_bytes_struct(b: &Bytes) -> Self {
         Self {
             hex_string: hex::encode(&b.bytes),
@@ -108,7 +116,7 @@ pub struct Base64 {
     base64_string: String,
 }
 
-impl From<String> for Base64 {
+impl convert::From<String> for Base64 {
     fn from(base64_string: String) -> Self {
         Base64 {
             base64_string: base64_string,
@@ -116,7 +124,7 @@ impl From<String> for Base64 {
     }
 }
 
-impl From<&str> for Base64 {
+impl convert::From<&str> for Base64 {
     fn from(base64_string: &str) -> Self {
         Base64 {
             base64_string: String::from(base64_string),
@@ -124,7 +132,7 @@ impl From<&str> for Base64 {
     }
 }
 
-impl FromToBytes for Base64 {
+impl ToBytes for Base64 {
     fn to_bytes_struct(&self) -> Bytes {
         let mut decoded_bytes = Vec::new();
 
@@ -164,7 +172,9 @@ impl FromToBytes for Base64 {
             bytes: assemble_bytes_from_segments(&decoded_bytes, 6),
         }
     }
+}
 
+impl FromBytes for Base64 {
     fn from_bytes_struct(b: &Bytes) -> Self {
         let segments_to_encode = split_bytes_into_segments(&b.bytes, 6);
 
@@ -232,7 +242,7 @@ impl Unicode {
     }
 }
 
-impl From<String> for Unicode {
+impl convert::From<String> for Unicode {
     fn from(unicode_string: String) -> Self {
         Unicode {
             unicode_string: unicode_string,
@@ -240,7 +250,7 @@ impl From<String> for Unicode {
     }
 }
 
-impl From<&str> for Unicode {
+impl convert::From<&str> for Unicode {
     fn from(unicode_string: &str) -> Self {
         Unicode {
             unicode_string: String::from(unicode_string),
@@ -248,13 +258,15 @@ impl From<&str> for Unicode {
     }
 }
 
-impl FromToBytes for Unicode {
+impl ToBytes for Unicode {
     fn to_bytes_struct(&self) -> Bytes {
         Bytes {
             bytes: Vec::from(self.to_string()),
         }
     }
+}
 
+impl FromBytes for Unicode {
     fn from_bytes_struct(b: &Bytes) -> Self {
         Self {
             unicode_string: String::from_utf8(b.to_bytes()).expect("invalid UTF-8 string"),

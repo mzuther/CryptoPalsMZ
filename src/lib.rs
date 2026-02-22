@@ -12,19 +12,19 @@ where
 }
 
 pub fn fixed_xor(plain_text: &crypto_vecs::Bytes, key: &crypto_vecs::Bytes) -> crypto_vecs::Bytes {
-    let mut bytes_xor = Vec::new();
+    let mut bytes_xor = crypto_vecs::Bytes::new();
+    let mut key_endless = key.iter().cycle();
 
-    let key_bytes = key.to_vec();
-    let mut key_iter = key_bytes.iter().cycle();
-
-    for byte_plain in plain_text.to_vec() {
-        let byte_key = key_iter.next().expect("infinite key was finite after all");
+    for byte_plain in plain_text.iter() {
+        let byte_key = key_endless
+            .next()
+            .expect("infinite key was finite after all");
         let byte_xor = (byte_plain | byte_key) & !(byte_plain & byte_key);
 
         bytes_xor.push(byte_xor);
     }
 
-    crypto_vecs::Bytes::from(bytes_xor)
+    bytes_xor
 }
 
 pub fn find_lowest_score_xor_cryptovecs<T>(
@@ -67,7 +67,7 @@ fn get_letter_frequencies(bytes: &crypto_vecs::Bytes) -> HashMap<u8, f64> {
     let mut letter_frequencies = HashMap::new();
     let percent_per_byte = 1.0 / (bytes.len() as f64);
 
-    for byte in bytes.to_vec() {
+    for &byte in bytes.iter() {
         let mut key = byte;
 
         // space
@@ -225,7 +225,7 @@ pub fn hamming_distance_bits(bytes_1: &crypto_vecs::Bytes, bytes_2: &crypto_vecs
 
     let mut differing_bits = 0;
 
-    for byte in bytes_with_differing_bits.to_vec() {
+    for &byte in bytes_with_differing_bits.iter() {
         let nibble_value_low = (byte as usize) & 0x0f;
         let nibble_value_high = (byte as usize) >> 4;
 
@@ -303,7 +303,7 @@ pub fn transpose_bytes(
         transposed_blocks_raw.push(Vec::with_capacity(block_capacity));
     }
 
-    for (index, &byte) in bytes.to_vec().iter().enumerate() {
+    for (index, &byte) in bytes.iter().enumerate() {
         // guard rail: may be lower than "keysize"
         let block_index = index % number_of_blocks;
         transposed_blocks_raw[block_index].push(byte);

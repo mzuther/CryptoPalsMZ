@@ -1,6 +1,8 @@
 use hex;
 use std::{convert, fmt, slice};
 
+use crate::crypto_vecs;
+
 // ----------------
 
 pub trait ToBytes {
@@ -18,7 +20,7 @@ impl fmt::Display for self::Bytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut formatted_string = String::new();
 
-        for &byte in &self.bytes {
+        for byte in self.iter() {
             formatted_string.push_str(&format!("{byte:#x}, "));
         }
 
@@ -38,15 +40,13 @@ impl convert::From<Vec<u8>> for self::Bytes {
 
 impl convert::From<&[u8]> for self::Bytes {
     fn from(bytes: &[u8]) -> Self {
-        self::Bytes {
-            bytes: bytes.to_vec(),
-        }
+        Self::from(bytes.to_vec())
     }
 }
 
 impl convert::From<u8> for self::Bytes {
     fn from(byte: u8) -> Self {
-        self::Bytes { bytes: vec![byte] }
+        Self::from(vec![byte])
     }
 }
 
@@ -75,7 +75,7 @@ impl self::Bytes {
     }
 
     pub fn to_vec(&self) -> Vec<u8> {
-        self.bytes.clone()
+        self.bytes.to_vec()
     }
 }
 
@@ -102,25 +102,21 @@ impl convert::From<String> for self::Hexadecimal {
 
 impl convert::From<&str> for self::Hexadecimal {
     fn from(hex_string: &str) -> Self {
-        self::Hexadecimal {
-            hex_string: String::from(hex_string.trim()).to_lowercase(),
-        }
+        Self::from(String::from(hex_string))
     }
 }
 
 impl convert::From<self::Bytes> for self::Hexadecimal {
     fn from(b: self::Bytes) -> Self {
-        Self {
-            hex_string: hex::encode(&b.to_vec()),
-        }
+        Self::from(hex::encode(b.iter()))
     }
 }
 
 impl ToBytes for self::Hexadecimal {
     fn to_bytes(&self) -> self::Bytes {
-        self::Bytes {
-            bytes: hex::decode(&self.hex_string).expect("Broken conversion"),
-        }
+        let hex_bytes = hex::decode(&self.hex_string).expect("Broken conversion");
+
+        self::Bytes::from(hex_bytes)
     }
 }
 
@@ -147,15 +143,13 @@ impl convert::From<String> for self::Base64 {
 
 impl convert::From<&str> for self::Base64 {
     fn from(base64_string: &str) -> Self {
-        self::Base64 {
-            base64_string: String::from(base64_string.trim()),
-        }
+        Self::from(String::from(base64_string))
     }
 }
 
 impl convert::From<self::Bytes> for self::Base64 {
     fn from(b: self::Bytes) -> Self {
-        let segments_to_encode = self::split_bytes_into_segments(&b.to_vec(), 6);
+        let segments_to_encode = self::split_bytes_into_segments(&b, 6);
         let mut encoded_bytes = String::new();
 
         for segment in &segments_to_encode {
@@ -188,9 +182,7 @@ impl convert::From<self::Bytes> for self::Base64 {
             encoded_bytes.push(char_int as char);
         }
 
-        Self {
-            base64_string: encoded_bytes,
-        }
+        Self::from(encoded_bytes)
     }
 }
 
@@ -230,9 +222,8 @@ impl ToBytes for self::Base64 {
             decoded_bytes.push(char_option);
         }
 
-        self::Bytes {
-            bytes: self::assemble_bytes_from_segments(&decoded_bytes, 6),
-        }
+        let base64_bytes = self::assemble_bytes_from_segments(&decoded_bytes, 6);
+        self::Bytes::from(base64_bytes)
     }
 }
 
@@ -272,38 +263,36 @@ impl convert::From<String> for self::Unicode {
 
 impl convert::From<&str> for self::Unicode {
     fn from(unicode_string: &str) -> Self {
-        self::Unicode {
-            unicode_string: String::from(unicode_string),
-        }
+        Self::from(String::from(unicode_string))
     }
 }
 
 impl convert::From<self::Bytes> for self::Unicode {
     fn from(b: self::Bytes) -> Self {
-        Self {
-            unicode_string: String::from_utf8(b.to_vec()).expect("invalid UTF-8 string"),
-        }
+        let unicode_string = String::from_utf8(b.to_vec()).expect("invalid UTF-8 string");
+
+        Self::from(unicode_string)
     }
 }
 
 impl ToBytes for self::Unicode {
     fn to_bytes(&self) -> self::Bytes {
-        self::Bytes {
-            bytes: Vec::from(self.unicode_string.clone()),
-        }
+        let unicode_bytes = Vec::from(self.unicode_string.clone());
+
+        self::Bytes::from(unicode_bytes)
     }
 }
 
 // ----------------
 
-fn split_bytes_into_segments(bytes: &[u8], bits_per_segment: u8) -> Vec<Option<u8>> {
+fn split_bytes_into_segments(bytes: &crypto_vecs::Bytes, bits_per_segment: u8) -> Vec<Option<u8>> {
     let mut segments_to_encode = Vec::new();
 
     let bits_per_byte = 8;
     let mut bits_with_value = 0;
     let mut remainder = 0;
 
-    for &byte in bytes {
+    for byte in bytes.iter() {
         bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
         let bits_with_remainder = bits_per_byte - bits_with_value;
 
@@ -336,14 +325,17 @@ fn split_bytes_into_segments(bytes: &[u8], bits_per_segment: u8) -> Vec<Option<u
     segments_to_encode
 }
 
-fn assemble_bytes_from_segments(bytes: &Vec<Option<u8>>, bits_per_segment: u8) -> Vec<u8> {
-    let mut assembled_segments = Vec::new();
+fn assemble_bytes_from_segments(
+    bytes: &Vec<Option<u8>>,
+    bits_per_segment: u8,
+) -> crypto_vecs::Bytes {
+    let mut assembled_segments = crypto_vecs::Bytes::new();
 
     let bits_per_byte = 8;
     let mut inverted_bit_output = 0;
     let mut byte_in_progress = 0;
 
-    for &byte_input in bytes {
+    for byte_input in bytes {
         // padding
         if byte_input.is_none() {
             return assembled_segments;

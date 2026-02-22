@@ -225,7 +225,7 @@ pub fn hamming_distance_bits(bytes_1: &crypto_vecs::Bytes, bytes_2: &crypto_vecs
 
     let mut differing_bits = 0;
 
-    for &byte in bytes_with_differing_bits.iter() {
+    for byte in bytes_with_differing_bits {
         let nibble_value_low = (byte as usize) & 0x0f;
         let nibble_value_high = (byte as usize) >> 4;
 

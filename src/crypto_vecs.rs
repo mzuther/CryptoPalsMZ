@@ -1,5 +1,5 @@
 use hex;
-use std::{convert, fmt, slice};
+use std::{convert, fmt, slice, vec};
 
 use crate::crypto_vecs;
 
@@ -47,6 +47,15 @@ impl convert::From<&[u8]> for self::Bytes {
 impl convert::From<u8> for self::Bytes {
     fn from(byte: u8) -> Self {
         Self::from(vec![byte])
+    }
+}
+
+impl IntoIterator for self::Bytes {
+    type Item = u8;
+    type IntoIter = vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.bytes.into_iter()
     }
 }
 
@@ -116,7 +125,7 @@ impl convert::From<&str> for self::Hexadecimal {
 
 impl convert::From<self::Bytes> for self::Hexadecimal {
     fn from(b: self::Bytes) -> Self {
-        Self::from(hex::encode(b.iter()))
+        Self::from(hex::encode(b.to_vec()))
     }
 }
 
@@ -513,6 +522,17 @@ mod tests {
         assert_eq!(bytes_iter.next(), Some(&0xd3));
         assert_eq!(bytes_iter.next(), Some(&0x42));
         assert_eq!(bytes_iter.next(), Some(&0x6f));
+        assert_eq!(bytes_iter.next(), None);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_into_iter() {
+        let bytes = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
+        let mut bytes_iter = bytes.into_iter();
+
+        assert_eq!(bytes_iter.next(), Some(0xd3));
+        assert_eq!(bytes_iter.next(), Some(0x42));
+        assert_eq!(bytes_iter.next(), Some(0x6f));
         assert_eq!(bytes_iter.next(), None);
     }
 

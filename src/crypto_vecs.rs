@@ -1,6 +1,5 @@
 use hex;
-use std::convert;
-use std::fmt;
+use std::{convert, fmt, slice};
 
 // ----------------
 
@@ -64,8 +63,15 @@ impl self::Bytes {
         self.bytes.push(byte);
     }
 
-    pub fn extend<T: Into<Vec<u8>>>(&mut self, bytes: T) {
+    pub fn extend<T>(&mut self, bytes: T)
+    where
+        T: Into<Vec<u8>>,
+    {
         self.bytes.extend(bytes.into());
+    }
+
+    pub fn iter(&self) -> slice::Iter<'_, u8> {
+        self.bytes.iter()
     }
 
     pub fn to_vec(&self) -> Vec<u8> {
@@ -470,6 +476,17 @@ mod tests {
         result.extend(vec![0x12, 0x0d]);
 
         assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_iter() {
+        let bytes = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
+        let mut bytes_iter = bytes.iter();
+
+        assert_eq!(bytes_iter.next(), Some(&0xd3));
+        assert_eq!(bytes_iter.next(), Some(&0x42));
+        assert_eq!(bytes_iter.next(), Some(&0x6f));
+        assert_eq!(bytes_iter.next(), None);
     }
 
     #[test]

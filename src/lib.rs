@@ -1,6 +1,4 @@
-use std::cmp;
-use std::collections::HashMap;
-use std::ops::Range;
+use std::{cmp, collections::HashMap, ops::Range};
 
 pub mod constants;
 pub mod crypto_vecs;

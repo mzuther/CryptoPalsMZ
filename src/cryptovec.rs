@@ -118,7 +118,6 @@ impl convert::From<&str> for self::Base64 {
 impl convert::From<self::Bytes> for self::Base64 {
     fn from(b: self::Bytes) -> Self {
         let segments_to_encode = split_bytes_into_segments(&b.to_vec(), 6);
-
         let mut encoded_bytes = String::new();
 
         for segment in &segments_to_encode {
@@ -214,14 +213,14 @@ impl fmt::Display for self::Unicode {
 
 impl self::Unicode {
     fn to_iso_8859_1(self) -> String {
-        let mut bytes_as_string = String::new();
+        let mut iso_string = String::new();
 
         for byte in self.to_bytes().to_vec() {
-            let iso_character = byte as char;
-            bytes_as_string.push(iso_character);
+            let iso_char = byte as char;
+            iso_string.push(iso_char);
         }
 
-        bytes_as_string
+        iso_string
     }
 }
 
@@ -383,50 +382,50 @@ mod tests {
 
     #[test]
     fn unit_conversion_hex_to_bytes_lowercase() {
-        let hex_string = self::Hexadecimal::from("41c3bce4bda0");
+        let hexadecimal = self::Hexadecimal::from("41c3bce4bda0");
         let expected_result = self::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
-        let result = hex_string.to_bytes();
+        let result = hexadecimal.to_bytes();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_hex_to_bytes_uppercase() {
-        let hex_string = self::Hexadecimal::from("21A3DCF4DBA1");
+        let hexadecimal = self::Hexadecimal::from("21A3DCF4DBA1");
         let expected_result = self::Bytes::from(vec![0x21, 0xa3, 0xdc, 0xf4, 0xdb, 0xa1]);
 
-        let result = hex_string.to_bytes();
+        let result = hexadecimal.to_bytes();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_hex_to_string_lowercase() {
-        let hex_string = self::Hexadecimal::from("41c3bce4bda0");
+        let hexadecimal = self::Hexadecimal::from("41c3bce4bda0");
         let expected_result = String::from("41c3bce4bda0");
 
-        let result = hex_string.to_string();
+        let result = hexadecimal.to_string();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_hex_to_string_uppercase_spaces() {
-        let hex_string = self::Hexadecimal::from("21A3DCF4DBA1");
+        let hexadecimal = self::Hexadecimal::from("21A3DCF4DBA1");
         let expected_result = String::from("21a3dcf4dba1");
 
-        let result = hex_string.to_string();
+        let result = hexadecimal.to_string();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_hex_to_string_whitespace() {
-        let hex_string = self::Hexadecimal::from(" \t41c3bce4bda0\n");
+        let hexadecimal = self::Hexadecimal::from(" \t41c3bce4bda0\n");
         let expected_result = String::from("41c3bce4bda0");
 
-        let result = hex_string.to_string();
+        let result = hexadecimal.to_string();
 
         assert_eq!(result, expected_result);
     }
@@ -489,10 +488,10 @@ mod tests {
 
     #[test]
     fn unit_conversion_base64_to_bytes() {
-        let base64_bytes = self::Base64::from(BASE64_COMPLETE_ALPHABET);
+        let base64 = self::Base64::from(BASE64_COMPLETE_ALPHABET);
         let expected_result = self::Bytes::from(get_base64_complete_alphabet_as_bytes());
 
-        let result = base64_bytes.to_bytes();
+        let result = base64.to_bytes();
 
         assert_eq!(result, expected_result);
     }
@@ -503,10 +502,10 @@ mod tests {
         expected_result_raw.push(0x00);
         expected_result_raw.push(0x11);
 
-        let base64_bytes = self::Base64::from(format!("{BASE64_COMPLETE_ALPHABET}ABE="));
+        let base64 = self::Base64::from(format!("{BASE64_COMPLETE_ALPHABET}ABE="));
         let expected_result = self::Bytes::from(expected_result_raw);
 
-        let result = base64_bytes.to_bytes();
+        let result = base64.to_bytes();
 
         assert_eq!(result, expected_result);
     }
@@ -516,10 +515,10 @@ mod tests {
         let mut expected_result_raw = get_base64_complete_alphabet_as_bytes();
         expected_result_raw.push(0x00);
 
-        let base64_bytes = self::Base64::from(format!("{BASE64_COMPLETE_ALPHABET}AA=="));
+        let base64 = self::Base64::from(format!("{BASE64_COMPLETE_ALPHABET}AA=="));
         let expected_result = self::Bytes::from(expected_result_raw);
 
-        let result = base64_bytes.to_bytes();
+        let result = base64.to_bytes();
 
         assert_eq!(result, expected_result);
     }
@@ -548,40 +547,40 @@ mod tests {
 
     #[test]
     fn unit_conversion_hex_to_base64_via_bytes() {
-        let hex_string = self::Hexadecimal::from(BASE64_COMPLETE_ALPHABET_HEX);
+        let hexadecimal = self::Hexadecimal::from(BASE64_COMPLETE_ALPHABET_HEX);
         let expected_result = self::Base64::from(BASE64_COMPLETE_ALPHABET);
 
-        let result = self::Base64::from(hex_string.to_bytes());
+        let result = self::Base64::from(hexadecimal.to_bytes());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_base64_to_hex_via_bytes() {
-        let base64_string = self::Base64::from(BASE64_COMPLETE_ALPHABET);
+        let base64 = self::Base64::from(BASE64_COMPLETE_ALPHABET);
         let expected_result = self::Hexadecimal::from(BASE64_COMPLETE_ALPHABET_HEX);
 
-        let result = self::Hexadecimal::from(base64_string.to_bytes());
+        let result = self::Hexadecimal::from(base64.to_bytes());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_unicode_to_base64_via_bytes() {
-        let unicode_string = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
+        let unicode = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
         let expected_result = self::Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
 
-        let result = self::Base64::from(unicode_string.to_bytes());
+        let result = self::Base64::from(unicode.to_bytes());
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_base64_to_unicode_via_bytes() {
-        let base64_string = self::Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
+        let base64 = self::Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
         let expected_result = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
 
-        let result = self::Unicode::from(base64_string.to_bytes());
+        let result = self::Unicode::from(base64.to_bytes());
 
         assert_eq!(result, expected_result);
     }
@@ -610,20 +609,20 @@ mod tests {
 
     #[test]
     fn unit_conversion_unicode_to_bytes_1() {
-        let unicode_string = self::Unicode::from("Ab3");
+        let unicode = self::Unicode::from("Ab3");
         let expected_result = self::Bytes::from(vec![0x41, 0x62, 0x33]);
 
-        let result = unicode_string.to_bytes();
+        let result = unicode.to_bytes();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_conversion_unicode_to_bytes_2() {
-        let unicode_string = self::Unicode::from("Aü你");
+        let unicode = self::Unicode::from("Aü你");
         let expected_result = self::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
-        let result = unicode_string.to_bytes();
+        let result = unicode.to_bytes();
 
         assert_eq!(result, expected_result);
     }

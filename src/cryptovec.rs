@@ -42,6 +42,12 @@ impl From<&[u8]> for Bytes {
     }
 }
 
+impl From<u8> for Bytes {
+    fn from(byte: u8) -> Self {
+        Bytes { bytes: vec![byte] }
+    }
+}
+
 impl FromToBytes for Bytes {
     fn to_bytes_struct(&self) -> Bytes {
         self.clone()
@@ -347,14 +353,38 @@ mod tests {
     use super::*;
 
     #[test]
-    fn unit_conversion_bytes_to_bytes() {
-        let bytes = Bytes::from(vec![0x41, 0x62, 0x33]);
-        let expected_result = Bytes::from(vec![0x41, 0x62, 0x33]);
+    fn unit_conversion_single_byte_to_bytes() {
+        let bytes = Bytes::from(0xd3);
+
+        // avoid "vec!" macro as this is used by the implementation
+        let mut expected_vec = Vec::new();
+        expected_vec.push(0xd3);
+
+        let expected_result = Bytes::from(expected_vec);
 
         let result = bytes.to_bytes_struct();
 
         assert_eq!(result, expected_result);
     }
+
+    #[test]
+    fn unit_conversion_bytes_vector_to_bytes() {
+        let bytes = Bytes::from(vec![0x41, 0x62, 0x33]);
+
+        // avoid "vec!" macro as this is used by the implementation
+        let mut expected_vec = Vec::new();
+        expected_vec.push(0x41);
+        expected_vec.push(0x62);
+        expected_vec.push(0x33);
+
+        let expected_result = Bytes::from(expected_vec);
+
+        let result = bytes.to_bytes_struct();
+
+        assert_eq!(result, expected_result);
+    }
+
+    // ----------------
 
     #[test]
     fn unit_conversion_unicode_to_bytes_1() {

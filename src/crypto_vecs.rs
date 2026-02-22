@@ -60,6 +60,14 @@ impl self::Bytes {
         self.bytes.len()
     }
 
+    pub fn push(&mut self, byte: u8) {
+        self.bytes.push(byte);
+    }
+
+    pub fn extend<T: Into<Vec<u8>>>(&mut self, bytes: T) {
+        self.bytes.extend(bytes.into());
+    }
+
     pub fn to_vec(&self) -> Vec<u8> {
         self.bytes.clone()
     }
@@ -417,6 +425,49 @@ mod tests {
         let expected_result = 3;
 
         let result = bytes.len();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_push_1() {
+        let expected_result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
+
+        let mut result = self::Bytes::new();
+        result.push(0xd3);
+        result.push(0x42);
+        result.push(0x6f);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_push_2() {
+        let expected_result = self::Bytes::from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+
+        let mut result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
+        result.push(0x12);
+        result.push(0x0d);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_extend_1() {
+        let expected_result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
+
+        let mut result = self::Bytes::new();
+        result.extend(vec![0xd3, 0x42, 0x6f]);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_extend_2() {
+        let expected_result = self::Bytes::from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+
+        let mut result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
+        result.extend(vec![0x12, 0x0d]);
 
         assert_eq!(result, expected_result);
     }

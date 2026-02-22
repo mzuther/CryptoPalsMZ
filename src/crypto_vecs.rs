@@ -52,7 +52,7 @@ impl convert::From<u8> for self::Bytes {
 }
 
 impl self::Bytes {
-    fn to_vec(&self) -> Vec<u8> {
+    pub fn to_vec(&self) -> Vec<u8> {
         self.bytes.clone()
     }
 }
@@ -111,7 +111,7 @@ pub struct Base64 {
 
 impl fmt::Display for self::Base64 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.base64_string)
+        write!(f, "base64:{}", self.base64_string)
     }
 }
 
@@ -228,7 +228,7 @@ impl fmt::Display for self::Unicode {
 }
 
 impl self::Unicode {
-    fn to_iso_8859_1(self) -> String {
+    pub fn to_iso_8859_1(self) -> String {
         let mut iso_string = String::new();
 
         for byte in self.to_bytes().to_vec() {
@@ -562,7 +562,7 @@ mod tests {
     #[test]
     fn unit_conversion_base64_to_string() {
         let base64 = self::Base64::from(BASE64_COMPLETE_ALPHABET);
-        let expected_result = String::from(BASE64_COMPLETE_ALPHABET);
+        let expected_result = String::from(format!("base64:{BASE64_COMPLETE_ALPHABET}"));
 
         let result = base64.to_string();
 
@@ -572,7 +572,7 @@ mod tests {
     #[test]
     fn unit_conversion_base64_to_string_whitespace() {
         let base64 = self::Base64::from(format!("\t\n{BASE64_COMPLETE_ALPHABET} "));
-        let expected_result = String::from(BASE64_COMPLETE_ALPHABET);
+        let expected_result = String::from(format!("base64:{BASE64_COMPLETE_ALPHABET}"));
 
         let result = base64.to_string();
 

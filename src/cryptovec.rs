@@ -50,7 +50,7 @@ pub struct Hexadecimal {
 
 impl fmt::Display for self::Hexadecimal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.hex_string)
+        write!(f, "0x{}", self.hex_string)
     }
 }
 
@@ -403,7 +403,7 @@ mod tests {
     #[test]
     fn unit_conversion_hex_to_string_lowercase() {
         let hexadecimal = self::Hexadecimal::from("41c3bce4bda0");
-        let expected_result = String::from("41c3bce4bda0");
+        let expected_result = String::from("0x41c3bce4bda0");
 
         let result = hexadecimal.to_string();
 
@@ -413,7 +413,7 @@ mod tests {
     #[test]
     fn unit_conversion_hex_to_string_uppercase_spaces() {
         let hexadecimal = self::Hexadecimal::from("21A3DCF4DBA1");
-        let expected_result = String::from("21a3dcf4dba1");
+        let expected_result = String::from("0x21a3dcf4dba1");
 
         let result = hexadecimal.to_string();
 
@@ -423,7 +423,7 @@ mod tests {
     #[test]
     fn unit_conversion_hex_to_string_whitespace() {
         let hexadecimal = self::Hexadecimal::from(" \t41c3bce4bda0\n");
-        let expected_result = String::from("41c3bce4bda0");
+        let expected_result = String::from("0x41c3bce4bda0");
 
         let result = hexadecimal.to_string();
 

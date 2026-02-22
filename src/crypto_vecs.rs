@@ -52,6 +52,10 @@ impl convert::From<u8> for self::Bytes {
 }
 
 impl self::Bytes {
+    pub const fn len(&self) -> usize {
+        self.bytes.len()
+    }
+
     pub fn to_vec(&self) -> Vec<u8> {
         self.bytes.clone()
     }
@@ -380,6 +384,26 @@ mod tests {
         let expected_result = self::Bytes::from(expected_result_vec);
 
         let result = self::Bytes::from(vec![0x41, 0x62, 0x33]);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_length_single_byte() {
+        let bytes = self::Bytes::from(0xd3);
+        let expected_result = 1;
+
+        let result = bytes.len();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_length_bytes() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0x33]);
+        let expected_result = 3;
+
+        let result = bytes.len();
 
         assert_eq!(result, expected_result);
     }

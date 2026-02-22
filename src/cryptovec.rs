@@ -15,6 +15,22 @@ pub struct Bytes {
     bytes: Vec<u8>,
 }
 
+impl fmt::Display for self::Bytes {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut formatted_string = String::new();
+
+        for &byte in &self.bytes {
+            formatted_string.push_str(&format!("{byte:#x}, "));
+        }
+
+        let stripped_string = formatted_string
+            .strip_suffix(", ")
+            .expect("string always ends in ', '");
+
+        write!(f, "[{}]", stripped_string)
+    }
+}
+
 impl convert::From<Vec<u8>> for self::Bytes {
     fn from(bytes: Vec<u8>) -> Self {
         self::Bytes { bytes: bytes }
@@ -364,6 +380,26 @@ mod tests {
         let expected_result = self::Bytes::from(expected_result_vec);
 
         let result = self::Bytes::from(vec![0x41, 0x62, 0x33]);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_byte_to_string() {
+        let bytes = self::Bytes::from(0xaf);
+        let expected_result = String::from("[0xaf]");
+
+        let result = bytes.to_string();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_to_string() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3]);
+        let expected_result = String::from("[0x41, 0x62, 0xf3]");
+
+        let result = bytes.to_string();
 
         assert_eq!(result, expected_result);
     }

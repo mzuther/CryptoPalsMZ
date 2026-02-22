@@ -251,7 +251,7 @@ impl self::Unicode {
 impl convert::From<String> for self::Unicode {
     fn from(unicode_string: String) -> Self {
         self::Unicode {
-            unicode_string: String::from(unicode_string.trim()),
+            unicode_string: unicode_string,
         }
     }
 }
@@ -259,7 +259,7 @@ impl convert::From<String> for self::Unicode {
 impl convert::From<&str> for self::Unicode {
     fn from(unicode_string: &str) -> Self {
         self::Unicode {
-            unicode_string: String::from(unicode_string.trim()),
+            unicode_string: String::from(unicode_string),
         }
     }
 }
@@ -494,7 +494,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_hex_to_string_whitespace() {
+    fn unit_conversion_hex_to_string_trim_whitespace() {
         let hexadecimal = self::Hexadecimal::from(" \t41c3bce4bda0\n");
         let expected_result = String::from("0x41c3bce4bda0");
 
@@ -607,7 +607,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_base64_to_string_whitespace() {
+    fn unit_conversion_base64_to_string_trim_whitespace() {
         let base64 = self::Base64::from(format!("\t\n{BASE64_COMPLETE_ALPHABET} "));
         let expected_result = String::from(format!("base64:{BASE64_COMPLETE_ALPHABET}"));
 
@@ -711,9 +711,9 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_unicode_to_string_whitespace() {
+    fn unit_conversion_unicode_to_string_keep_whitespace() {
         let unicode = self::Unicode::from("\n Hi. Servus. Grüezi. 你好.\t");
-        let expected_result = String::from("Hi. Servus. Grüezi. 你好.");
+        let expected_result = String::from("\n Hi. Servus. Grüezi. 你好.\t");
 
         let result = unicode.to_string();
 

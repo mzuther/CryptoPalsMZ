@@ -296,24 +296,17 @@ pub fn transpose_bytes(
         return vec![bytes.clone()];
     }
 
-    let mut transposed_blocks_raw: Vec<Vec<u8>> = Vec::with_capacity(number_of_blocks);
+    let mut transposed_blocks: Vec<crypto_vecs::Bytes> = Vec::with_capacity(number_of_blocks);
     let block_capacity = (bytes.len() / number_of_blocks) + 1;
 
     for _ in 0..number_of_blocks {
-        transposed_blocks_raw.push(Vec::with_capacity(block_capacity));
+        transposed_blocks.push(crypto_vecs::Bytes::with_capacity(block_capacity));
     }
 
     for (index, &byte) in bytes.iter().enumerate() {
         // guard rail: may be lower than "keysize"
         let block_index = index % number_of_blocks;
-        transposed_blocks_raw[block_index].push(byte);
-    }
-
-    let mut transposed_blocks: Vec<crypto_vecs::Bytes> = Vec::with_capacity(number_of_blocks);
-
-    for block in transposed_blocks_raw {
-        let bytes = crypto_vecs::Bytes::from(block);
-        transposed_blocks.push(bytes);
+        transposed_blocks[block_index].push(byte);
     }
 
     transposed_blocks

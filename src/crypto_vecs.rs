@@ -52,7 +52,15 @@ impl convert::From<u8> for self::Bytes {
 
 impl self::Bytes {
     pub fn new() -> Self {
-        Self { bytes: Vec::new() }
+        Self::from(Vec::new())
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self::from(Vec::with_capacity(capacity))
+    }
+
+    pub const fn capacity(&self) -> usize {
+        self.bytes.capacity()
     }
 
     pub const fn len(&self) -> usize {
@@ -377,6 +385,33 @@ mod tests {
         let result = self::Bytes::new();
 
         assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_with_capacity_1() {
+        let capacity = 10;
+        let bytes = self::Bytes::with_capacity(capacity);
+
+        assert!(bytes.capacity() >= capacity);
+        assert!(bytes.capacity() < capacity * 10);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_with_capacity_2() {
+        let capacity = 100;
+        let bytes = self::Bytes::with_capacity(capacity);
+
+        assert!(bytes.capacity() >= capacity);
+        assert!(bytes.capacity() < capacity * 10);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_with_capacity_3() {
+        let capacity = 10_000;
+        let bytes = self::Bytes::with_capacity(capacity);
+
+        assert!(bytes.capacity() >= capacity);
+        assert!(bytes.capacity() < capacity * 10);
     }
 
     #[test]

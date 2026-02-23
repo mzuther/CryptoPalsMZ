@@ -223,8 +223,12 @@ impl fmt::Display for self::Hexadecimal {
 
 impl convert::From<String> for self::Hexadecimal {
     fn from(hex_string: String) -> Self {
+        let string_without_whitespace = hex_string
+            .split_ascii_whitespace()
+            .fold(String::new(), |acc, s| acc + s);
+
         self::Hexadecimal {
-            hex_string: hex_string.trim().to_lowercase(),
+            hex_string: string_without_whitespace.to_lowercase(),
         }
     }
 }
@@ -264,8 +268,12 @@ impl fmt::Display for self::Base64 {
 
 impl convert::From<String> for self::Base64 {
     fn from(base64_string: String) -> Self {
+        let string_without_whitespace = base64_string
+            .split_ascii_whitespace()
+            .fold(String::new(), |acc, s| acc + s);
+
         self::Base64 {
-            base64_string: String::from(base64_string.trim()),
+            base64_string: string_without_whitespace,
         }
     }
 }
@@ -276,6 +284,7 @@ impl convert::From<&str> for self::Base64 {
     }
 }
 
+// TODO: check input characters thoroughly
 impl convert::From<&self::Bytes> for self::Base64 {
     fn from(bytes: &self::Bytes) -> Self {
         let segments_to_encode = self::split_bytes_into_segments(&bytes, 6);
@@ -716,7 +725,7 @@ mod tests {
 
     #[test]
     fn unit_conversion_hex_to_string_trim_whitespace() {
-        let hexadecimal = self::Hexadecimal::from(" \t41c3bce4bda0\n");
+        let hexadecimal = self::Hexadecimal::from("\t41\n  c3b\n\tce4b\n da\r\n 0\n\n");
         let expected_result = String::from("hex:41c3bce4bda0");
 
         let result = hexadecimal.to_string();
@@ -839,7 +848,9 @@ mod tests {
 
     #[test]
     fn unit_conversion_base64_to_string_trim_whitespace() {
-        let base64 = self::Base64::from(format!("\t\n{BASE64_COMPLETE_ALPHABET} "));
+        let base64 = self::Base64::from(
+            "\r\nABCD\nEFGH\n  IJKL\nMNOP\t\nQRSTUV\nW\n\t XYZa\nbcdef\nghi\njklmn\nopqrstuv\nwxyz01234\n5\n67\n89+/\t",
+        );
         let expected_result = String::from(format!("base64:{BASE64_COMPLETE_ALPHABET}"));
 
         let result = base64.to_string();

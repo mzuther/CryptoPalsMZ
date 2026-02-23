@@ -36,6 +36,16 @@ fn challenge_06() {
     let cypher_start = crypto_vecs::Bytes::from(cypher_start_vec);
 
     assert_eq!(
+        cypher_base64.to_hexadecimal(),
+        cypher.to_hexadecimal()
+    );
+
+    assert_eq!(
+        cypher_base64.to_hexadecimal(),
+        cypher.to_base64().to_hexadecimal()
+    );
+
+    assert_eq!(
         cypher_start.to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("1d421f4d0b0f021f")
     );

@@ -65,6 +65,18 @@ impl ToBytes for self::Bytes {
     fn to_bytes(&self) -> self::Bytes {
         self.clone()
     }
+
+    fn to_hexadecimal(&self) -> self::Hexadecimal {
+        self::Hexadecimal::from(self)
+    }
+
+    fn to_base64(&self) -> self::Base64 {
+        self::Base64::from(self)
+    }
+
+    fn to_unicode(&self) -> self::Unicode {
+        self::Unicode::from(self)
+    }
 }
 
 impl IntoIterator for self::Bytes {

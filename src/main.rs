@@ -36,7 +36,7 @@ fn challenge_06() {
     let cypher_start = crypto_vecs::Bytes::from(cypher_start_vec);
 
     assert_eq!(
-        crypto_vecs::Hexadecimal::from(cypher_start),
+        cypher_start.to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("1d421f4d0b0f021f")
     );
 
@@ -72,11 +72,11 @@ fn challenge_06() {
     let (cypher_start_2, _) = cypher_vec_2.split_at(4);
 
     assert_eq!(
-        crypto_vecs::Hexadecimal::from(crypto_vecs::Bytes::from(cypher_start_1)),
+        crypto_vecs::Bytes::from(cypher_start_1).to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("1d1f0b02")
     );
     assert_eq!(
-        crypto_vecs::Hexadecimal::from(crypto_vecs::Bytes::from(cypher_start_2)),
+        crypto_vecs::Bytes::from(cypher_start_2).to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("424d0f1f")
     );
 
@@ -90,15 +90,15 @@ fn challenge_06() {
     let (cypher_start_3, _) = cypher_vec_3.split_at(2);
 
     assert_eq!(
-        crypto_vecs::Hexadecimal::from(crypto_vecs::Bytes::from(cypher_start_1)),
+        crypto_vecs::Bytes::from(cypher_start_1).to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("1d4d02")
     );
     assert_eq!(
-        crypto_vecs::Hexadecimal::from(crypto_vecs::Bytes::from(cypher_start_2)),
+        crypto_vecs::Bytes::from(cypher_start_2).to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("420b1f")
     );
     assert_eq!(
-        crypto_vecs::Hexadecimal::from(crypto_vecs::Bytes::from(cypher_start_3)),
+        crypto_vecs::Bytes::from(cypher_start_3).to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("1f0f")
     );
 
@@ -116,23 +116,23 @@ fn challenge_06() {
     let (cypher_start_5, _) = cypher_vec_5.split_at(1);
 
     assert_eq!(
-        crypto_vecs::Hexadecimal::from(crypto_vecs::Bytes::from(cypher_start_1)),
+        crypto_vecs::Bytes::from(cypher_start_1).to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("1d0f")
     );
     assert_eq!(
-        crypto_vecs::Hexadecimal::from(crypto_vecs::Bytes::from(cypher_start_2)),
+        crypto_vecs::Bytes::from(cypher_start_2).to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("4202")
     );
     assert_eq!(
-        crypto_vecs::Hexadecimal::from(crypto_vecs::Bytes::from(cypher_start_3)),
+        crypto_vecs::Bytes::from(cypher_start_3).to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("1f1f")
     );
     assert_eq!(
-        crypto_vecs::Hexadecimal::from(crypto_vecs::Bytes::from(cypher_start_4)),
+        crypto_vecs::Bytes::from(cypher_start_4).to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("4d")
     );
     assert_eq!(
-        crypto_vecs::Hexadecimal::from(crypto_vecs::Bytes::from(cypher_start_5)),
+        crypto_vecs::Bytes::from(cypher_start_5).to_hexadecimal(),
         crypto_vecs::Hexadecimal::from("0b")
     );
 
@@ -178,7 +178,7 @@ fn challenge_06() {
 
     // let proposed_key = crypto_vecs::Bytes::from(proposed_key_vec);
     // let result_bytes = cryptopals::fixed_xor(&cypher, &proposed_key);
-    // let result = crypto_vecs::Unicode::from(result_bytes);
+    // let result = result_bytes.to_unicode();
 
     // println!("{result}");
     // println!("");
@@ -228,23 +228,24 @@ fn challenge_03() {
 }
 
 fn play_with_xor() {
-    let plain_text = crypto_vecs::Unicode::from("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");
-    let key = crypto_vecs::Unicode::from("ESWAREINMAL");
-    let cypher = cryptopals::fixed_xor_cryptovecs(&plain_text, &key);
+    let unicode_plain_text =
+        crypto_vecs::Unicode::from("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");
+    let unicode_key = crypto_vecs::Unicode::from("ESWAREINMAL");
+    let cypher = cryptopals::fixed_xor_cryptovecs(&unicode_plain_text, &unicode_key);
 
     println!("\n[Plain]");
-    println!("{}", plain_text);
-    println!("{}", crypto_vecs::Hexadecimal::from(plain_text.to_bytes()));
-    println!("{}", crypto_vecs::Base64::from(plain_text.to_bytes()));
+    println!("{}", unicode_plain_text);
+    println!("{}", unicode_plain_text.to_hexadecimal());
+    println!("{}", unicode_plain_text.to_base64());
 
     println!("\n[Key]");
-    println!("{}", key);
-    println!("{}", crypto_vecs::Hexadecimal::from(key.to_bytes()));
-    println!("{}", crypto_vecs::Base64::from(key.to_bytes()));
+    println!("{}", unicode_key);
+    println!("{}", unicode_key.to_hexadecimal());
+    println!("{}", unicode_key.to_base64());
 
     println!("\n[Cypher]");
-    println!("{}", crypto_vecs::Hexadecimal::from(cypher.clone()));
-    println!("{}", crypto_vecs::Base64::from(cypher.clone()));
+    println!("{}", cypher.to_hexadecimal());
+    println!("{}", cypher.to_base64());
 
     println!("");
 }

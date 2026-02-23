@@ -10,7 +10,7 @@ fn integration_challenge_01() {
         "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t",
     );
 
-    let result = crypto_vecs::Base64::from(hexadecimal.to_bytes());
+    let result = hexadecimal.to_base64();
 
     assert_eq!(result, expected_result);
 }
@@ -24,7 +24,7 @@ fn integration_challenge_01_reverse() {
         "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d",
     );
 
-    let result = crypto_vecs::Hexadecimal::from(base64.to_bytes());
+    let result = base64.to_hexadecimal();
 
     assert_eq!(result, expected_result);
 }
@@ -37,7 +37,7 @@ fn integration_challenge_02() {
 
     let bytes_xor = cryptopals::fixed_xor_cryptovecs(&hexadecimal_plain, &hexadecimal_key);
 
-    let result = crypto_vecs::Hexadecimal::from(bytes_xor);
+    let result = bytes_xor.to_hexadecimal();
 
     assert_eq!(result, expected_result);
 }
@@ -54,7 +54,7 @@ fn integration_challenge_03() {
         cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher, &keys_range_bytes);
 
     let score = scores.first().expect("there should always be one element");
-    let result = crypto_vecs::Unicode::from(score.plain_text.clone());
+    let result = score.plain_text.to_unicode();
 
     assert_eq!(result, expected_result);
 }
@@ -86,7 +86,7 @@ fn integration_challenge_04() {
         }
     }
 
-    let result = crypto_vecs::Unicode::from(best_score.plain_text);
+    let result = best_score.plain_text.to_unicode();
 
     assert_eq!(result, expected_result);
 }
@@ -102,7 +102,7 @@ fn integration_challenge_05() {
     );
 
     let encoded_bytes = cryptopals::fixed_xor_cryptovecs(&unicode_plain, &unicode_key);
-    let result = crypto_vecs::Hexadecimal::from(encoded_bytes);
+    let result = encoded_bytes.to_hexadecimal();
 
     assert_eq!(result, expected_result);
 }

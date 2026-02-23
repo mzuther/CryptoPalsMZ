@@ -50,10 +50,13 @@ fn integration_challenge_03() {
     let expected_result = crypto_vecs::Unicode::from("Cooking MC's like a pound of bacon");
 
     let keys_range_bytes = 0x00..0x80;
-    let scores =
+    let mut scores =
         cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher, &keys_range_bytes);
 
-    let score = scores.first().expect("there should always be one element");
+    // sort by score, resulting in highest score first (to get lowest score with "pop()")
+    scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
+
+    let score = scores.pop().expect("there should always be one element");
     let result = score.plain_text.to_unicode();
 
     assert_eq!(result, expected_result);
@@ -78,7 +81,10 @@ fn integration_challenge_04() {
 
         let mut scores =
             cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher, &keys_range_bytes);
-        scores.reverse();
+
+        // sort by score, resulting in highest score first (to get lowest score with "pop()")
+        scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
+
         let score = scores.pop().expect("there should always be one element");
 
         if score.score < best_score.score {

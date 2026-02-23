@@ -44,9 +44,6 @@ pub fn find_lowest_score_xor(
         scores.push(score);
     }
 
-    // sort by score, resulting in lowest score first
-    scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
-
     scores
 }
 

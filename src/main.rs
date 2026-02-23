@@ -194,6 +194,9 @@ fn challenge_06() {
         }
         println!("");
 
+        // sort by score, resulting in lowest score first
+        scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
+
         let score = scores.first().expect("there should always be one element");
         proposed_key.extend(score.key.to_vec());
     }

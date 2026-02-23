@@ -41,28 +41,31 @@ fn challenge_06() {
     );
 
     let keysize = 2;
-    let bytes_1 = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
-    let bytes_2 = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
-    let edit_size_2 = cryptopals::hamming_distance_bits(&bytes_1, &bytes_2);
-    let edit_size_2_normalized = (edit_size_2 as f64) / (keysize as f64);
+    let bytes = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
+    let other = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
 
-    assert_eq!(edit_size_2_normalized, 2.5);
+    let edit_size = bytes.hamming_distance_bits(&other);
+    let edit_size_normalized = (edit_size as f64) / (keysize as f64);
+
+    assert_eq!(edit_size_normalized, 2.5);
 
     let keysize = 3;
-    let bytes_1 = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
-    let bytes_2 = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
-    let edit_size_2 = cryptopals::hamming_distance_bits(&bytes_1, &bytes_2);
-    let edit_size_2_normalized = (edit_size_2 as f64) / (keysize as f64);
+    let bytes = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
+    let other = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
 
-    assert_eq!(edit_size_2_normalized, 2.0);
+    let edit_size = bytes.hamming_distance_bits(&other);
+    let edit_size_normalized = (edit_size as f64) / (keysize as f64);
+
+    assert_eq!(edit_size_normalized, 2.0);
 
     let keysize = 5;
-    let bytes_1 = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
-    let bytes_2 = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
-    let edit_size_2 = cryptopals::hamming_distance_bits(&bytes_1, &bytes_2);
-    let edit_size_2_normalized = (edit_size_2 as f64) / (keysize as f64);
+    let bytes = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
+    let other = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
 
-    assert_eq!(edit_size_2_normalized, 1.2);
+    let edit_size = bytes.hamming_distance_bits(&other);
+    let edit_size_normalized = (edit_size as f64) / (keysize as f64);
+
+    assert_eq!(edit_size_normalized, 1.2);
 
     let keysize = 2;
     let transposed_vecs = cryptopals::transpose_bytes(&cypher, keysize);

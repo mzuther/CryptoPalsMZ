@@ -9,8 +9,9 @@ where
     U: crypto_vecs::ToBytes,
 {
     let plain_text = plain_text_vec.to_bytes();
+    let key = key_vec.to_bytes();
 
-    plain_text.fixed_xor(&key_vec.to_bytes())
+    plain_text.fixed_xor(&key)
 }
 
 pub fn find_lowest_score_xor_cryptovecs<T>(
@@ -198,35 +199,15 @@ fn score_letter_frequencies(bytes: &crypto_vecs::Bytes) -> f64 {
     total_score
 }
 
-pub fn hamming_distance_bits_cryptovecs<T, U>(cryptovec_1: &T, cryptovec_2: &U) -> u64
+pub fn hamming_distance_bits_cryptovecs<T, U>(bytes_vec: &T, other_vec: &U) -> u64
 where
     T: crypto_vecs::ToBytes,
     U: crypto_vecs::ToBytes,
 {
-    self::hamming_distance_bits(&cryptovec_1.to_bytes(), &cryptovec_2.to_bytes())
-}
+    let bytes = bytes_vec.to_bytes();
+    let other = other_vec.to_bytes();
 
-pub fn hamming_distance_bits(bytes_1: &crypto_vecs::Bytes, bytes_2: &crypto_vecs::Bytes) -> u64 {
-    let bytes_with_differing_bits = bytes_1.fixed_xor(&bytes_2);
-
-    let mut differing_bits = 0;
-
-    for byte in bytes_with_differing_bits {
-        let nibble_value_low = (byte as usize) & 0x0f;
-        let nibble_value_high = (byte as usize) >> 4;
-
-        let differing_bits_low = constants::LOOKUP_BITS_IN_NIBBLE
-            .get(nibble_value_low)
-            .expect("index is between 0 and 15");
-        let differing_bits_high = constants::LOOKUP_BITS_IN_NIBBLE
-            .get(nibble_value_high)
-            .expect("index is between 0 and 15");
-
-        differing_bits += *differing_bits_low as u64;
-        differing_bits += *differing_bits_high as u64;
-    }
-
-    differing_bits
+    bytes.hamming_distance_bits(&other)
 }
 
 pub fn guess_keysize_from_hamming_distance(
@@ -241,17 +222,16 @@ pub fn guess_keysize_from_hamming_distance(
 
         let bytes_vec = bytes.to_vec();
         let mut iter_chunks = bytes_vec.chunks_exact(keysize);
-        let mut chunk_vec_1 = iter_chunks.next().expect("text should be long enough");
+        let chunk_vec_1 = iter_chunks.next().expect("text should be long enough");
+        let mut chunk_1 = crypto_vecs::Bytes::from(chunk_vec_1);
 
         for _ in 0..number_of_calculations {
             let chunk_vec_2 = iter_chunks.next().expect("text should be long enough");
+            let chunk_2 = crypto_vecs::Bytes::from(chunk_vec_2);
 
-            edit_size += self::hamming_distance_bits(
-                &crypto_vecs::Bytes::from(chunk_vec_1),
-                &crypto_vecs::Bytes::from(chunk_vec_2),
-            ) as f64;
+            edit_size += chunk_1.hamming_distance_bits(&chunk_2) as f64;
 
-            chunk_vec_1 = chunk_vec_2;
+            chunk_1 = chunk_2;
         }
 
         let edit_size_average = edit_size / (number_of_calculations as f64);
@@ -364,74 +344,6 @@ mod tests {
     }
 
     // ----------------
-
-    #[test]
-    fn unit_hamming_distance_bits_empty() {
-        let bytes_1 = crypto_vecs::Bytes::new();
-        let bytes_2 = crypto_vecs::Bytes::new();
-        let expected_result = 0;
-
-        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_hamming_distance_bits_1() {
-        // from u8
-        let bytes_1 = crypto_vecs::Bytes::from(0x02);
-        // from Vec<u8>
-        let bytes_2 = crypto_vecs::Bytes::from(vec![0xa0]);
-        let expected_result = 3;
-
-        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_hamming_distance_bits_2() {
-        let bytes_1 = crypto_vecs::Bytes::from(vec![0x02, 0xb0]);
-        let bytes_2 = crypto_vecs::Bytes::from(vec![0xa0, 0x01]);
-        let expected_result = 7;
-
-        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_hamming_distance_bits_3() {
-        let bytes_1 = crypto_vecs::Bytes::from(vec![0x1d, 0x42]);
-        let bytes_2 = crypto_vecs::Bytes::from(vec![0x1f, 0x4d]);
-        let expected_result = 5;
-
-        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_hamming_distance_bits_4() {
-        let bytes_1 = crypto_vecs::Bytes::from(vec![0x1d, 0x42, 0x1f]);
-        let bytes_2 = crypto_vecs::Bytes::from(vec![0x4d, 0x0b, 0x0f]);
-        let expected_result = 6;
-
-        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_hamming_distance_bits_5() {
-        let bytes_1 = crypto_vecs::Bytes::from(vec![0x1d, 0x42, 0x1f, 0x4d, 0x0b]);
-        let bytes_2 = crypto_vecs::Bytes::from(vec![0x0f, 0x02, 0x1f, 0x4f, 0x13]);
-        let expected_result = 6;
-
-        let result = self::hamming_distance_bits(&bytes_1, &bytes_2);
-
-        assert_eq!(result, expected_result);
-    }
 
     #[test]
     fn unit_hamming_distance_bits_unicode() {

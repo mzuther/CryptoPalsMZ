@@ -82,6 +82,7 @@ fn get_letter_frequencies(bytes: &crypto_vecs::Bytes) -> HashMap<u8, f64> {
 pub fn print_histogram(
     key: &crypto_vecs::Bytes,
     bytes: &crypto_vecs::Bytes,
+    y_max: f64,
     magnification_factor: f64,
     rotate_histogram: bool,
     min_percentage_spaces: f64,
@@ -117,7 +118,7 @@ pub fn print_histogram(
     }
 
     println!("{}", key.to_string());
-    let max_bin_size = (magnification_factor / 3.80) as i32;
+    let max_bin_size = (magnification_factor * y_max) as i32;
 
     let english_letter_frequencies = constants::get_english_letter_frequencies();
     let mut bins = Vec::with_capacity(english_letter_frequencies.len());
@@ -165,7 +166,7 @@ pub fn print_histogram(
         println!("{bin}");
     }
 
-    // println!("{}", crypto_vecs::Unicode::from(bytes));
+    // println!("{}", bytes.to_iso_8859_1());
     println!("");
 }
 

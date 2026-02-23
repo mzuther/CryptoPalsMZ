@@ -190,7 +190,7 @@ fn challenge_06() {
             //     crypto_vecs::Unicode::from(&score.plain_text).to_string().get(0..30).unwrap()
             // );
 
-            cryptopals::print_histogram(&score.key, &score.plain_text, 195.0, true, 0.005, 5);
+            cryptopals::print_histogram(&score.key, &score.plain_text, 0.22, 235.0, true, 0.005, 5);
         }
         println!("");
 
@@ -199,10 +199,10 @@ fn challenge_06() {
     }
 
     let plain_text = cypher.fixed_xor(&proposed_key);
-    // let result = plain_text.to_unicode();
+    let result = plain_text.to_iso_8859_1();
 
-    // println!("{result}");
-    // println!("");
+    println!("{result}");
+    println!("");
 
     // assert_eq!(result, expected_result);
 }
@@ -228,7 +228,7 @@ fn challenge_04() {
         // println!("\n[{line_hex}]\n");
 
         for score in &scores {
-            cryptopals::print_histogram(&score.key, &score.plain_text, 195.0, true, 0.05, 7);
+            cryptopals::print_histogram(&score.key, &score.plain_text, 0.22, 235.0, true, 0.05, 7);
         }
     }
 }
@@ -244,7 +244,7 @@ fn challenge_03() {
     scores.sort_by(|a, b| a.key.cmp(&b.key));
 
     for score in &scores {
-        cryptopals::print_histogram(&score.key, &score.plain_text, 195.0, true, 0.025, 5);
+        cryptopals::print_histogram(&score.key, &score.plain_text, 0.22, 235.0, true, 0.025, 5);
     }
 }
 

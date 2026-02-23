@@ -8,22 +8,6 @@ fn main() {
     challenge_06();
 }
 
-// 2
-// 0x65/0x20  0x41/0x44/0x45
-// 0x54/0x74  0x20/0x27/0x31/0x45
-
-// 3
-// 0x20/0x65  0x31/0x35/0x40/0x45/0x54/0x61/0x74
-// 0x20/0x54  0x00/0x41/0x45/0x61/0x65/0x74
-// 0x20  0x00/0x04/0x31/0x41/0x45/0x54/0x61/0x74
-
-// 5
-// 0x20/0x65  0x41/0x45
-// 0x20/0x45/0x65/0x74  0x00/0x41/0x54/0x61
-// 0x20  0x45
-// 0x54  0x61/0x74
-// 0x00/0x20  0x11/0x15/0x31/0x65/0x74
-
 fn challenge_06() {
     let cypher_text_string: String =
         fs::read_to_string("original/6.txt").expect("could not read file");
@@ -35,10 +19,7 @@ fn challenge_06() {
     let (cypher_start_vec, _) = cypher_vec.split_at(8);
     let cypher_start = crypto_vecs::Bytes::from(cypher_start_vec);
 
-    assert_eq!(
-        cypher_base64.to_hexadecimal(),
-        cypher.to_hexadecimal()
-    );
+    assert_eq!(cypher_base64.to_hexadecimal(), cypher.to_hexadecimal());
 
     assert_eq!(
         cypher_base64.to_hexadecimal(),
@@ -156,16 +137,16 @@ fn challenge_06() {
     );
 
     let keysize_range = 2..41;
-    let mut scores = cryptopals::guess_keysize_from_hamming_distance(&cypher, &keysize_range, 3);
+    let mut scores = cryptopals::guess_keysize_from_hamming_distance(&cypher, &keysize_range, 10);
 
     // order by score, with lowest score first
     scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
 
-    // println!("[keysizes]");
-    // for score in scores.get(0..5).unwrap() {
-    //     println!("{}: {}", score.keysize, score.score);
-    // }
-    // println!("");
+    println!("[keysizes]");
+    for score in scores.get(0..5).unwrap() {
+        println!("{}: {}", score.keysize, score.score);
+    }
+    println!("");
 
     let take_xth_score = 0;
     let score = scores
@@ -183,13 +164,6 @@ fn challenge_06() {
         println!("[block {}/{}]", index + 1, keysize);
         scores.sort_by(|a, b| a.key.cmp(&b.key));
         for score in &scores {
-            // println!(
-            //     "{}: {} -> {}",
-            //     score.key,
-            //     score.score,
-            //     crypto_vecs::Unicode::from(&score.plain_text).to_string().get(0..30).unwrap()
-            // );
-
             cryptopals::print_histogram(&score.key, &score.plain_text, 0.22, 235.0, true, 0.005, 5);
         }
         println!("");
@@ -201,7 +175,14 @@ fn challenge_06() {
         proposed_key.extend(score.key.to_vec());
     }
 
-    let plain_text = cypher.fixed_xor(&proposed_key);
+    let manual_key_hex = crypto_vecs::Hexadecimal::from(
+        "5465726d696e61746f7220583a204272696e6720746865206e6f697365",
+    );
+    let manual_key = manual_key_hex.to_bytes();
+
+    assert_eq!(manual_key, proposed_key);
+
+    let plain_text = cypher.fixed_xor(&manual_key);
     let result = plain_text.to_iso_8859_1();
 
     println!("{result}");

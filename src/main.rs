@@ -68,9 +68,11 @@ fn challenge_06() {
     assert_eq!(edit_size_normalized, 1.2);
 
     let keysize = 2;
-    let transposed_vecs = cryptopals::transpose_bytes(&cypher, keysize);
+    let transposed_vecs = cypher.transpose_bytes(keysize);
+
     let cypher_vec_1 = transposed_vecs[0].to_vec();
     let cypher_vec_2 = transposed_vecs[1].to_vec();
+
     let (cypher_start_1, _) = cypher_vec_1.split_at(4);
     let (cypher_start_2, _) = cypher_vec_2.split_at(4);
 
@@ -84,10 +86,12 @@ fn challenge_06() {
     );
 
     let keysize = 3;
-    let transposed_vecs = cryptopals::transpose_bytes(&cypher, keysize);
+    let transposed_vecs = cypher.transpose_bytes(keysize);
+
     let cypher_vec_1 = transposed_vecs[0].to_vec();
     let cypher_vec_2 = transposed_vecs[1].to_vec();
     let cypher_vec_3 = transposed_vecs[2].to_vec();
+
     let (cypher_start_1, _) = cypher_vec_1.split_at(3);
     let (cypher_start_2, _) = cypher_vec_2.split_at(3);
     let (cypher_start_3, _) = cypher_vec_3.split_at(2);
@@ -106,12 +110,14 @@ fn challenge_06() {
     );
 
     let keysize = 5;
-    let transposed_vecs = cryptopals::transpose_bytes(&cypher, keysize);
+    let transposed_vecs = cypher.transpose_bytes(keysize);
+
     let cypher_vec_1 = transposed_vecs[0].to_vec();
     let cypher_vec_2 = transposed_vecs[1].to_vec();
     let cypher_vec_3 = transposed_vecs[2].to_vec();
     let cypher_vec_4 = transposed_vecs[3].to_vec();
     let cypher_vec_5 = transposed_vecs[4].to_vec();
+
     let (cypher_start_1, _) = cypher_vec_1.split_at(2);
     let (cypher_start_2, _) = cypher_vec_2.split_at(2);
     let (cypher_start_3, _) = cypher_vec_3.split_at(2);
@@ -153,7 +159,7 @@ fn challenge_06() {
         .get(take_xth_score)
         .expect("there should always be a few elements");
 
-    let transposed_vecs = cryptopals::transpose_bytes(&cypher, score.keysize);
+    let transposed_vecs = cypher.transpose_bytes(score.keysize);
     let mut proposed_key_vec: Vec<u8> = Vec::new();
 
     for block in 0..transposed_vecs.len() {

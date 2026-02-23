@@ -251,33 +251,6 @@ pub fn guess_keysize_from_hamming_distance(
     scores
 }
 
-pub fn transpose_bytes(
-    bytes: &crypto_vecs::Bytes,
-    number_of_blocks: usize,
-) -> Vec<crypto_vecs::Bytes> {
-    assert!(number_of_blocks > 0);
-
-    // may come in useful for automatic processing (single-byte keys)
-    if number_of_blocks == 1 {
-        return vec![bytes.clone()];
-    }
-
-    let mut transposed_blocks: Vec<crypto_vecs::Bytes> = Vec::with_capacity(number_of_blocks);
-    let block_capacity = (bytes.len() / number_of_blocks) + 1;
-
-    for _ in 0..number_of_blocks {
-        transposed_blocks.push(crypto_vecs::Bytes::with_capacity(block_capacity));
-    }
-
-    for (index, &byte) in bytes.iter().enumerate() {
-        // guard rail: may be lower than "keysize"
-        let block_index = index % number_of_blocks;
-        transposed_blocks[block_index].push(byte);
-    }
-
-    transposed_blocks
-}
-
 pub fn transpose_strings_clockwise(strings: &Vec<String>) -> Vec<String> {
     self::transpose_strings(strings, true)
 }
@@ -354,67 +327,6 @@ mod tests {
         let result = self::hamming_distance_bits_cryptovecs(&unicode_1, &unicode_2);
 
         assert_eq!(result, expected_result);
-    }
-
-    // ----------------
-
-    #[test]
-    fn unit_transpose_bytes_no_transposition() {
-        let bytes = crypto_vecs::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-        let keysize = 1;
-
-        let transposed_vecs = self::transpose_bytes(&bytes, keysize);
-
-        assert_eq!(transposed_vecs.len(), keysize);
-        assert_eq!(transposed_vecs[0], bytes);
-    }
-
-    #[test]
-    fn unit_transpose_bytes_equal_distribution() {
-        let bytes = crypto_vecs::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-        let keysize = 2;
-
-        let transposed_vecs = self::transpose_bytes(&bytes, keysize);
-
-        assert_eq!(transposed_vecs.len(), keysize);
-        assert_eq!(
-            transposed_vecs[0],
-            crypto_vecs::Bytes::from(vec![1, 3, 5, 7, 9])
-        );
-        assert_eq!(
-            transposed_vecs[1],
-            crypto_vecs::Bytes::from(vec![2, 4, 6, 8, 10])
-        );
-    }
-
-    #[test]
-    fn unit_transpose_bytes_unequal_distribution() {
-        let bytes = crypto_vecs::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-        let keysize = 3;
-
-        let transposed_vecs = self::transpose_bytes(&bytes, keysize);
-
-        assert_eq!(transposed_vecs.len(), keysize);
-        assert_eq!(
-            transposed_vecs[0],
-            crypto_vecs::Bytes::from(vec![1, 4, 7, 10])
-        );
-        assert_eq!(transposed_vecs[1], crypto_vecs::Bytes::from(vec![2, 5, 8]));
-        assert_eq!(transposed_vecs[2], crypto_vecs::Bytes::from(vec![3, 6, 9]));
-    }
-
-    #[test]
-    fn unit_transpose_bytes_not_enough_elements() {
-        let bytes = crypto_vecs::Bytes::from(vec![1, 2, 3]);
-        let keysize = bytes.len() + 1;
-
-        let transposed_vecs = self::transpose_bytes(&bytes, keysize);
-
-        assert_eq!(transposed_vecs.len(), keysize);
-        assert_eq!(transposed_vecs[0], crypto_vecs::Bytes::from(1));
-        assert_eq!(transposed_vecs[1], crypto_vecs::Bytes::from(2));
-        assert_eq!(transposed_vecs[2], crypto_vecs::Bytes::from(3));
-        assert_eq!(transposed_vecs[3], crypto_vecs::Bytes::new());
     }
 
     // ----------------

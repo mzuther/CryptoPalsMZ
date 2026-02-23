@@ -118,6 +118,17 @@ impl self::Bytes {
         self.bytes.to_vec()
     }
 
+    pub fn to_iso_8859_1(&self) -> String {
+        let mut iso_string = String::new();
+
+        for &byte in self.iter() {
+            let iso_char = byte as char;
+            iso_string.push(iso_char);
+        }
+
+        iso_string
+    }
+
     // ----------------
 
     pub fn push(&mut self, byte: u8) {
@@ -310,19 +321,6 @@ pub struct Unicode {
 impl fmt::Display for self::Unicode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.unicode_string)
-    }
-}
-
-impl self::Unicode {
-    pub fn to_iso_8859_1(self) -> String {
-        let mut iso_string = String::new();
-
-        for byte in self.to_bytes().to_vec() {
-            let iso_char = byte as char;
-            iso_string.push(iso_char);
-        }
-
-        iso_string
     }
 }
 
@@ -933,8 +931,7 @@ mod tests {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0x33]);
         let expected_result = String::from("Ab3");
 
-        let result_unicode = bytes.to_unicode();
-        let result = result_unicode.to_iso_8859_1();
+        let result = bytes.to_iso_8859_1();
 
         assert_eq!(result, expected_result);
     }
@@ -944,8 +941,7 @@ mod tests {
         let bytes = self::Bytes::from(vec![0x46, 0x72, 0xc3, 0xbc, 0x68, 0x6a, 0x61, 0x68, 0x72]);
         let expected_result = String::from("FrÃ¼hjahr");
 
-        let result_unicode = bytes.to_unicode();
-        let result = result_unicode.to_iso_8859_1();
+        let result = bytes.to_iso_8859_1();
 
         assert_eq!(result, expected_result);
     }

@@ -3,38 +3,24 @@ use std::{cmp, collections::HashMap, ops::Range};
 pub mod constants;
 pub mod crypto_vecs;
 
-pub fn fixed_xor_cryptovecs<T, U>(plain_text: &T, key: &U) -> crypto_vecs::Bytes
+pub fn fixed_xor_cryptovecs<T, U>(plain_text_vec: &T, key_vec: &U) -> crypto_vecs::Bytes
 where
     T: crypto_vecs::ToBytes,
     U: crypto_vecs::ToBytes,
 {
-    self::fixed_xor(&plain_text.to_bytes(), &key.to_bytes())
-}
+    let plain_text = plain_text_vec.to_bytes();
 
-pub fn fixed_xor(plain_text: &crypto_vecs::Bytes, key: &crypto_vecs::Bytes) -> crypto_vecs::Bytes {
-    let mut bytes_xor = crypto_vecs::Bytes::new();
-    let mut key_endless = key.iter().cycle();
-
-    for byte_plain in plain_text.iter() {
-        let byte_key = key_endless
-            .next()
-            .expect("infinite key was finite after all");
-        let byte_xor = (byte_plain | byte_key) & !(byte_plain & byte_key);
-
-        bytes_xor.push(byte_xor);
-    }
-
-    bytes_xor
+    plain_text.fixed_xor(&key_vec.to_bytes())
 }
 
 pub fn find_lowest_score_xor_cryptovecs<T>(
-    cryptovec: &T,
+    cryptovec_vec: &T,
     keys_range_bytes: &Range<u8>,
 ) -> Vec<constants::ScoreXOR>
 where
     T: crypto_vecs::ToBytes,
 {
-    self::find_lowest_score_xor(&cryptovec.to_bytes(), &keys_range_bytes)
+    self::find_lowest_score_xor(&cryptovec_vec.to_bytes(), &keys_range_bytes)
 }
 
 pub fn find_lowest_score_xor(
@@ -45,7 +31,7 @@ pub fn find_lowest_score_xor(
 
     for key_byte in keys_range_bytes.clone() {
         let key = crypto_vecs::Bytes::from(key_byte);
-        let bytes_xor = self::fixed_xor(&bytes, &key);
+        let bytes_xor = bytes.fixed_xor(&key);
         let score = self::score_letter_frequencies(&bytes_xor);
 
         let score = constants::ScoreXOR {
@@ -221,7 +207,7 @@ where
 }
 
 pub fn hamming_distance_bits(bytes_1: &crypto_vecs::Bytes, bytes_2: &crypto_vecs::Bytes) -> u64 {
-    let bytes_with_differing_bits = self::fixed_xor(&bytes_1, &bytes_2);
+    let bytes_with_differing_bits = bytes_1.fixed_xor(&bytes_2);
 
     let mut differing_bits = 0;
 
@@ -363,41 +349,6 @@ fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<St
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn unit_fixed_xor_single_byte_key() {
-        let bytes_1 = crypto_vecs::Bytes::from(vec![
-            0x1c, 0x01, 0x11, 0x00, 0x1f, 0xa2, 0x4b, 0x53, 0x98, 0xc5,
-        ]);
-        let bytes_2 = crypto_vecs::Bytes::from(0x74);
-        let expected_result = crypto_vecs::Bytes::from(vec![
-            0x68, 0x75, 0x65, 0x74, 0x6b, 0xd6, 0x3f, 0x27, 0xec, 0xb1,
-        ]);
-
-        let result = self::fixed_xor(&bytes_1, &bytes_2);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_fixed_xor_full_length_key() {
-        let bytes_1 = crypto_vecs::Bytes::from(vec![
-            0x1c, 0x01, 0x11, 0x00, 0x1f, 0x01, 0x01, 0x00, 0x06, 0x1a, 0x02, 0x4b, 0x53, 0x53,
-            0x50, 0x09, 0x18, 0x1c,
-        ]);
-        let bytes_2 = crypto_vecs::Bytes::from(vec![
-            0x68, 0x69, 0x74, 0x20, 0x74, 0x68, 0x65, 0x20, 0x62, 0x75, 0x6c, 0x6c, 0x27, 0x73,
-            0x20, 0x65, 0x79, 0x65,
-        ]);
-        let expected_result = crypto_vecs::Bytes::from(vec![
-            0x74, 0x68, 0x65, 0x20, 0x6b, 0x69, 0x64, 0x20, 0x64, 0x6f, 0x6e, 0x27, 0x74, 0x20,
-            0x70, 0x6c, 0x61, 0x79,
-        ]);
-
-        let result = self::fixed_xor(&bytes_1, &bytes_2);
-
-        assert_eq!(result, expected_result);
-    }
 
     #[test]
     fn unit_fixed_xor_unicode() {

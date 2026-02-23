@@ -1,8 +1,6 @@
 use hex;
 use std::{convert, fmt, slice, vec};
 
-use crate::crypto_vecs;
-
 // ----------------
 
 pub trait ToBytes {
@@ -106,9 +104,21 @@ impl self::Bytes {
         self.bytes.capacity()
     }
 
+    // ----------------
+
     pub const fn len(&self) -> usize {
         self.bytes.len()
     }
+
+    pub fn iter(&self) -> slice::Iter<'_, u8> {
+        self.bytes.iter()
+    }
+
+    pub fn to_vec(&self) -> Vec<u8> {
+        self.bytes.to_vec()
+    }
+
+    // ----------------
 
     pub fn push(&mut self, byte: u8) {
         self.bytes.push(byte);
@@ -121,12 +131,24 @@ impl self::Bytes {
         self.bytes.extend(bytes.into());
     }
 
-    pub fn iter(&self) -> slice::Iter<'_, u8> {
-        self.bytes.iter()
-    }
+    // ----------------
 
-    pub fn to_vec(&self) -> Vec<u8> {
-        self.bytes.to_vec()
+    pub fn fixed_xor(&self, key: &self::Bytes) -> self::Bytes {
+        let bytes_plain = self.iter();
+        let mut bytes_key_endless = key.iter().cycle();
+
+        let mut result_xor = self::Bytes::new();
+
+        for byte_plain in bytes_plain {
+            let byte_key = bytes_key_endless
+                .next()
+                .expect("infinite key was finite after all");
+            let byte_xor = (byte_plain | byte_key) & !(byte_plain & byte_key);
+
+            result_xor.push(byte_xor);
+        }
+
+        result_xor
     }
 }
 
@@ -336,7 +358,7 @@ impl ToBytes for self::Unicode {
 
 // ----------------
 
-fn split_bytes_into_segments(bytes: &crypto_vecs::Bytes, bits_per_segment: u8) -> Vec<Option<u8>> {
+fn split_bytes_into_segments(bytes: &self::Bytes, bits_per_segment: u8) -> Vec<Option<u8>> {
     let mut segments_to_encode = Vec::new();
 
     let bits_per_byte = 8;
@@ -376,11 +398,8 @@ fn split_bytes_into_segments(bytes: &crypto_vecs::Bytes, bits_per_segment: u8) -
     segments_to_encode
 }
 
-fn assemble_bytes_from_segments(
-    bytes: &Vec<Option<u8>>,
-    bits_per_segment: u8,
-) -> crypto_vecs::Bytes {
-    let mut assembled_segments = crypto_vecs::Bytes::new();
+fn assemble_bytes_from_segments(bytes: &Vec<Option<u8>>, bits_per_segment: u8) -> self::Bytes {
+    let mut assembled_segments = self::Bytes::new();
 
     let bits_per_byte = 8;
     let mut inverted_bit_output = 0;
@@ -927,6 +946,65 @@ mod tests {
 
         let result_unicode = bytes.to_unicode();
         let result = result_unicode.to_iso_8859_1();
+
+        assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_fixed_xor_single_byte() {
+        let plain_text = self::Bytes::from(0x1c);
+        let key = self::Bytes::from(0x74);
+        let expected_result = self::Bytes::from(0x68);
+
+        let result = plain_text.fixed_xor(&key);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_fixed_xor_single_byte_key() {
+        let plain_text = self::Bytes::from(vec![
+            0x1c, 0x01, 0x11, 0x00, 0x1f, 0xa2, 0x4b, 0x53, 0x98, 0xc5,
+        ]);
+        let key = self::Bytes::from(0x74);
+        let expected_result = self::Bytes::from(vec![
+            0x68, 0x75, 0x65, 0x74, 0x6b, 0xd6, 0x3f, 0x27, 0xec, 0xb1,
+        ]);
+
+        let result = plain_text.fixed_xor(&key);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_fixed_xor_full_length_key() {
+        let plain_text = self::Bytes::from(vec![
+            0x1c, 0x01, 0x11, 0x00, 0x1f, 0x01, 0x01, 0x00, 0x06, 0x1a, 0x02, 0x4b, 0x53, 0x53,
+            0x50, 0x09, 0x18, 0x1c,
+        ]);
+        let key = self::Bytes::from(vec![
+            0x68, 0x69, 0x74, 0x20, 0x74, 0x68, 0x65, 0x20, 0x62, 0x75, 0x6c, 0x6c, 0x27, 0x73,
+            0x20, 0x65, 0x79, 0x65,
+        ]);
+        let expected_result = self::Bytes::from(vec![
+            0x74, 0x68, 0x65, 0x20, 0x6b, 0x69, 0x64, 0x20, 0x64, 0x6f, 0x6e, 0x27, 0x74, 0x20,
+            0x70, 0x6c, 0x61, 0x79,
+        ]);
+
+        let result = plain_text.fixed_xor(&key);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_fixed_xor_key_too_long() {
+        let plain_text = self::Bytes::from(vec![0x1c, 0x01, 0x11, 0x00]);
+        let key = self::Bytes::from(vec![0x68, 0x69, 0x74, 0x20, 0x74, 0x68, 0x65, 0x20]);
+        let expected_result = self::Bytes::from(vec![0x74, 0x68, 0x65, 0x20]);
+
+        let result = plain_text.fixed_xor(&key);
 
         assert_eq!(result, expected_result);
     }

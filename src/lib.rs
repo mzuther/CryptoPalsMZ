@@ -165,7 +165,7 @@ pub fn print_histogram(
         println!("{bin}");
     }
 
-    // println!("{}", crypto_vecs::Unicode::from(bytes.clone()));
+    // println!("{}", crypto_vecs::Unicode::from(bytes));
     println!("");
 }
 

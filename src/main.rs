@@ -168,13 +168,13 @@ fn challenge_06() {
             cryptopals::find_lowest_score_xor(&transposed_vecs[block], &keys_range_bytes);
 
         println!("[block {}/{}]", block + 1, score.keysize);
-        scores.sort_by_key(|a| a.key.clone());
+        scores.sort_by(|a, b| a.key.cmp(&b.key));
         for score in &scores {
             // println!(
             //     "{}: {} -> {}",
             //     score.key,
             //     score.score,
-            //     crypto_vecs::Unicode::from(score.plain_text.clone()).to_string().get(0..30).unwrap()
+            //     crypto_vecs::Unicode::from(&score.plain_text).to_string().get(0..30).unwrap()
             // );
 
             cryptopals::print_histogram(&score.key, &score.plain_text, 195.0, true, 0.005, 5);
@@ -211,7 +211,7 @@ fn challenge_04() {
         let keys_range_bytes = 0x00..0x80;
         let mut scores =
             cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher, &keys_range_bytes);
-        scores.sort_by_key(|a| a.key.clone());
+        scores.sort_by(|a, b| a.key.cmp(&b.key));
 
         // println!("\n[{line_hex}]\n");
 
@@ -229,7 +229,7 @@ fn challenge_03() {
     let keys_range_bytes = 0x00..0x80;
     let mut scores =
         cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher, &keys_range_bytes);
-    scores.sort_by_key(|a| a.key.clone());
+    scores.sort_by(|a, b| a.key.cmp(&b.key));
 
     for score in &scores {
         cryptopals::print_histogram(&score.key, &score.plain_text, 195.0, true, 0.025, 5);

@@ -8,15 +8,15 @@ pub trait ToBytes {
     fn to_bytes(&self) -> self::Bytes;
 
     fn to_hexadecimal(&self) -> self::Hexadecimal {
-        self::Hexadecimal::from(self.to_bytes())
+        self::Hexadecimal::from(&self.to_bytes())
     }
 
     fn to_base64(&self) -> self::Base64 {
-        self::Base64::from(self.to_bytes())
+        self::Base64::from(&self.to_bytes())
     }
 
     fn to_unicode(&self) -> self::Unicode {
-        self::Unicode::from(self.to_bytes())
+        self::Unicode::from(&self.to_bytes())
     }
 }
 
@@ -75,22 +75,6 @@ impl IntoIterator for self::Bytes {
         self.bytes.into_iter()
     }
 }
-
-// impl Iterator for self::Bytes {
-//     type Item = u8;
-
-//     fn next(&mut self) -> Option<Self::Item> {
-//         self.bytes.iter().next().copied()
-//     }
-// }
-
-// impl Iterator for &self::Bytes {
-//     type Item = u8;
-
-//     fn next(&mut self) -> Option<Self::Item> {
-//         self.bytes.iter().next().copied()
-//     }
-// }
 
 impl self::Bytes {
     pub fn new() -> Self {
@@ -238,9 +222,9 @@ impl convert::From<&str> for self::Hexadecimal {
     }
 }
 
-impl convert::From<self::Bytes> for self::Hexadecimal {
-    fn from(b: self::Bytes) -> Self {
-        Self::from(hex::encode(b.to_vec()))
+impl convert::From<&self::Bytes> for self::Hexadecimal {
+    fn from(bytes: &self::Bytes) -> Self {
+        Self::from(hex::encode(bytes.to_vec()))
     }
 }
 
@@ -279,9 +263,9 @@ impl convert::From<&str> for self::Base64 {
     }
 }
 
-impl convert::From<self::Bytes> for self::Base64 {
-    fn from(b: self::Bytes) -> Self {
-        let segments_to_encode = self::split_bytes_into_segments(&b, 6);
+impl convert::From<&self::Bytes> for self::Base64 {
+    fn from(bytes: &self::Bytes) -> Self {
+        let segments_to_encode = self::split_bytes_into_segments(&bytes, 6);
         let mut encoded_bytes = String::new();
 
         for segment in &segments_to_encode {
@@ -386,9 +370,9 @@ impl convert::From<&str> for self::Unicode {
     }
 }
 
-impl convert::From<self::Bytes> for self::Unicode {
-    fn from(b: self::Bytes) -> Self {
-        let unicode_string = String::from_utf8(b.to_vec()).expect("invalid UTF-8 string");
+impl convert::From<&self::Bytes> for self::Unicode {
+    fn from(bytes: &self::Bytes) -> Self {
+        let unicode_string = String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string");
 
         Self::from(unicode_string)
     }
@@ -662,7 +646,7 @@ mod tests {
         let bytes = self::Bytes::from(vec![0x3b, 0x44, 0x2c, 0x4e, 0xcc, 0x0f]);
         let expected_result = self::Hexadecimal::from("3b442c4ecc0f");
 
-        let result = self::Hexadecimal::from(bytes);
+        let result = self::Hexadecimal::from(&bytes);
 
         assert_eq!(result, expected_result);
     }
@@ -751,7 +735,7 @@ mod tests {
         let bytes = self::Bytes::from(get_base64_complete_alphabet_as_bytes());
         let expected_result = self::Base64::from(BASE64_COMPLETE_ALPHABET);
 
-        let result = self::Base64::from(bytes);
+        let result = self::Base64::from(&bytes);
 
         assert_eq!(result, expected_result);
     }
@@ -899,7 +883,7 @@ mod tests {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0x33]);
         let expected_result = self::Unicode::from("Ab3");
 
-        let result = self::Unicode::from(bytes);
+        let result = self::Unicode::from(&bytes);
 
         assert_eq!(result, expected_result);
     }
@@ -919,7 +903,7 @@ mod tests {
         let bytes = self::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
         let expected_result = self::Unicode::from("Aü你");
 
-        let result = self::Unicode::from(bytes);
+        let result = self::Unicode::from(&bytes);
 
         assert_eq!(result, expected_result);
     }

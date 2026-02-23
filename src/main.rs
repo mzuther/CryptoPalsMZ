@@ -30,8 +30,8 @@ fn challenge_06() {
 
     let cypher_base64 = crypto_vecs::Base64::from(cypher_text_string);
     let cypher = cypher_base64.to_bytes();
-    let cypher_vec = cypher.to_vec();
 
+    let cypher_vec = cypher.to_vec();
     let (cypher_start_vec, _) = cypher_vec.split_at(8);
     let cypher_start = crypto_vecs::Bytes::from(cypher_start_vec);
 
@@ -146,7 +146,10 @@ fn challenge_06() {
     );
 
     let keysize_range = 2..41;
-    let scores = cryptopals::guess_keysize_from_hamming_distance(&cypher, &keysize_range, 3);
+    let mut scores = cryptopals::guess_keysize_from_hamming_distance(&cypher, &keysize_range, 3);
+
+    // order by score, with lowest score first
+    scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
 
     // println!("[keysizes]");
     // for score in scores.get(0..5).unwrap() {
@@ -159,15 +162,15 @@ fn challenge_06() {
         .get(take_xth_score)
         .expect("there should always be a few elements");
 
-    let transposed_vecs = cypher.transpose_bytes(score.keysize);
-    let mut proposed_key_vec: Vec<u8> = Vec::new();
+    let keysize = score.keysize;
+    let transposed_vecs = cypher.transpose_bytes(keysize);
+    let mut proposed_key = crypto_vecs::Bytes::new();
 
-    for block in 0..transposed_vecs.len() {
+    for (index, block) in transposed_vecs.iter().enumerate() {
         let keys_range_bytes = 0x00..0xff;
-        let mut scores =
-            cryptopals::find_lowest_score_xor(&transposed_vecs[block], &keys_range_bytes);
+        let mut scores = cryptopals::find_lowest_score_xor(&block, &keys_range_bytes);
 
-        println!("[block {}/{}]", block + 1, score.keysize);
+        println!("[block {}/{}]", index + 1, keysize);
         scores.sort_by(|a, b| a.key.cmp(&b.key));
         for score in &scores {
             // println!(
@@ -182,12 +185,11 @@ fn challenge_06() {
         println!("");
 
         let score = scores.first().expect("there should always be one element");
-        proposed_key_vec.extend(score.key.to_vec());
+        proposed_key.extend(score.key.to_vec());
     }
 
-    // let proposed_key = crypto_vecs::Bytes::from(proposed_key_vec);
-    // let result_bytes = cryptopals::fixed_xor(&cypher, &proposed_key);
-    // let result = result_bytes.to_unicode();
+    let plain_text = cypher.fixed_xor(&proposed_key);
+    // let result = plain_text.to_unicode();
 
     // println!("{result}");
     // println!("");

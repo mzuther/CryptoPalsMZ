@@ -46,7 +46,7 @@ pub fn get_english_letter_frequencies() -> IndexMap<u8, f64> {
     english_letter_frequencies
 }
 
-pub const LOOKUP_BITS_IN_NIBBLE: [u8; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
+pub const LOOKUP_BITS_IN_NIBBLE: [u32; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
 
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct ScoreXOR {

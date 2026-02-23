@@ -159,24 +159,25 @@ impl self::Bytes {
         result_xor
     }
 
-    pub fn hamming_distance_bits(&self, other: &self::Bytes) -> u64 {
+    pub fn hamming_distance_bits(&self, other: &self::Bytes) -> u32 {
         let bytes_with_differing_bits = self.fixed_xor(&other);
 
         let mut differing_bits = 0;
 
         for byte in bytes_with_differing_bits {
-            let nibble_value_low = (byte as usize) & 0x0f;
-            let nibble_value_high = (byte as usize) >> 4;
+            let nibble_value_low = byte & 0x0f;
+            let nibble_value_high = byte >> 4;
 
             let differing_bits_low = constants::LOOKUP_BITS_IN_NIBBLE
-                .get(nibble_value_low)
-                .expect("index must be between 0 and 15");
-            let differing_bits_high = constants::LOOKUP_BITS_IN_NIBBLE
-                .get(nibble_value_high)
+                .get(nibble_value_low as usize)
                 .expect("index must be between 0 and 15");
 
-            differing_bits += *differing_bits_low as u64;
-            differing_bits += *differing_bits_high as u64;
+            let differing_bits_high = constants::LOOKUP_BITS_IN_NIBBLE
+                .get(nibble_value_high as usize)
+                .expect("index must be between 0 and 15");
+
+            differing_bits += *differing_bits_low;
+            differing_bits += *differing_bits_high;
         }
 
         differing_bits

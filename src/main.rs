@@ -9,10 +9,10 @@ fn main() {
 }
 
 fn challenge_06() {
-    let cypher_text_string: String =
+    let cypher_string: String =
         fs::read_to_string("original/6.txt").expect("could not read file");
 
-    let cypher_base64 = crypto_vecs::Base64::from(cypher_text_string);
+    let cypher_base64 = crypto_vecs::Base64::from(cypher_string);
     let cypher = cypher_base64.to_bytes();
 
     let cypher_vec = cypher.to_vec();
@@ -181,10 +181,10 @@ fn challenge_06() {
 
     assert_eq!(manual_key, proposed_key);
 
-    let plain_text = cypher.fixed_xor(&manual_key);
-    let result = plain_text.to_iso_8859_1();
+    let plain = cypher.fixed_xor(&manual_key);
+    let result_iso = plain.to_iso_8859_1();
 
-    println!("{result}");
+    println!("{result_iso}");
     println!("");
 
     // assert_eq!(result, expected_result);

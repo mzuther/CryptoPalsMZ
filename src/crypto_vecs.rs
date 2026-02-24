@@ -1006,18 +1006,18 @@ mod tests {
 
     #[test]
     fn unit_fixed_xor_single_byte() {
-        let plain_text = self::Bytes::from(0x1c);
+        let plain = self::Bytes::from(0x1c);
         let key = self::Bytes::from(0x74);
         let expected_result = self::Bytes::from(0x68);
 
-        let result = plain_text.fixed_xor(&key);
+        let result = plain.fixed_xor(&key);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_fixed_xor_single_byte_key() {
-        let plain_text = self::Bytes::from(vec![
+        let plain = self::Bytes::from(vec![
             0x1c, 0x01, 0x11, 0x00, 0x1f, 0xa2, 0x4b, 0x53, 0x98, 0xc5,
         ]);
         let key = self::Bytes::from(0x74);
@@ -1025,14 +1025,14 @@ mod tests {
             0x68, 0x75, 0x65, 0x74, 0x6b, 0xd6, 0x3f, 0x27, 0xec, 0xb1,
         ]);
 
-        let result = plain_text.fixed_xor(&key);
+        let result = plain.fixed_xor(&key);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_fixed_xor_full_length_key() {
-        let plain_text = self::Bytes::from(vec![
+        let plain = self::Bytes::from(vec![
             0x1c, 0x01, 0x11, 0x00, 0x1f, 0x01, 0x01, 0x00, 0x06, 0x1a, 0x02, 0x4b, 0x53, 0x53,
             0x50, 0x09, 0x18, 0x1c,
         ]);
@@ -1045,18 +1045,18 @@ mod tests {
             0x70, 0x6c, 0x61, 0x79,
         ]);
 
-        let result = plain_text.fixed_xor(&key);
+        let result = plain.fixed_xor(&key);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_fixed_xor_key_too_long() {
-        let plain_text = self::Bytes::from(vec![0x1c, 0x01, 0x11, 0x00]);
+        let plain = self::Bytes::from(vec![0x1c, 0x01, 0x11, 0x00]);
         let key = self::Bytes::from(vec![0x68, 0x69, 0x74, 0x20, 0x74, 0x68, 0x65, 0x20]);
         let expected_result = self::Bytes::from(vec![0x74, 0x68, 0x65, 0x20]);
 
-        let result = plain_text.fixed_xor(&key);
+        let result = plain.fixed_xor(&key);
 
         assert_eq!(result, expected_result);
     }

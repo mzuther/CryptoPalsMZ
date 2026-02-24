@@ -209,15 +209,26 @@ impl fmt::Display for self::Hexadecimal {
     }
 }
 
-// TODO: check input characters thoroughly
 impl convert::From<String> for self::Hexadecimal {
     fn from(hex_string: String) -> Self {
         let string_without_whitespace = hex_string
             .split_ascii_whitespace()
-            .fold(String::new(), |acc, string_slice| acc + string_slice);
+            .fold(String::new(), |acc, string_slice| acc + string_slice)
+            .to_lowercase();
+
+        let invalid_characters: String = string_without_whitespace
+            .chars()
+            .filter(|c| !constants::HEXADECIMAL_VALID_CHARACTERS.contains(*c))
+            .collect();
+
+        assert!(
+            invalid_characters.len() == 0,
+            "found invalid hexadecimal characters: {}",
+            invalid_characters
+        );
 
         self::Hexadecimal {
-            hex_string: string_without_whitespace.to_lowercase(),
+            hex_string: string_without_whitespace,
         }
     }
 }
@@ -260,12 +271,22 @@ impl fmt::Display for self::Base64 {
     }
 }
 
-// TODO: check input characters thoroughly
 impl convert::From<String> for self::Base64 {
     fn from(base64_string: String) -> Self {
         let string_without_whitespace = base64_string
             .split_ascii_whitespace()
             .fold(String::new(), |acc, string_slice| acc + string_slice);
+
+        let invalid_characters: String = string_without_whitespace
+            .chars()
+            .filter(|c| !constants::BASE64_VALID_CHARACTERS.contains(*c))
+            .collect();
+
+        assert!(
+            invalid_characters.len() == 0,
+            "found invalid base64 characters: {}",
+            invalid_characters
+        );
 
         self::Base64 {
             base64_string: string_without_whitespace,
@@ -279,7 +300,6 @@ impl convert::From<&str> for self::Base64 {
     }
 }
 
-// TODO: check input characters thoroughly
 impl convert::From<&self::Bytes> for self::Base64 {
     fn from(bytes: &self::Bytes) -> Self {
         let base64_segments = self::split_bytes_into_segments(&bytes, 6);
@@ -294,6 +314,7 @@ impl convert::From<&self::Bytes> for self::Base64 {
                     char_int = 61;
                 } else {
                     char_int = segment.unwrap();
+                    assert!(char_int < 64, "{} is not a valid base64 segment", char_int);
 
                     // upper case letter
                     if char_int < 26 {
@@ -698,6 +719,12 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "found invalid hexadecimal characters: !!g")]
+    fn unit_conversion_hex_invalid_string() {
+        let _ = self::Hexadecimal::from("4A!f3!c6g1D298");
+    }
+
+    #[test]
     fn unit_conversion_hex_to_bytes_lowercase() {
         let hexadecimal = self::Hexadecimal::from("41c3bce4bda0");
         let expected_result = self::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
@@ -776,7 +803,8 @@ mod tests {
         bytes_raw.push(0x11);
 
         let bytes = self::Bytes::from(bytes_raw);
-        let expected_result = self::Base64::from(format!("{}ABE=", constants::BASE64_COMPLETE_ALPHABET));
+        let expected_result =
+            self::Base64::from(format!("{}ABE=", constants::BASE64_COMPLETE_ALPHABET));
 
         let result = bytes.to_base64();
 
@@ -789,11 +817,18 @@ mod tests {
         bytes_raw.push(0x00);
 
         let bytes = self::Bytes::from(bytes_raw);
-        let expected_result = self::Base64::from(format!("{}AA==", constants::BASE64_COMPLETE_ALPHABET));
+        let expected_result =
+            self::Base64::from(format!("{}AA==", constants::BASE64_COMPLETE_ALPHABET));
 
         let result = bytes.to_base64();
 
         assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    #[should_panic(expected = "found invalid base64 characters: ._.")]
+    fn unit_conversion_base64_invalid_string() {
+        let _ = self::Base64::from("HUIfTQ.sP_A.h9");
     }
 
     #[test]
@@ -836,7 +871,8 @@ mod tests {
     #[test]
     fn unit_conversion_base64_to_string() {
         let base64 = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
-        let expected_result = String::from(format!("base64:{}", constants::BASE64_COMPLETE_ALPHABET));
+        let expected_result =
+            String::from(format!("base64:{}", constants::BASE64_COMPLETE_ALPHABET));
 
         let result = base64.to_string();
 
@@ -848,7 +884,8 @@ mod tests {
         let base64 = self::Base64::from(
             "\r\nABCD\nEFGH\n  IJKL\nMNOP\t\nQRSTUV\nW\n\t XYZa\nbcdef\nghi\njklmn\nopqrstuv\nwxyz01234\n5\n67\n89+/\t",
         );
-        let expected_result = String::from(format!("base64:{}", constants::BASE64_COMPLETE_ALPHABET));
+        let expected_result =
+            String::from(format!("base64:{}", constants::BASE64_COMPLETE_ALPHABET));
 
         let result = base64.to_string();
 

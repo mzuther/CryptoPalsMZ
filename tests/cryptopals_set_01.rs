@@ -116,3 +116,49 @@ fn integration_challenge_05() {
 
     assert_eq!(result, expected_result);
 }
+
+#[test]
+fn integration_challenge_06() {
+    let cypher_string: String = fs::read_to_string("original/6.txt").expect("could not read file");
+    let cypher_base64 = crypto_vecs::Base64::from(cypher_string);
+    let cypher = cypher_base64.to_bytes();
+
+    let keysize_range = 2..41;
+    let samples_hamming_distance = 10;
+
+    let mut edit_sizes = cryptopals::guess_keysize_from_hamming_distance(
+        &cypher,
+        &keysize_range,
+        samples_hamming_distance,
+    );
+
+    // sort by score, resulting in highest score first (to get lowest score with "pop()")
+    edit_sizes.sort_by(|a, b| b.partial_cmp(&a).unwrap());
+
+    let best_edit_size = edit_sizes
+        .pop()
+        .expect("there should always be a few elements");
+
+    let transposed_vecs = cypher.transpose_bytes(best_edit_size.keysize);
+    let mut result_key = crypto_vecs::Bytes::new();
+
+    for block in transposed_vecs.iter() {
+        let mut block_scores = cryptopals::find_lowest_score_xor(&block);
+
+        // sort by score, resulting in highest score first (to get lowest score with "pop()")
+        block_scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
+
+        let best_block_score = block_scores
+            .pop()
+            .expect("there should always be one element");
+
+        result_key.extend(best_block_score.key.to_vec());
+    }
+
+    let manual_key = crypto_vecs::Hexadecimal::from(
+        "5465726d696e61746f7220583a204272696e6720746865206e6f697365",
+    );
+    let expected_result = manual_key.to_bytes();
+
+    assert_eq!(result_key, expected_result);
+}

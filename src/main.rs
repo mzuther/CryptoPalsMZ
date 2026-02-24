@@ -190,46 +190,6 @@ fn challenge_06() {
     // assert_eq!(result, expected_result);
 }
 
-fn challenge_04() {
-    let all_strings_hex: String =
-        fs::read_to_string("original/4.txt").expect("could not read file");
-
-    let mut best_score = cryptopals::constants::ScoreXOR {
-        score: 1000.0,
-        key: crypto_vecs::Bytes::from(0xff),
-        plain_text: crypto_vecs::Bytes::new(),
-    };
-
-    let cypher_lines_hex = all_strings_hex.lines();
-    for cypher_line_hex in cypher_lines_hex {
-        let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(cypher_line_hex);
-        let cypher = hexadecimal_cypher.to_bytes();
-
-        let mut scores = cryptopals::find_lowest_score_xor(&cypher);
-        scores.sort_by(|a, b| a.key.cmp(&b.key));
-
-        // println!("\n[{line_hex}]\n");
-
-        for score in &scores {
-            cryptopals::print_histogram(&score.key, &score.plain_text, 0.22, 235.0, true, 0.05, 7);
-        }
-    }
-}
-
-fn challenge_03() {
-    let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(
-        "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736",
-    );
-    let cypher = hexadecimal_cypher.to_bytes();
-
-    let mut scores = cryptopals::find_lowest_score_xor(&cypher);
-    scores.sort_by(|a, b| a.key.cmp(&b.key));
-
-    for score in &scores {
-        cryptopals::print_histogram(&score.key, &score.plain_text, 0.22, 235.0, true, 0.025, 5);
-    }
-}
-
 fn play_with_xor() {
     let unicode_plain =
         crypto_vecs::Unicode::from("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");

@@ -180,7 +180,7 @@ fn score_letter_frequencies(bytes: &crypto_vecs::Bytes) -> f64 {
 pub fn guess_keysize_from_hamming_distance(
     bytes: &crypto_vecs::Bytes,
     keysize_range: &Range<usize>,
-    number_of_calculations: u32,
+    number_of_samples: u32,
 ) -> Vec<constants::ScoreKeysize> {
     let mut scores: Vec<constants::ScoreKeysize> = Vec::with_capacity(keysize_range.len());
 
@@ -192,7 +192,7 @@ pub fn guess_keysize_from_hamming_distance(
         let chunk_vec_1 = iter_chunks.next().expect("text should be long enough");
         let mut chunk_1 = crypto_vecs::Bytes::from(chunk_vec_1);
 
-        for _ in 0..number_of_calculations {
+        for _ in 0..number_of_samples {
             let chunk_vec_2 = iter_chunks.next().expect("text should be long enough");
             let chunk_2 = crypto_vecs::Bytes::from(chunk_vec_2);
 
@@ -201,7 +201,7 @@ pub fn guess_keysize_from_hamming_distance(
             chunk_1 = chunk_2;
         }
 
-        let edit_size_average = (edit_size as f64) / (number_of_calculations as f64);
+        let edit_size_average = (edit_size as f64) / (number_of_samples as f64);
         let edit_size_normalized = edit_size_average / (keysize as f64);
 
         let score = constants::ScoreKeysize {

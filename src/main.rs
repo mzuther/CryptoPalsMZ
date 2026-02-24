@@ -5,12 +5,28 @@ use cryptopals::crypto_vecs::{self, ToBytes};
 use std::fs;
 
 fn main() {
-    challenge_06();
+    challenge_07();
+}
+
+fn challenge_07() {
+    let cypher_string: String = fs::read_to_string("original/7.txt").expect("could not read file");
+
+    let cypher_base64 = crypto_vecs::Base64::from(cypher_string);
+    let cypher = cypher_base64.to_bytes();
+
+    let key_string = crypto_vecs::Unicode::from("YELLOW SUBMARINE");
+    let key = key_string.to_bytes();
+
+    println!("orig:   {}\n", cypher_base64);
+    println!("cypher: {}\n", cypher_base64);
+    println!("key:    {}", key_string);
+    println!("        {}", key);
+
+    // assert_eq!(result, expected_result);
 }
 
 fn challenge_06() {
-    let cypher_string: String =
-        fs::read_to_string("original/6.txt").expect("could not read file");
+    let cypher_string: String = fs::read_to_string("original/6.txt").expect("could not read file");
 
     let cypher_base64 = crypto_vecs::Base64::from(cypher_string);
     let cypher = cypher_base64.to_bytes();

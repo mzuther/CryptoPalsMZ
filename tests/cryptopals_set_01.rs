@@ -49,9 +49,7 @@ fn integration_challenge_03() {
     );
     let expected_result = crypto_vecs::Unicode::from("Cooking MC's like a pound of bacon");
 
-    let keys_range_bytes = 0x00..0x80;
-    let mut scores =
-        cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher, &keys_range_bytes);
+    let mut scores = cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher);
 
     // sort by score, resulting in highest score first (to get lowest score with "pop()")
     scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
@@ -76,11 +74,9 @@ fn integration_challenge_04() {
     };
 
     for string_hex in all_strings_hex.lines() {
-        let keys_range_bytes = 0x00..0x80;
         let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(string_hex);
 
-        let mut scores =
-            cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher, &keys_range_bytes);
+        let mut scores = cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher);
 
         // sort by score, resulting in highest score first (to get lowest score with "pop()")
         scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());

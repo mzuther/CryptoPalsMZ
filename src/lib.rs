@@ -14,23 +14,18 @@ where
     plain_text.fixed_xor(&key)
 }
 
-pub fn find_lowest_score_xor_cryptovecs<T>(
-    cryptovec_vec: &T,
-    keys_range_bytes: &Range<u8>,
-) -> Vec<constants::ScoreXOR>
+pub fn find_lowest_score_xor_cryptovecs<T>(cryptovec_vec: &T) -> Vec<constants::ScoreXOR>
 where
     T: crypto_vecs::ToBytes,
 {
-    self::find_lowest_score_xor(&cryptovec_vec.to_bytes(), &keys_range_bytes)
+    self::find_lowest_score_xor(&cryptovec_vec.to_bytes())
 }
 
-pub fn find_lowest_score_xor(
-    bytes: &crypto_vecs::Bytes,
-    keys_range_bytes: &Range<u8>,
-) -> Vec<constants::ScoreXOR> {
+pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<constants::ScoreXOR> {
+    let keys_range_bytes = 0x00..0xff;
     let mut scores: Vec<constants::ScoreXOR> = Vec::with_capacity(keys_range_bytes.len());
 
-    for key_byte in keys_range_bytes.clone() {
+    for key_byte in keys_range_bytes {
         let key = crypto_vecs::Bytes::from(key_byte);
         let bytes_xor = bytes.fixed_xor(&key);
         let score = self::score_letter_frequencies(&bytes_xor);

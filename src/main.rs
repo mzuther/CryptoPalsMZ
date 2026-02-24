@@ -158,8 +158,7 @@ fn challenge_06() {
     let mut proposed_key = crypto_vecs::Bytes::new();
 
     for (index, block) in transposed_vecs.iter().enumerate() {
-        let keys_range_bytes = 0x00..0xff;
-        let mut scores = cryptopals::find_lowest_score_xor(&block, &keys_range_bytes);
+        let mut scores = cryptopals::find_lowest_score_xor(&block);
 
         println!("[block {}/{}]", index + 1, keysize);
         scores.sort_by(|a, b| a.key.cmp(&b.key));
@@ -204,9 +203,7 @@ fn challenge_04() {
     let cypher_lines_hex = all_strings_hex.lines();
     for cypher_line_hex in cypher_lines_hex {
         let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(cypher_line_hex);
-        let keys_range_bytes = 0x00..0x80;
-        let mut scores =
-            cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher, &keys_range_bytes);
+        let mut scores = cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher);
         scores.sort_by(|a, b| a.key.cmp(&b.key));
 
         // println!("\n[{line_hex}]\n");
@@ -222,9 +219,7 @@ fn challenge_03() {
         "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736",
     );
 
-    let keys_range_bytes = 0x00..0x80;
-    let mut scores =
-        cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher, &keys_range_bytes);
+    let mut scores = cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher);
     scores.sort_by(|a, b| a.key.cmp(&b.key));
 
     for score in &scores {

@@ -66,14 +66,17 @@ impl ToBytes for self::Bytes {
         self.clone()
     }
 
+    // performance: prevent intermediate conversion to Bytes
     fn to_hexadecimal(&self) -> self::Hexadecimal {
         self::Hexadecimal::from(self)
     }
 
+    // performance: prevent intermediate conversion to Bytes
     fn to_base64(&self) -> self::Base64 {
         self::Base64::from(self)
     }
 
+    // performance: prevent intermediate conversion to Bytes
     fn to_unicode(&self) -> self::Unicode {
         self::Unicode::from(self)
     }
@@ -251,6 +254,11 @@ impl ToBytes for self::Hexadecimal {
 
         self::Bytes::from(hex_bytes)
     }
+
+    // performance: prevent intermediate conversion to Bytes
+    fn to_hexadecimal(&self) -> self::Hexadecimal {
+        self.clone()
+    }
 }
 
 // ----------------
@@ -363,6 +371,11 @@ impl ToBytes for self::Base64 {
         let base64_bytes = self::assemble_bytes_from_segments(&decoded_bytes, 6);
         self::Bytes::from(base64_bytes)
     }
+
+    // performance: prevent intermediate conversion to Bytes
+    fn to_base64(&self) -> self::Base64 {
+        self.clone()
+    }
 }
 
 // ----------------
@@ -405,6 +418,11 @@ impl ToBytes for self::Unicode {
         let unicode_bytes = Vec::from(self.unicode_string.clone());
 
         self::Bytes::from(unicode_bytes)
+    }
+
+    // performance: prevent intermediate conversion to Bytes
+    fn to_unicode(&self) -> self::Unicode {
+        self.clone()
     }
 }
 

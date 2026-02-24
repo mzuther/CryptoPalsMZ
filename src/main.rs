@@ -143,7 +143,7 @@ fn challenge_06() {
     scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
 
     println!("[keysizes]");
-    for score in scores.get(0..5).unwrap() {
+    for score in scores.get(0..5).expect("all keysizes should be processed") {
         println!("{}: {}", score.keysize, score.score);
     }
     println!("");

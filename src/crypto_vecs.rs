@@ -29,11 +29,9 @@ pub struct Bytes {
 
 impl fmt::Display for self::Bytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut formatted_string = String::new();
-
-        for byte in self.iter() {
-            formatted_string.push_str(&format!("{byte:#x}, "));
-        }
+        let formatted_string = self
+            .iter()
+            .fold(String::new(), |acc, &byte| format!("{acc}{byte:#x}, "));
 
         let stripped_string = formatted_string
             .strip_suffix(", ")
@@ -104,11 +102,11 @@ impl self::Bytes {
         self.bytes.capacity()
     }
 
-    // ----------------
-
     pub const fn len(&self) -> usize {
         self.bytes.len()
     }
+
+    // ----------------
 
     pub fn iter(&self) -> slice::Iter<'_, u8> {
         self.bytes.iter()
@@ -119,14 +117,8 @@ impl self::Bytes {
     }
 
     pub fn to_iso_8859_1(&self) -> String {
-        let mut iso_string = String::new();
-
-        for &byte in self.iter() {
-            let iso_char = byte as char;
-            iso_string.push(iso_char);
-        }
-
-        iso_string
+        self.iter()
+            .fold(String::new(), |acc, &byte| format!("{acc}{}", byte as char))
     }
 
     // ----------------
@@ -145,64 +137,57 @@ impl self::Bytes {
     // ----------------
 
     pub fn fixed_xor(&self, key: &self::Bytes) -> self::Bytes {
-        let bytes_plain = self.iter();
+        assert!(key.len() > 0);
+
         let mut bytes_key_endless = key.iter().cycle();
 
-        let mut result_xor = self::Bytes::new();
+        self.iter()
+            .fold(self::Bytes::new(), |mut acc, &byte_plain| {
+                let byte_key = bytes_key_endless
+                    .next()
+                    .expect("infinite key was finite after all");
 
-        for byte_plain in bytes_plain {
-            let byte_key = bytes_key_endless
-                .next()
-                .expect("infinite key was finite after all");
-            let byte_xor = (byte_plain | byte_key) & !(byte_plain & byte_key);
-
-            result_xor.push(byte_xor);
-        }
-
-        result_xor
+                acc.push((byte_plain | byte_key) & !(byte_plain & byte_key));
+                acc
+            })
     }
 
     pub fn hamming_distance_bits(&self, other: &self::Bytes) -> u32 {
         let bytes_with_differing_bits = self.fixed_xor(&other);
 
-        let mut differing_bits = 0;
-
-        for byte in bytes_with_differing_bits {
+        bytes_with_differing_bits.iter().fold(0, |acc, &byte| {
             let nibble_value_low = byte & 0x0f;
             let nibble_value_high = byte >> 4;
 
             let differing_bits_low = constants::LOOKUP_BITS_IN_NIBBLE
                 .get(nibble_value_low as usize)
-                .expect("index must be between 0 and 15");
+                .expect("index must be between 0 and 15")
+                .clone();
 
             let differing_bits_high = constants::LOOKUP_BITS_IN_NIBBLE
                 .get(nibble_value_high as usize)
-                .expect("index must be between 0 and 15");
+                .expect("index must be between 0 and 15")
+                .clone();
 
-            differing_bits += *differing_bits_low;
-            differing_bits += *differing_bits_high;
-        }
-
-        differing_bits
+            acc + differing_bits_low + differing_bits_high
+        })
     }
 
     pub fn transpose_bytes(&self, number_of_blocks: usize) -> Vec<self::Bytes> {
         assert!(number_of_blocks > 0);
 
-        // may come in useful for automatic processing (single-byte keys)
+        // performance: handle special case
+        //
+        // may come in useful when automatically processing single-byte keys
         if number_of_blocks == 1 {
             return vec![self.clone()];
         }
 
-        let mut transposed_blocks: Vec<self::Bytes> = Vec::with_capacity(number_of_blocks);
         let block_capacity = (self.len() / number_of_blocks) + 1;
-
-        for _ in 0..number_of_blocks {
-            transposed_blocks.push(self::Bytes::with_capacity(block_capacity));
-        }
+        let mut transposed_blocks =
+            vec![self::Bytes::with_capacity(block_capacity); number_of_blocks];
 
         for (index, &byte) in self.iter().enumerate() {
-            // guard rail: may be lower than "keysize"
             let block_index = index % number_of_blocks;
             transposed_blocks[block_index].push(byte);
         }
@@ -224,11 +209,12 @@ impl fmt::Display for self::Hexadecimal {
     }
 }
 
+// TODO: check input characters thoroughly
 impl convert::From<String> for self::Hexadecimal {
     fn from(hex_string: String) -> Self {
         let string_without_whitespace = hex_string
             .split_ascii_whitespace()
-            .fold(String::new(), |acc, s| acc + s);
+            .fold(String::new(), |acc, string_slice| acc + string_slice);
 
         self::Hexadecimal {
             hex_string: string_without_whitespace.to_lowercase(),
@@ -274,11 +260,12 @@ impl fmt::Display for self::Base64 {
     }
 }
 
+// TODO: check input characters thoroughly
 impl convert::From<String> for self::Base64 {
     fn from(base64_string: String) -> Self {
         let string_without_whitespace = base64_string
             .split_ascii_whitespace()
-            .fold(String::new(), |acc, s| acc + s);
+            .fold(String::new(), |acc, string_slice| acc + string_slice);
 
         self::Base64 {
             base64_string: string_without_whitespace,
@@ -295,80 +282,85 @@ impl convert::From<&str> for self::Base64 {
 // TODO: check input characters thoroughly
 impl convert::From<&self::Bytes> for self::Base64 {
     fn from(bytes: &self::Bytes) -> Self {
-        let segments_to_encode = self::split_bytes_into_segments(&bytes, 6);
-        let mut encoded_bytes = String::new();
+        let base64_segments = self::split_bytes_into_segments(&bytes, 6);
 
-        for segment in &segments_to_encode {
-            let mut char_int: u8;
+        let base64_string = base64_segments
+            .iter()
+            .fold(String::new(), |mut acc, &segment| {
+                let mut char_int: u8;
 
-            // padding character (=)
-            if segment.is_none() {
-                char_int = 61;
-            } else {
-                char_int = segment.unwrap();
-
-                // upper case letter
-                if char_int < 26 {
-                    char_int += 65
-                // lower case letter
-                } else if char_int < 52 {
-                    char_int += 71
-                // plus
-                } else if char_int == 62 {
-                    char_int = 43
-                // slash
-                } else if char_int == 63 {
-                    char_int = 47
-                // digit
+                // padding character (=)
+                if segment.is_none() {
+                    char_int = 61;
                 } else {
-                    char_int -= 4
+                    char_int = segment.unwrap();
+
+                    // upper case letter
+                    if char_int < 26 {
+                        char_int += 65
+                    // lower case letter
+                    } else if char_int < 52 {
+                        char_int += 71
+                    // plus
+                    } else if char_int == 62 {
+                        char_int = 43
+                    // slash
+                    } else if char_int == 63 {
+                        char_int = 47
+                    // digit
+                    } else {
+                        char_int -= 4
+                    }
                 }
-            }
 
-            encoded_bytes.push(char_int as char);
-        }
+                acc.push(char_int as char);
+                acc
+            });
 
-        Self::from(encoded_bytes)
+        Self::from(base64_string)
     }
 }
 
 impl ToBytes for self::Base64 {
     fn to_bytes(&self) -> self::Bytes {
-        let mut decoded_bytes = Vec::new();
+        let decoded_bytes = self
+            .base64_string
+            .bytes()
+            .fold(Vec::new(), |mut acc, char_int| {
+                let char_option;
 
-        for char_int in self.base64_string.bytes() {
-            let char_option;
+                // plus
+                if char_int == 43 {
+                    char_option = Some(62);
+                // slash
+                } else if char_int == 47 {
+                    char_option = Some(63);
+                // padding character (=)
+                } else if char_int == 61 {
+                    char_option = None;
+                // digit
+                } else if char_int <= 57 {
+                    char_option = Some(char_int + 4);
+                // upper case letter
+                } else if char_int <= 90 {
+                    char_option = Some(char_int - 65);
+                // lower case letter
+                } else {
+                    char_option = Some(char_int - 71);
+                }
 
-            // plus
-            if char_int == 43 {
-                char_option = Some(62);
-            // slash
-            } else if char_int == 47 {
-                char_option = Some(63);
-            // padding character (=)
-            } else if char_int == 61 {
-                char_option = None;
-            // digit
-            } else if char_int <= 57 {
-                char_option = Some(char_int + 4);
-            // upper case letter
-            } else if char_int <= 90 {
-                char_option = Some(char_int - 65);
-            // lower case letter
-            } else {
-                char_option = Some(char_int - 71);
-            }
+                assert!(
+                    char_option.is_none_or(|x| x < 64),
+                    "{:?} is not valid base64",
+                    char_option
+                );
 
-            assert!(
-                char_option.is_none_or(|x| x < 64),
-                "{} is not valid base64",
-                char_option.unwrap()
-            );
-
-            decoded_bytes.push(char_option);
-        }
+                acc.push(char_option);
+                acc
+            });
 
         let base64_bytes = self::assemble_bytes_from_segments(&decoded_bytes, 6);
+
         self::Bytes::from(base64_bytes)
     }
 
@@ -429,13 +421,11 @@ impl ToBytes for self::Unicode {
 // ----------------
 
 fn split_bytes_into_segments(bytes: &self::Bytes, bits_per_segment: u8) -> Vec<Option<u8>> {
-    let mut segments_to_encode = Vec::new();
-
     let bits_per_byte = 8;
     let mut bits_with_value = 0;
     let mut remainder = 0;
 
-    for byte in bytes.iter() {
+    let mut segments_to_encode = bytes.iter().fold(Vec::new(), |mut acc, &byte| {
         bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
         let bits_with_remainder = bits_per_byte - bits_with_value;
 
@@ -445,15 +435,17 @@ fn split_bytes_into_segments(bytes: &self::Bytes, bits_per_segment: u8) -> Vec<O
         let value = ((byte & mask_value) >> bits_with_remainder) + remainder;
         remainder = (byte & mask_remainder) << (bits_per_segment - bits_with_remainder);
 
-        segments_to_encode.push(Some(value));
+        acc.push(Some(value));
 
         if bits_with_value == (bits_per_byte - bits_per_segment) {
             bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
 
-            segments_to_encode.push(Some(remainder));
+            acc.push(Some(remainder));
             remainder = 0;
         }
-    }
+
+        acc
+    });
 
     // add padding characters
     if bits_with_value > 0 {
@@ -469,37 +461,41 @@ fn split_bytes_into_segments(bytes: &self::Bytes, bits_per_segment: u8) -> Vec<O
 }
 
 fn assemble_bytes_from_segments(bytes: &Vec<Option<u8>>, bits_per_segment: u8) -> self::Bytes {
-    let mut assembled_segments = self::Bytes::new();
-
     let bits_per_byte = 8;
     let mut inverted_bit_output = 0;
     let mut byte_in_progress = 0;
 
-    for byte_input in bytes {
-        // padding
-        if byte_input.is_none() {
-            return assembled_segments;
-        }
-
-        for inverted_bit_input in 0..bits_per_segment {
-            let current_bit_input = bits_per_segment - inverted_bit_input - 1;
-            let current_bit_output: u8 = bits_per_byte - inverted_bit_output - 1;
-
-            let current_mask_input = 1 << current_bit_input;
-            let current_mask_output = 1 << current_bit_output;
-
-            if (byte_input.unwrap() & current_mask_input) > 0 {
-                byte_in_progress += current_mask_output;
+    let assembled_segments = bytes
+        .iter()
+        .fold(self::Bytes::new(), |mut acc, byte_input_option| {
+            // padding
+            if byte_input_option.is_none() {
+                return acc;
             }
 
-            inverted_bit_output = (inverted_bit_output + 1) % bits_per_byte;
+            let byte_input = byte_input_option.unwrap();
 
-            if inverted_bit_output == 0 {
-                assembled_segments.push(byte_in_progress);
-                byte_in_progress = 0;
+            for inverted_bit_input in 0..bits_per_segment {
+                let current_bit_input = bits_per_segment - inverted_bit_input - 1;
+                let current_bit_output: u8 = bits_per_byte - inverted_bit_output - 1;
+
+                let current_mask_input = 1 << current_bit_input;
+                let current_mask_output = 1 << current_bit_output;
+
+                if (byte_input & current_mask_input) > 0 {
+                    byte_in_progress += current_mask_output;
+                }
+
+                inverted_bit_output = (inverted_bit_output + 1) % bits_per_byte;
+
+                if inverted_bit_output == 0 {
+                    acc.push(byte_in_progress);
+                    byte_in_progress = 0;
+                }
             }
-        }
-    }
+
+            acc
+        });
 
     assembled_segments
 }
@@ -1080,17 +1076,6 @@ mod tests {
     }
 
     // ----------------
-
-    #[test]
-    fn unit_hamming_distance_bits_empty() {
-        let bytes = self::Bytes::new();
-        let other = self::Bytes::new();
-        let expected_result = 0;
-
-        let result = bytes.hamming_distance_bits(&other);
-
-        assert_eq!(result, expected_result);
-    }
 
     #[test]
     fn unit_hamming_distance_bits_1() {

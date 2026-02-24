@@ -4,11 +4,14 @@ pub mod constants;
 pub mod crypto_vecs;
 
 pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<constants::ScoreXOR> {
-    let keys_range_bytes = 0x00..0xff;
-    let mut scores: Vec<constants::ScoreXOR> = Vec::with_capacity(keys_range_bytes.len());
+    let key_range = 0x00..0xff;
 
-    for key_byte in keys_range_bytes {
-        let key = crypto_vecs::Bytes::from(key_byte);
+    let all_keys = key_range.fold(Vec::new(), |mut acc, key_byte| {
+        acc.push(crypto_vecs::Bytes::from(key_byte));
+        acc
+    });
+
+    all_keys.into_iter().fold(Vec::new(), |mut acc, key| {
         let bytes_xor = bytes.fixed_xor(&key);
         let score = self::score_letter_frequencies(&bytes_xor);
 
@@ -18,10 +21,9 @@ pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<constants::Score
             plain_text: bytes_xor,
         };
 
-        scores.push(score);
-    }
-
-    scores
+        acc.push(score);
+        acc
+    })
 }
 
 fn get_letter_frequencies(bytes: &crypto_vecs::Bytes) -> HashMap<u8, f64> {
@@ -75,16 +77,17 @@ pub fn print_histogram(
 
     if min_important_letters > 0 {
         let important_letters = vec!['e', 't', 'a', 'o', 'n', 's', 'h', 'r'];
-        let mut found_count = 0;
 
-        for letter_char in important_letters {
+        let found_count = important_letters.iter().fold(0, |acc, &letter_char| {
             let letter = letter_char as u8;
             let percentage_letter = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
 
             if percentage_letter > 0.0 {
-                found_count += 1;
+                acc + 1
+            } else {
+                acc
             }
-        }
+        });
 
         if found_count < min_important_letters {
             return;

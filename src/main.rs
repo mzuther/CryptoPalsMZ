@@ -203,7 +203,9 @@ fn challenge_04() {
     let cypher_lines_hex = all_strings_hex.lines();
     for cypher_line_hex in cypher_lines_hex {
         let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(cypher_line_hex);
-        let mut scores = cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher);
+        let cypher = hexadecimal_cypher.to_bytes();
+
+        let mut scores = cryptopals::find_lowest_score_xor(&cypher);
         scores.sort_by(|a, b| a.key.cmp(&b.key));
 
         // println!("\n[{line_hex}]\n");
@@ -218,8 +220,9 @@ fn challenge_03() {
     let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(
         "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736",
     );
+    let cypher = hexadecimal_cypher.to_bytes();
 
-    let mut scores = cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher);
+    let mut scores = cryptopals::find_lowest_score_xor(&cypher);
     scores.sort_by(|a, b| a.key.cmp(&b.key));
 
     for score in &scores {
@@ -228,20 +231,24 @@ fn challenge_03() {
 }
 
 fn play_with_xor() {
-    let unicode_plain_text =
+    let unicode_plain =
         crypto_vecs::Unicode::from("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");
+    let plain = unicode_plain.to_bytes();
+
     let unicode_key = crypto_vecs::Unicode::from("ESWAREINMAL");
-    let cypher = cryptopals::fixed_xor_cryptovecs(&unicode_plain_text, &unicode_key);
+    let key = unicode_key.to_bytes();
+
+    let cypher = plain.fixed_xor(&key);
 
     println!("\n[Plain]");
-    println!("{}", unicode_plain_text);
-    println!("{}", unicode_plain_text.to_hexadecimal());
-    println!("{}", unicode_plain_text.to_base64());
+    println!("{}", unicode_plain);
+    println!("{}", plain.to_hexadecimal());
+    println!("{}", plain.to_base64());
 
     println!("\n[Key]");
     println!("{}", unicode_key);
-    println!("{}", unicode_key.to_hexadecimal());
-    println!("{}", unicode_key.to_base64());
+    println!("{}", key.to_hexadecimal());
+    println!("{}", key.to_base64());
 
     println!("\n[Cypher]");
     println!("{}", cypher.to_hexadecimal());

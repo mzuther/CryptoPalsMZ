@@ -3,24 +3,6 @@ use std::{cmp, collections::HashMap, ops::Range};
 pub mod constants;
 pub mod crypto_vecs;
 
-pub fn fixed_xor_cryptovecs<T, U>(plain_text_vec: &T, key_vec: &U) -> crypto_vecs::Bytes
-where
-    T: crypto_vecs::ToBytes,
-    U: crypto_vecs::ToBytes,
-{
-    let plain_text = plain_text_vec.to_bytes();
-    let key = key_vec.to_bytes();
-
-    plain_text.fixed_xor(&key)
-}
-
-pub fn find_lowest_score_xor_cryptovecs<T>(cryptovec_vec: &T) -> Vec<constants::ScoreXOR>
-where
-    T: crypto_vecs::ToBytes,
-{
-    self::find_lowest_score_xor(&cryptovec_vec.to_bytes())
-}
-
 pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<constants::ScoreXOR> {
     let keys_range_bytes = 0x00..0xff;
     let mut scores: Vec<constants::ScoreXOR> = Vec::with_capacity(keys_range_bytes.len());
@@ -192,17 +174,6 @@ fn score_letter_frequencies(bytes: &crypto_vecs::Bytes) -> f64 {
     total_score
 }
 
-pub fn hamming_distance_bits_cryptovecs<T, U>(bytes_vec: &T, other_vec: &U) -> u32
-where
-    T: crypto_vecs::ToBytes,
-    U: crypto_vecs::ToBytes,
-{
-    let bytes = bytes_vec.to_bytes();
-    let other = other_vec.to_bytes();
-
-    bytes.hamming_distance_bits(&other)
-}
-
 pub fn guess_keysize_from_hamming_distance(
     bytes: &crypto_vecs::Bytes,
     keysize_range: &Range<usize>,
@@ -291,17 +262,22 @@ fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<St
 
 #[cfg(test)]
 mod tests {
+    use crate::crypto_vecs::ToBytes;
+
     use super::*;
 
     #[test]
     fn unit_fixed_xor_unicode() {
-        let unicode = crypto_vecs::Unicode::from("Cooking MCs");
-        let key_unicode = crypto_vecs::Unicode::from("X");
+        let unicode_plain = crypto_vecs::Unicode::from("Cooking MCs");
+        let unicode_key = crypto_vecs::Unicode::from("X");
         let expected_result = crypto_vecs::Bytes::from(vec![
             0x1b, 0x37, 0x37, 0x33, 0x31, 0x36, 0x3f, 0x78, 0x15, 0x1b, 0x2b,
         ]);
 
-        let result = self::fixed_xor_cryptovecs(&unicode, &key_unicode);
+        let plain = unicode_plain.to_bytes();
+        let key = unicode_key.to_bytes();
+
+        let result = plain.fixed_xor(&key);
 
         assert_eq!(result, expected_result);
     }
@@ -310,11 +286,14 @@ mod tests {
 
     #[test]
     fn unit_hamming_distance_bits_unicode() {
-        let unicode_1 = crypto_vecs::Unicode::from("this is a test");
-        let unicode_2 = crypto_vecs::Unicode::from("wokka wokka!!!");
+        let unicode_bytes = crypto_vecs::Unicode::from("this is a test");
+        let unicode_other = crypto_vecs::Unicode::from("wokka wokka!!!");
         let expected_result = 37;
 
-        let result = self::hamming_distance_bits_cryptovecs(&unicode_1, &unicode_2);
+        let bytes = unicode_bytes.to_bytes();
+        let other = unicode_other.to_bytes();
+
+        let result = bytes.hamming_distance_bits(&other);
 
         assert_eq!(result, expected_result);
     }

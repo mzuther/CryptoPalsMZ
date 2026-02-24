@@ -35,7 +35,10 @@ fn integration_challenge_02() {
     let hexadecimal_key = crypto_vecs::Hexadecimal::from("686974207468652062756c6c277320657965");
     let expected_result = crypto_vecs::Hexadecimal::from("746865206b696420646f6e277420706c6179");
 
-    let bytes_xor = cryptopals::fixed_xor_cryptovecs(&hexadecimal_plain, &hexadecimal_key);
+    let plain = hexadecimal_plain.to_bytes();
+    let key = hexadecimal_key.to_bytes();
+
+    let bytes_xor = plain.fixed_xor(&key);
 
     let result = bytes_xor.to_hexadecimal();
 
@@ -47,9 +50,10 @@ fn integration_challenge_03() {
     let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(
         "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736",
     );
+    let cypher = hexadecimal_cypher.to_bytes();
     let expected_result = crypto_vecs::Unicode::from("Cooking MC's like a pound of bacon");
 
-    let mut scores = cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher);
+    let mut scores = cryptopals::find_lowest_score_xor(&cypher);
 
     // sort by score, resulting in highest score first (to get lowest score with "pop()")
     scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
@@ -75,8 +79,9 @@ fn integration_challenge_04() {
 
     for string_hex in all_strings_hex.lines() {
         let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(string_hex);
+        let cypher = hexadecimal_cypher.to_bytes();
 
-        let mut scores = cryptopals::find_lowest_score_xor_cryptovecs(&hexadecimal_cypher);
+        let mut scores = cryptopals::find_lowest_score_xor(&cypher);
 
         // sort by score, resulting in highest score first (to get lowest score with "pop()")
         scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
@@ -103,7 +108,10 @@ fn integration_challenge_05() {
         "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f",
     );
 
-    let encoded_bytes = cryptopals::fixed_xor_cryptovecs(&unicode_plain, &unicode_key);
+    let plain = unicode_plain.to_bytes();
+    let key = unicode_key.to_bytes();
+
+    let encoded_bytes = plain.fixed_xor(&key);
     let result = encoded_bytes.to_hexadecimal();
 
     assert_eq!(result, expected_result);

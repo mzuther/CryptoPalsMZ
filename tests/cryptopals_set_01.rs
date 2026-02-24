@@ -123,6 +123,9 @@ fn integration_challenge_06() {
     let cypher_base64 = crypto_vecs::Base64::from(cypher_string);
     let cypher = cypher_base64.to_bytes();
 
+    let manual_key = crypto_vecs::Unicode::from("Terminator X: Bring the noise");
+    let expected_result = manual_key.to_bytes();
+
     let keysize_range = 2..41;
     let samples_hamming_distance = 10;
 
@@ -140,25 +143,22 @@ fn integration_challenge_06() {
         .expect("there should always be a few elements");
 
     let transposed_vecs = cypher.transpose_bytes(best_edit_size.keysize);
-    let mut result_key = crypto_vecs::Bytes::new();
 
-    for block in transposed_vecs.iter() {
-        let mut block_scores = cryptopals::find_lowest_score_xor(&block);
+    let result_key = transposed_vecs
+        .iter()
+        .fold(crypto_vecs::Bytes::new(), |mut acc, block| {
+            let mut block_scores = cryptopals::find_lowest_score_xor(block);
 
-        // sort by score, resulting in highest score first (to get lowest score with "pop()")
-        block_scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
+            // sort by score, resulting in highest score first (to get lowest score with "pop()")
+            block_scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
 
-        let best_block_score = block_scores
-            .pop()
-            .expect("there should always be one element");
+            let best_block_score = block_scores
+                .pop()
+                .expect("there should always be one element");
 
-        result_key.extend(best_block_score.key.to_vec());
-    }
-
-    let manual_key = crypto_vecs::Hexadecimal::from(
-        "5465726d696e61746f7220583a204272696e6720746865206e6f697365",
-    );
-    let expected_result = manual_key.to_bytes();
+            acc.extend(best_block_score.key.to_vec());
+            acc
+        });
 
     assert_eq!(result_key, expected_result);
 }

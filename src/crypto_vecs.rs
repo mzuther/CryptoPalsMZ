@@ -29,15 +29,7 @@ pub struct Bytes {
 
 impl fmt::Display for self::Bytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let formatted_string = self
-            .iter()
-            .fold(String::new(), |acc, &byte| format!("{acc}{byte:#x}, "));
-
-        let stripped_string = formatted_string
-            .strip_suffix(", ")
-            .expect("string always ends in ', '");
-
-        write!(f, "[{}]", stripped_string)
+        write!(f, "[{}]", self.to_hexadecimal())
     }
 }
 
@@ -205,7 +197,23 @@ pub struct Hexadecimal {
 
 impl fmt::Display for self::Hexadecimal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "hex:{}", self.hex_string)
+        let block_size = 8;
+
+        let hex_blocks: String =
+            self.hex_string
+                .chars()
+                .enumerate()
+                .fold(String::new(), |mut acc, (index, char)| {
+                    acc.push(char);
+
+                    if index % block_size == block_size - 1 {
+                        acc.push(' ');
+                    }
+
+                    acc
+                });
+
+        write!(f, "{}", hex_blocks.trim_end())
     }
 }
 
@@ -679,7 +687,7 @@ mod tests {
     #[test]
     fn unit_conversion_byte_to_string() {
         let bytes = self::Bytes::from(0xaf);
-        let expected_result = String::from("[0xaf]");
+        let expected_result = String::from("[af]");
 
         let result = bytes.to_string();
 
@@ -689,7 +697,27 @@ mod tests {
     #[test]
     fn unit_conversion_bytes_to_string() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3]);
-        let expected_result = String::from("[0x41, 0x62, 0xf3]");
+        let expected_result = String::from("[4162f3]");
+
+        let result = bytes.to_string();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_to_string_three_blocks() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result = String::from("[4162f3d3 426f120d 1e]");
+
+        let result = bytes.to_string();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_to_string_no_space_at_end() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+        let expected_result = String::from("[4162f3d3 426f120d]");
 
         let result = bytes.to_string();
 
@@ -745,9 +773,9 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_hex_to_string_lowercase() {
-        let hexadecimal = self::Hexadecimal::from("41c3bce4bda0");
-        let expected_result = String::from("hex:41c3bce4bda0");
+    fn unit_conversion_hex_to_string() {
+        let hexadecimal = self::Hexadecimal::from("41c3bc");
+        let expected_result = String::from("41c3bc");
 
         let result = hexadecimal.to_string();
 
@@ -755,9 +783,19 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_hex_to_string_uppercase_spaces() {
-        let hexadecimal = self::Hexadecimal::from("21A3DCF4DBA1");
-        let expected_result = String::from("hex:21a3dcf4dba1");
+    fn unit_conversion_hex_to_string_two_blocks() {
+        let hexadecimal = self::Hexadecimal::from("21a3dcf4dba1");
+        let expected_result = String::from("21a3dcf4 dba1");
+
+        let result = hexadecimal.to_string();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_hex_to_string_no_space_at_end() {
+        let hexadecimal = self::Hexadecimal::from("21a3dcf4dba1bddb");
+        let expected_result = String::from("21a3dcf4 dba1bddb");
 
         let result = hexadecimal.to_string();
 
@@ -767,7 +805,7 @@ mod tests {
     #[test]
     fn unit_conversion_hex_to_string_trim_whitespace() {
         let hexadecimal = self::Hexadecimal::from("\t41\n  c3b\n\tce4b\n da\r\n 0\n\n");
-        let expected_result = String::from("hex:41c3bce4bda0");
+        let expected_result = String::from("41c3bce4 bda0");
 
         let result = hexadecimal.to_string();
 

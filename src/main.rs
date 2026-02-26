@@ -187,7 +187,7 @@ fn challenge_06() {
         scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
 
         let score = scores.first().expect("there should always be one element");
-        proposed_key.extend(score.key.to_vec());
+        proposed_key.extend(score.key.as_slice());
     }
 
     let manual_key_hex = crypto_vecs::Hexadecimal::from(

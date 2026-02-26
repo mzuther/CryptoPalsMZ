@@ -104,6 +104,17 @@ impl self::Bytes {
         self.bytes.iter()
     }
 
+    // reference to array
+    pub const fn as_slice(&self) -> &[u8] {
+        self.bytes.as_slice()
+    }
+
+    // reference to vec
+    pub fn as_ref(&self) -> &Vec<u8> {
+        self.bytes.as_ref()
+    }
+
+    // clone of vec
     pub fn to_vec(&self) -> Vec<u8> {
         self.bytes.to_vec()
     }
@@ -249,7 +260,7 @@ impl convert::From<&str> for self::Hexadecimal {
 
 impl convert::From<&self::Bytes> for self::Hexadecimal {
     fn from(bytes: &self::Bytes) -> Self {
-        Self::from(hex::encode(bytes.to_vec()))
+        Self::from(hex::encode(bytes.as_ref()))
     }
 }
 

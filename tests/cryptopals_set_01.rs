@@ -156,7 +156,7 @@ fn integration_challenge_06() {
                 .pop()
                 .expect("there should always be one element");
 
-            acc.extend(best_block_score.key.to_vec());
+            acc.extend(best_block_score.key.as_slice());
             acc
         });
 

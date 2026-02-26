@@ -1,4 +1,6 @@
 use crate::constants;
+
+use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyInit, block_padding};
 use hex;
 use std::{convert, fmt, slice, vec};
 
@@ -174,6 +176,36 @@ impl self::Bytes {
 
             acc + differing_bits_low + differing_bits_high
         })
+    }
+
+    // ----------------
+
+    // TODO: add tests
+    pub fn aes128_ecb_encode_block(&self, key: &self::Bytes) -> self::Bytes {
+        let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
+
+        type Aes128EcbEnc = ecb::Encryptor<aes::Aes128>;
+        let encryptor = Aes128EcbEnc::new_from_slice(key.as_slice()).unwrap();
+
+        let cypher_vec = encryptor
+            .encrypt_padded_b2b_mut::<block_padding::Pkcs7>(self.as_slice(), &mut buffer)
+            .unwrap();
+
+        self::Bytes::from(cypher_vec)
+    }
+
+    // TODO: add tests
+    pub fn aes128_ecb_decode_block(&self, key: &self::Bytes) -> self::Bytes {
+        let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
+
+        type Aes128EcbDec = ecb::Decryptor<aes::Aes128>;
+        let decryptor = Aes128EcbDec::new_from_slice(key.as_slice()).unwrap();
+
+        let plain_vec = decryptor
+            .decrypt_padded_b2b_mut::<block_padding::Pkcs7>(self.as_slice(), &mut buffer)
+            .unwrap();
+
+        self::Bytes::from(plain_vec)
     }
 
     pub fn transpose_bytes(&self, number_of_blocks: usize) -> Vec<self::Bytes> {

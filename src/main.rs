@@ -1,6 +1,5 @@
 #![allow(unused)]
 
-use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyInit, block_padding};
 use cryptopals;
 use cryptopals::crypto_vecs::{self, ToBytes};
 use std::fs;
@@ -9,7 +8,7 @@ fn main() {
     challenge_07_enc();
     challenge_07_dec();
 
-    challenge_07();
+    // challenge_07();
 }
 
 const BUFFER_SIZE: usize = 128;
@@ -26,17 +25,7 @@ fn challenge_07_enc() {
     );
     let expected_result = expected_result_hex.to_bytes();
 
-    // encrypt from buffer to buffer
-    let mut buffer = [0x00u8; BUFFER_SIZE];
-
-    type Aes128EcbEnc = ecb::Encryptor<aes::Aes128>;
-    let encryptor = Aes128EcbEnc::new_from_slice(key.as_slice()).unwrap();
-
-    let cypher_vec = encryptor
-        .encrypt_padded_b2b_mut::<block_padding::Pkcs7>(plain.as_slice(), &mut buffer)
-        .unwrap();
-
-    let cypher = crypto_vecs::Bytes::from(cypher_vec);
+    let cypher = plain.aes128_ecb_encode_block(&key);
 
     assert_eq!(cypher, expected_result);
 }
@@ -53,17 +42,7 @@ fn challenge_07_dec() {
     let expected_result_unicode = crypto_vecs::Unicode::from("hello world! this is my plaintext.");
     let expected_result = expected_result_unicode.to_bytes();
 
-    // decrypt from buffer to buffer
-    let mut buffer = [0x00u8; BUFFER_SIZE];
-
-    type Aes128EcbDec = ecb::Decryptor<aes::Aes128>;
-    let decryptor = Aes128EcbDec::new_from_slice(key.as_slice()).unwrap();
-
-    let plain_vec = decryptor
-        .decrypt_padded_b2b_mut::<block_padding::Pkcs7>(cypher.as_slice(), &mut buffer)
-        .unwrap();
-
-    let plain = crypto_vecs::Bytes::from(plain_vec);
+    let plain = cypher.aes128_ecb_decode_block(&key);
 
     assert_eq!(plain, expected_result);
 }
@@ -77,7 +56,6 @@ fn challenge_07() {
     let key_string = crypto_vecs::Unicode::from("YELLOW SUBMARINE");
     let key = key_string.to_bytes();
 
-    println!("orig:   {}\n", cypher_base64);
     println!("cypher: {}\n", cypher_base64);
     println!("key:    {}", key_string);
     println!("        {}", key);

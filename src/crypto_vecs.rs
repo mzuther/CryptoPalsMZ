@@ -128,6 +128,32 @@ impl self::Bytes {
 
     // ----------------
 
+    pub fn first_n(&self, length: usize) -> self::Bytes {
+        assert!(length > 0);
+
+        let first_part = self
+            .bytes
+            .chunks(length)
+            .next()
+            .expect("chunk size must be 1 or more");
+
+        Self::from(first_part)
+    }
+
+    pub fn last_n(&self, length: usize) -> self::Bytes {
+        assert!(length > 0);
+
+        let last_part = self
+            .bytes
+            .rchunks(length)
+            .next()
+            .expect("chunk size must be 1 or more");
+
+        Self::from(last_part)
+    }
+
+    // ----------------
+
     pub fn push(&mut self, byte: u8) {
         self.bytes.push(byte);
     }
@@ -658,6 +684,48 @@ mod tests {
         let expected_result = 3;
 
         let result = bytes.len();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_first() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result = self::Bytes::from(vec![0x41, 0x62, 0xf3]);
+
+        let result = bytes.first_n(3);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_first_longer_than_original() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result =
+            self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+
+        let result = bytes.first_n(12);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_last() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result = self::Bytes::from(vec![0x12, 0x0d, 0x1e]);
+
+        let result = bytes.last_n(3);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_last_longer_than_original() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result =
+            self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+
+        let result = bytes.last_n(12);
 
         assert_eq!(result, expected_result);
     }

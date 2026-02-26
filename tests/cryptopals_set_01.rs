@@ -162,3 +162,27 @@ fn integration_challenge_06() {
 
     assert_eq!(result_key, expected_result);
 }
+
+#[test]
+fn integration_challenge_07() {
+    let cypher_string: String = fs::read_to_string("original/7.txt").expect("could not read file");
+
+    let cypher_base64 = crypto_vecs::Base64::from(cypher_string);
+    let cypher = cypher_base64.to_bytes();
+
+    let key_string = crypto_vecs::Unicode::from("YELLOW SUBMARINE");
+    let key = key_string.to_bytes();
+
+    let plain = cypher.aes128_ecb_decode(&key);
+
+    let expected_result_start = crypto_vecs::Unicode::from("I'm back and I'm ringin' the bell");
+    let result_start = plain.first_n(33).to_unicode();
+
+    assert_eq!(result_start, expected_result_start);
+
+    let expected_result_end =
+        crypto_vecs::Unicode::from("Play that funky music \n\u{4}\u{4}\u{4}\u{4}");
+    let result_end = plain.last_n(27).to_unicode();
+
+    assert_eq!(result_end, expected_result_end);
+}

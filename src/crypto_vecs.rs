@@ -207,31 +207,43 @@ impl self::Bytes {
     // ----------------
 
     // TODO: add tests
-    pub fn aes128_ecb_encode_block(&self, key: &self::Bytes) -> self::Bytes {
-        let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
+    pub fn aes128_ecb_encode(&self, key: &self::Bytes) -> self::Bytes {
+        self.as_slice().chunks(constants::AES_128_BUFFER_SIZE).fold(
+            self::Bytes::new(),
+            |mut acc, plain_block| {
+                let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
 
-        type Aes128EcbEnc = ecb::Encryptor<aes::Aes128>;
-        let encryptor = Aes128EcbEnc::new_from_slice(key.as_slice()).unwrap();
+                type Aes128EcbEnc = ecb::Encryptor<aes::Aes128>;
+                let encryptor = Aes128EcbEnc::new_from_slice(key.as_slice()).unwrap();
 
-        let cypher_vec = encryptor
-            .encrypt_padded_b2b_mut::<block_padding::Pkcs7>(self.as_slice(), &mut buffer)
-            .unwrap();
+                let plain_vec = encryptor
+                    .encrypt_padded_b2b_mut::<block_padding::NoPadding>(plain_block, &mut buffer)
+                    .unwrap();
 
-        self::Bytes::from(cypher_vec)
+                acc.extend(plain_vec);
+                acc
+            },
+        )
     }
 
     // TODO: add tests
-    pub fn aes128_ecb_decode_block(&self, key: &self::Bytes) -> self::Bytes {
-        let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
+    pub fn aes128_ecb_decode(&self, key: &self::Bytes) -> self::Bytes {
+        self.as_slice().chunks(constants::AES_128_BUFFER_SIZE).fold(
+            self::Bytes::new(),
+            |mut acc, cypher_block| {
+                let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
 
-        type Aes128EcbDec = ecb::Decryptor<aes::Aes128>;
-        let decryptor = Aes128EcbDec::new_from_slice(key.as_slice()).unwrap();
+                type Aes128EcbDec = ecb::Decryptor<aes::Aes128>;
+                let decryptor = Aes128EcbDec::new_from_slice(key.as_slice()).unwrap();
 
-        let plain_vec = decryptor
-            .decrypt_padded_b2b_mut::<block_padding::Pkcs7>(self.as_slice(), &mut buffer)
-            .unwrap();
+                let cypher_vec = decryptor
+                    .decrypt_padded_b2b_mut::<block_padding::NoPadding>(cypher_block, &mut buffer)
+                    .unwrap();
 
-        self::Bytes::from(plain_vec)
+                acc.extend(cypher_vec);
+                acc
+            },
+        )
     }
 
     pub fn transpose_bytes(&self, number_of_blocks: usize) -> Vec<self::Bytes> {

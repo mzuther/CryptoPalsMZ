@@ -5,62 +5,7 @@ use cryptopals::crypto_vecs::{self, ToBytes};
 use std::fs;
 
 fn main() {
-    challenge_07_enc();
-    challenge_07_dec();
-
-    // challenge_07();
-}
-
-const BUFFER_SIZE: usize = 128;
-
-fn challenge_07_enc() {
-    let plain_unicode = crypto_vecs::Unicode::from("hello world! this is my plaintext.");
-    let plain = plain_unicode.to_bytes();
-
-    let key_array = vec![0x42; 16];
-    let key = crypto_vecs::Bytes::from(key_array);
-
-    let expected_result_hex = crypto_vecs::Hexadecimal::from(
-        "42b153410851a931eb3e6c048867ae5f95eb20b42e176b07840db75688be9c70e4670ea0d87a71be5f9f3099b4fff3dc",
-    );
-    let expected_result = expected_result_hex.to_bytes();
-
-    let cypher = plain.aes128_ecb_encode_block(&key);
-
-    assert_eq!(cypher, expected_result);
-}
-
-fn challenge_07_dec() {
-    let key_array = vec![0x42; 16];
-    let key = crypto_vecs::Bytes::from(key_array);
-
-    let cypher_hex = crypto_vecs::Hexadecimal::from(
-        "42b153410851a931eb3e6c048867ae5f95eb20b42e176b07840db75688be9c70e4670ea0d87a71be5f9f3099b4fff3dc",
-    );
-    let cypher = cypher_hex.to_bytes();
-
-    let expected_result_unicode = crypto_vecs::Unicode::from("hello world! this is my plaintext.");
-    let expected_result = expected_result_unicode.to_bytes();
-
-    let plain = cypher.aes128_ecb_decode_block(&key);
-
-    assert_eq!(plain, expected_result);
-}
-
-fn challenge_07() {
-    let cypher_string: String = fs::read_to_string("original/7.txt").expect("could not read file");
-
-    let cypher_base64 = crypto_vecs::Base64::from(cypher_string);
-    let cypher = cypher_base64.to_bytes();
-
-    let key_string = crypto_vecs::Unicode::from("YELLOW SUBMARINE");
-    let key = key_string.to_bytes();
-
-    println!("cypher: {}\n", cypher_base64);
-    println!("key:    {}", key_string);
-    println!("        {}", key);
-
-    // assert_eq!(result, expected_result);
+    challenge_06();
 }
 
 fn challenge_06() {

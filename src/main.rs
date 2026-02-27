@@ -5,7 +5,23 @@ use cryptopals::crypto_vecs::{self, ToBytes};
 use std::fs;
 
 fn main() {
-    challenge_06();
+    challenge_08();
+}
+
+fn challenge_08() {
+    let all_strings_hex: String =
+        fs::read_to_string("original/8.txt").expect("could not read file");
+
+    for string_hex in all_strings_hex.lines() {
+        let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(string_hex);
+        let cypher = hexadecimal_cypher.to_bytes();
+
+        println!("{}\n", string_hex);
+        println!("{}\n", hexadecimal_cypher);
+        println!("{}\n\n--------------\n", cypher);
+    }
+
+    // assert_eq!(result, expected_result);
 }
 
 fn challenge_06() {

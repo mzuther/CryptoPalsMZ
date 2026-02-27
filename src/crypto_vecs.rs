@@ -136,6 +136,28 @@ impl self::Bytes {
         self.bytes.iter()
     }
 
+    pub fn chunks(&self, chunk_size: usize) -> Vec<Self> {
+        assert!(chunk_size > 0, "chunk size must be non-zero");
+
+        self.bytes
+            .chunks(chunk_size)
+            .fold(Vec::new(), |mut acc, chunk| {
+                acc.push(Self::from(chunk));
+                acc
+            })
+    }
+
+    pub fn rchunks(&self, chunk_size: usize) -> Vec<Self> {
+        assert!(chunk_size > 0, "chunk size must be non-zero");
+
+        self.bytes
+            .rchunks(chunk_size)
+            .fold(Vec::new(), |mut acc, chunk| {
+                acc.push(Self::from(chunk));
+                acc
+            })
+    }
+
     // reference to array
     pub const fn as_slice(&self) -> &[u8] {
         self.bytes.as_slice()
@@ -158,28 +180,16 @@ impl self::Bytes {
 
     // ----------------
 
-    pub fn first_n(&self, length: usize) -> self::Bytes {
+    pub fn first_n(&self, length: usize) -> Option<Self> {
         assert!(length > 0);
 
-        let first_part = self
-            .bytes
-            .chunks(length)
-            .next()
-            .expect("chunk size must be 1 or more");
-
-        Self::from(first_part)
+        self.chunks(length).get(0).cloned()
     }
 
-    pub fn last_n(&self, length: usize) -> self::Bytes {
+    pub fn last_n(&self, length: usize) -> Option<Self> {
         assert!(length > 0);
 
-        let last_part = self
-            .bytes
-            .rchunks(length)
-            .next()
-            .expect("chunk size must be 1 or more");
-
-        Self::from(last_part)
+        self.rchunks(length).get(0).cloned()
     }
 
     // ----------------
@@ -809,11 +819,75 @@ mod tests {
     }
 
     #[test]
+    fn unit_conversion_bytes_chunks() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
+
+        let mut expected_result = Vec::new();
+        expected_result.push(self::Bytes::from(vec![0x41, 0x62, 0xf3]));
+        expected_result.push(self::Bytes::from(vec![0xd3, 0x42, 0x6f]));
+        expected_result.push(self::Bytes::from(vec![0x12, 0x0d, 0xff]));
+
+        let result = bytes.chunks(3);
+
+        for (index, result_chunk) in result.iter().enumerate() {
+            assert_eq!(result_chunk, expected_result.get(index).unwrap());
+        }
+    }
+
+    #[test]
+    fn unit_conversion_bytes_chunks_remainder() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+
+        let mut expected_result = Vec::new();
+        expected_result.push(self::Bytes::from(vec![0x41, 0x62, 0xf3]));
+        expected_result.push(self::Bytes::from(vec![0xd3, 0x42, 0x6f]));
+        expected_result.push(self::Bytes::from(vec![0x12, 0x0d]));
+
+        let result = bytes.chunks(3);
+
+        for (index, result_chunk) in result.iter().enumerate() {
+            assert_eq!(result_chunk, expected_result.get(index).unwrap());
+        }
+    }
+
+    #[test]
+    fn unit_conversion_bytes_rchunks() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
+
+        let mut expected_result = Vec::new();
+        expected_result.push(self::Bytes::from(vec![0x12, 0x0d, 0xff]));
+        expected_result.push(self::Bytes::from(vec![0xd3, 0x42, 0x6f]));
+        expected_result.push(self::Bytes::from(vec![0x41, 0x62, 0xf3]));
+
+        let result = bytes.rchunks(3);
+
+        for (index, result_chunk) in result.iter().enumerate() {
+            assert_eq!(result_chunk, expected_result.get(index).unwrap());
+        }
+    }
+
+    #[test]
+    fn unit_conversion_bytes_rchunks_remainder() {
+        let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+
+        let mut expected_result = Vec::new();
+        expected_result.push(self::Bytes::from(vec![0x6f, 0x12, 0x0d]));
+        expected_result.push(self::Bytes::from(vec![0xf3, 0xd3, 0x42]));
+        expected_result.push(self::Bytes::from(vec![0x41, 0x62]));
+
+        let result = bytes.rchunks(3);
+
+        for (index, result_chunk) in result.iter().enumerate() {
+            assert_eq!(result_chunk, expected_result.get(index).unwrap());
+        }
+    }
+
+    #[test]
     fn unit_conversion_bytes_first() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result = self::Bytes::from(vec![0x41, 0x62, 0xf3]);
 
-        let result = bytes.first_n(3);
+        let result = bytes.first_n(3).unwrap();
 
         assert_eq!(result, expected_result);
     }
@@ -824,7 +898,7 @@ mod tests {
         let expected_result =
             self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
 
-        let result = bytes.first_n(12);
+        let result = bytes.first_n(12).unwrap();
 
         assert_eq!(result, expected_result);
     }
@@ -834,7 +908,7 @@ mod tests {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result = self::Bytes::from(vec![0x12, 0x0d, 0x1e]);
 
-        let result = bytes.last_n(3);
+        let result = bytes.last_n(3).unwrap();
 
         assert_eq!(result, expected_result);
     }
@@ -845,7 +919,7 @@ mod tests {
         let expected_result =
             self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
 
-        let result = bytes.last_n(12);
+        let result = bytes.last_n(12).unwrap();
 
         assert_eq!(result, expected_result);
     }

@@ -16,6 +16,10 @@ fn challenge_08() {
         let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(string_hex);
         let cypher = hexadecimal_cypher.to_bytes();
 
+        for chunk in cypher.chunks(16) {
+            println!("{}", chunk);
+        }
+
         println!("{}\n", string_hex);
         println!("{}\n", hexadecimal_cypher);
         println!("{}\n\n--------------\n", cypher);

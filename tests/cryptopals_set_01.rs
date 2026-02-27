@@ -176,12 +176,12 @@ fn integration_challenge_07() {
     let plain = cypher.aes_128_ecb_decrypt(&key).unwrap();
 
     let expected_result_start = crypto_vecs::Unicode::from("I'm back and I'm ringin' the bell");
-    let result_start = plain.first_n(33).to_unicode();
+    let result_start = plain.first_n(33).unwrap().to_unicode();
 
     assert_eq!(result_start, expected_result_start);
 
     let expected_result_end = crypto_vecs::Unicode::from("Play that funky music \n");
-    let result_end = plain.last_n(23).to_unicode();
+    let result_end = plain.last_n(23).unwrap().to_unicode();
 
     assert_eq!(result_end, expected_result_end);
 }

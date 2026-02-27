@@ -208,11 +208,11 @@ impl self::Bytes {
 
     // TODO: add tests
     pub fn aes128_ecb_encode(&self, key: &self::Bytes) -> self::Bytes {
+        let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
+
         self.as_slice().chunks(constants::AES_128_BUFFER_SIZE).fold(
             self::Bytes::new(),
             |mut acc, plain_block| {
-                let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
-
                 type Aes128EcbEnc = ecb::Encryptor<aes::Aes128>;
                 let encryptor = Aes128EcbEnc::new_from_slice(key.as_slice()).unwrap();
 
@@ -228,17 +228,32 @@ impl self::Bytes {
 
     // TODO: add tests
     pub fn aes128_ecb_decode(&self, key: &self::Bytes) -> self::Bytes {
+        type Aes128EcbDec = ecb::Decryptor<aes::Aes128>;
+        let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
+
         self.as_slice().chunks(constants::AES_128_BUFFER_SIZE).fold(
             self::Bytes::new(),
             |mut acc, cypher_block| {
-                let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
-
-                type Aes128EcbDec = ecb::Decryptor<aes::Aes128>;
                 let decryptor = Aes128EcbDec::new_from_slice(key.as_slice()).unwrap();
 
-                let cypher_vec = decryptor
-                    .decrypt_padded_b2b_mut::<block_padding::NoPadding>(cypher_block, &mut buffer)
-                    .unwrap();
+                // try to remove padding
+                let cypher_vec_pkcs7 = decryptor
+                    .decrypt_padded_b2b_mut::<block_padding::Pkcs7>(cypher_block, &mut buffer);
+
+                let cypher_vec = match cypher_vec_pkcs7 {
+                    Ok(vec) => vec,
+                    // no padding found
+                    Err(_) => {
+                        let decryptor = Aes128EcbDec::new_from_slice(key.as_slice()).unwrap();
+
+                        decryptor
+                            .decrypt_padded_b2b_mut::<block_padding::NoPadding>(
+                                cypher_block,
+                                &mut buffer,
+                            )
+                            .unwrap()
+                    }
+                };
 
                 acc.extend(cypher_vec);
                 acc

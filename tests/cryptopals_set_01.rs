@@ -181,8 +181,8 @@ fn integration_challenge_07() {
     assert_eq!(result_start, expected_result_start);
 
     let expected_result_end =
-        crypto_vecs::Unicode::from("Play that funky music \n\u{4}\u{4}\u{4}\u{4}");
-    let result_end = plain.last_n(27).to_unicode();
+        crypto_vecs::Unicode::from("Play that funky music \n");
+    let result_end = plain.last_n(23).to_unicode();
 
     assert_eq!(result_end, expected_result_end);
 }

@@ -401,14 +401,30 @@ impl self::Hexadecimal {
 
 // ----------------
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Base64 {
     base64_string: String,
 }
 
 impl fmt::Display for self::Base64 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "base64:{}", self.base64_string)
+        write!(
+            f,
+            "Base64[{}] {{ {} }}",
+            self.base64_string.chars().count(),
+            self.get_representation()
+        )
+    }
+}
+
+impl fmt::Debug for self::Base64 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Base64[{}] {{ {} }}",
+            self.base64_string.chars().count(),
+            self.get_representation()
+        )
     }
 }
 
@@ -529,6 +545,28 @@ impl ToBytes for self::Base64 {
     // performance: prevent intermediate conversion to Bytes
     fn to_base64(&self) -> self::Base64 {
         self.clone()
+    }
+}
+
+impl self::Base64 {
+    pub fn get_representation(&self) -> String {
+        let block_size = 8;
+
+        let base64_blocks: String =
+            self.base64_string
+                .chars()
+                .enumerate()
+                .fold(String::new(), |mut acc, (index, char)| {
+                    acc.push(char);
+
+                    if index % block_size == block_size - 1 {
+                        acc.push(' ');
+                    }
+
+                    acc
+                });
+
+        String::from(base64_blocks.trim_end())
     }
 }
 
@@ -1147,8 +1185,9 @@ mod tests {
     #[test]
     fn unit_conversion_base64_to_string() {
         let base64 = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
-        let expected_result =
-            String::from(format!("base64:{}", constants::BASE64_COMPLETE_ALPHABET));
+        let expected_result = String::from(
+            "Base64[64] { ABCDEFGH IJKLMNOP QRSTUVWX YZabcdef ghijklmn opqrstuv wxyz0123 456789+/ }",
+        );
 
         let result = base64.to_string();
 
@@ -1160,8 +1199,9 @@ mod tests {
         let base64 = self::Base64::from(
             "\r\nABCD\nEFGH\n  IJKL\nMNOP\t\nQRSTUV\nW\n\t XYZa\nbcdef\nghi\njklmn\nopqrstuv\nwxyz01234\n5\n67\n89+/\t",
         );
-        let expected_result =
-            String::from(format!("base64:{}", constants::BASE64_COMPLETE_ALPHABET));
+        let expected_result = String::from(
+            "Base64[64] { ABCDEFGH IJKLMNOP QRSTUVWX YZabcdef ghijklmn opqrstuv wxyz0123 456789+/ }",
+        );
 
         let result = base64.to_string();
 

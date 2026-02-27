@@ -1646,10 +1646,10 @@ mod tests {
         assert_eq!(result, expected_result);
 
         // padding is needed
-        assert_ne!(plain.len() % 16, 0);
+        assert_ne!(plain.len() % constants::AES_128_BYTES_IN_KEY, 0);
 
         // padding was added
-        assert_eq!(result.len() % 16, 0);
+        assert_eq!(result.len() % constants::AES_128_BYTES_IN_KEY, 0);
     }
 
     #[test]

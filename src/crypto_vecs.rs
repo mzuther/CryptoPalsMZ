@@ -297,14 +297,30 @@ impl self::Bytes {
 
 // ----------------
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Hexadecimal {
     hex_string: String,
 }
 
 impl fmt::Display for self::Hexadecimal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.get_representation())
+        write!(
+            f,
+            "Hexadecimal[{}] {{ {} }}",
+            self.len(),
+            self.get_representation()
+        )
+    }
+}
+
+impl fmt::Debug for self::Hexadecimal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Hexadecimal[{}] {{ {} }}",
+            self.len(),
+            self.get_representation()
+        )
     }
 }
 
@@ -975,7 +991,7 @@ mod tests {
     #[test]
     fn unit_conversion_hex_to_string() {
         let hexadecimal = self::Hexadecimal::from("41c3bc");
-        let expected_result = String::from("41c3bc");
+        let expected_result = String::from("Hexadecimal[3] { 41c3bc }");
 
         let result = hexadecimal.to_string();
 
@@ -985,7 +1001,7 @@ mod tests {
     #[test]
     fn unit_conversion_hex_to_string_two_blocks() {
         let hexadecimal = self::Hexadecimal::from("21a3dcf4dba1");
-        let expected_result = String::from("21a3dcf4 dba1");
+        let expected_result = String::from("Hexadecimal[6] { 21a3dcf4 dba1 }");
 
         let result = hexadecimal.to_string();
 
@@ -995,7 +1011,7 @@ mod tests {
     #[test]
     fn unit_conversion_hex_to_string_no_space_at_end() {
         let hexadecimal = self::Hexadecimal::from("21a3dcf4dba1bddb");
-        let expected_result = String::from("21a3dcf4 dba1bddb");
+        let expected_result = String::from("Hexadecimal[8] { 21a3dcf4 dba1bddb }");
 
         let result = hexadecimal.to_string();
 
@@ -1005,7 +1021,7 @@ mod tests {
     #[test]
     fn unit_conversion_hex_to_string_trim_whitespace() {
         let hexadecimal = self::Hexadecimal::from("\t41\n  c3b\n\tce4b\n da\r\n 0\n\n");
-        let expected_result = String::from("41c3bce4 bda0");
+        let expected_result = String::from("Hexadecimal[6] { 41c3bce4 bda0 }");
 
         let result = hexadecimal.to_string();
 

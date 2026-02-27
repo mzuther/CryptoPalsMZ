@@ -572,14 +572,30 @@ impl self::Base64 {
 
 // ----------------
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Unicode {
     unicode_string: String,
 }
 
 impl fmt::Display for self::Unicode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.unicode_string)
+        write!(
+            f,
+            "Unicode[{}] {{ {} }}",
+            self.unicode_string.chars().count(),
+            self.unicode_string
+        )
+    }
+}
+
+impl fmt::Debug for self::Unicode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Unicode[{}] {{ {} }}",
+            self.unicode_string.chars().count(),
+            self.unicode_string
+        )
     }
 }
 
@@ -1315,7 +1331,7 @@ mod tests {
     #[test]
     fn unit_conversion_unicode_to_string() {
         let unicode = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
-        let expected_result = String::from("Hi. Servus. Grüezi. 你好.");
+        let expected_result = String::from("Unicode[23] { Hi. Servus. Grüezi. 你好. }");
 
         let result = unicode.to_string();
 
@@ -1325,7 +1341,7 @@ mod tests {
     #[test]
     fn unit_conversion_unicode_to_string_keep_whitespace() {
         let unicode = self::Unicode::from("\n Hi. Servus. Grüezi. 你好.\t");
-        let expected_result = String::from("\n Hi. Servus. Grüezi. 你好.\t");
+        let expected_result = String::from("Unicode[26] { \n Hi. Servus. Grüezi. 你好.\t }");
 
         let result = unicode.to_string();
 

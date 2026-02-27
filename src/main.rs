@@ -7,41 +7,7 @@ use cryptopals::crypto_vecs::{self, ToBytes};
 use std::fs;
 
 fn main() {
-    challenge_08();
-}
-
-fn challenge_08() {
-    let all_strings_hex: String =
-        fs::read_to_string("original/8.txt").expect("could not read file");
-
-    for (index, string_hex) in all_strings_hex.lines().enumerate() {
-        let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(string_hex);
-        let cypher = hexadecimal_cypher.to_bytes();
-
-        let mut chunks = cypher.chunks(constants::AES_128_BYTES_IN_KEY);
-        chunks.sort();
-
-        let duplicates = chunks.iter().zip(chunks.iter().skip(1)).fold(
-            Vec::new(),
-            |mut acc, (chunk, next_chunk)| {
-                if chunk == next_chunk {
-                    acc.push(chunk);
-                }
-
-                acc
-            },
-        );
-
-        if duplicates.len() > 0 {
-            println!("[{}]", index);
-
-            for duplicate_chunk in duplicates {
-                println!("{}", duplicate_chunk);
-            }
-        }
-    }
-
-    // assert_eq!(result, expected_result);
+    challenge_06();
 }
 
 fn challenge_06() {

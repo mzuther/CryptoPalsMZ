@@ -1,7 +1,7 @@
 use crate::constants;
 
-use aes::cipher::{BlockDecryptMut, BlockEncryptMut, KeyInit, block_padding};
 use hex;
+use openssl::{cipher, cipher_ctx, error};
 use std::{convert, fmt, slice, vec};
 
 // ----------------
@@ -207,58 +207,41 @@ impl self::Bytes {
     // ----------------
 
     // TODO: add tests
-    pub fn aes128_ecb_encode(&self, key: &self::Bytes) -> self::Bytes {
-        let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
+    pub fn aes_128_ecb_encrypt(&self, key: &self::Bytes) -> Result<self::Bytes, error::ErrorStack> {
+        let mut cipher_context = cipher_ctx::CipherCtx::new()?;
 
-        self.as_slice().chunks(constants::AES_128_BUFFER_SIZE).fold(
-            self::Bytes::new(),
-            |mut acc, plain_block| {
-                type Aes128EcbEnc = ecb::Encryptor<aes::Aes128>;
-                let encryptor = Aes128EcbEnc::new_from_slice(key.as_slice()).unwrap();
+        cipher_context.encrypt_init(
+            Some(cipher::Cipher::aes_128_ecb()),
+            Some(key.as_slice()),
+            Some(Default::default()),
+        )?;
 
-                let plain_vec = encryptor
-                    .encrypt_padded_b2b_mut::<block_padding::NoPadding>(plain_block, &mut buffer)
-                    .unwrap();
-
-                acc.extend(plain_vec);
-                acc
-            },
-        )
+        self.process_symmetric_key_algorithm(cipher_context)
     }
 
     // TODO: add tests
-    pub fn aes128_ecb_decode(&self, key: &self::Bytes) -> self::Bytes {
-        type Aes128EcbDec = ecb::Decryptor<aes::Aes128>;
-        let mut buffer = [0x00u8; constants::AES_128_BUFFER_SIZE];
+    pub fn aes_128_ecb_decrypt(&self, key: &self::Bytes) -> Result<self::Bytes, error::ErrorStack> {
+        let mut cipher_context = cipher_ctx::CipherCtx::new()?;
 
-        self.as_slice().chunks(constants::AES_128_BUFFER_SIZE).fold(
-            self::Bytes::new(),
-            |mut acc, cypher_block| {
-                let decryptor = Aes128EcbDec::new_from_slice(key.as_slice()).unwrap();
+        cipher_context.decrypt_init(
+            Some(cipher::Cipher::aes_128_ecb()),
+            Some(key.as_slice()),
+            Some(Default::default()),
+        )?;
 
-                // try to remove padding
-                let cypher_vec_pkcs7 = decryptor
-                    .decrypt_padded_b2b_mut::<block_padding::Pkcs7>(cypher_block, &mut buffer);
+        self.process_symmetric_key_algorithm(cipher_context)
+    }
 
-                let cypher_vec = match cypher_vec_pkcs7 {
-                    Ok(vec) => vec,
-                    // no padding found
-                    Err(_) => {
-                        let decryptor = Aes128EcbDec::new_from_slice(key.as_slice()).unwrap();
+    fn process_symmetric_key_algorithm(
+        &self,
+        mut cipher_context: cipher_ctx::CipherCtx,
+    ) -> Result<self::Bytes, error::ErrorStack> {
+        let mut buffer = vec![];
 
-                        decryptor
-                            .decrypt_padded_b2b_mut::<block_padding::NoPadding>(
-                                cypher_block,
-                                &mut buffer,
-                            )
-                            .unwrap()
-                    }
-                };
+        cipher_context.cipher_update_vec(self.as_slice(), &mut buffer)?;
+        cipher_context.cipher_final_vec(&mut buffer)?;
 
-                acc.extend(cypher_vec);
-                acc
-            },
-        )
+        Ok(self::Bytes::from(buffer))
     }
 
     pub fn transpose_bytes(&self, number_of_blocks: usize) -> Vec<self::Bytes> {

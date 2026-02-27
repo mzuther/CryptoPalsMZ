@@ -31,13 +31,23 @@ pub struct Bytes {
 
 impl fmt::Display for self::Bytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Bytes[{}] {{ {} }}", self.len(), self.to_hexadecimal())
+        write!(
+            f,
+            "Bytes[{}] {{ {} }}",
+            self.len(),
+            self.to_hexadecimal().get_representation()
+        )
     }
 }
 
 impl fmt::Debug for self::Bytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Bytes[{}] {{ {} }}", self.len(), self.to_hexadecimal())
+        write!(
+            f,
+            "Bytes[{}] {{ {} }}",
+            self.len(),
+            self.to_hexadecimal().get_representation()
+        )
     }
 }
 
@@ -294,23 +304,7 @@ pub struct Hexadecimal {
 
 impl fmt::Display for self::Hexadecimal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let block_size = 8;
-
-        let hex_blocks: String =
-            self.hex_string
-                .chars()
-                .enumerate()
-                .fold(String::new(), |mut acc, (index, char)| {
-                    acc.push(char);
-
-                    if index % block_size == block_size - 1 {
-                        acc.push(' ');
-                    }
-
-                    acc
-                });
-
-        write!(f, "{}", hex_blocks.trim_end())
+        write!(f, "{}", self.get_representation())
     }
 }
 
@@ -364,8 +358,28 @@ impl ToBytes for self::Hexadecimal {
 }
 
 impl self::Hexadecimal {
-        pub const fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.hex_string.len() / 2
+    }
+
+    pub fn get_representation(&self) -> String {
+        let block_size = 8;
+
+        let hex_blocks: String =
+            self.hex_string
+                .chars()
+                .enumerate()
+                .fold(String::new(), |mut acc, (index, char)| {
+                    acc.push(char);
+
+                    if index % block_size == block_size - 1 {
+                        acc.push(' ');
+                    }
+
+                    acc
+                });
+
+        String::from(hex_blocks.trim_end())
     }
 }
 

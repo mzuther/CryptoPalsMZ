@@ -83,6 +83,20 @@ impl IntoIterator for self::Bytes {
     }
 }
 
+impl AsMut<Vec<u8>> for self::Bytes {
+    // reference to mutable vec
+    fn as_mut(&mut self) -> &mut Vec<u8> {
+        self.bytes.as_mut()
+    }
+}
+
+impl AsRef<Vec<u8>> for self::Bytes {
+    // reference to vec
+    fn as_ref(&self) -> &Vec<u8> {
+        self.bytes.as_ref()
+    }
+}
+
 impl self::Bytes {
     pub fn new() -> Self {
         Self::from(Vec::new())
@@ -111,9 +125,9 @@ impl self::Bytes {
         self.bytes.as_slice()
     }
 
-    // reference to vec
-    pub fn as_ref(&self) -> &Vec<u8> {
-        self.bytes.as_ref()
+    // reference to mutable array
+    pub const fn as_mut_slice(&mut self) -> &mut [u8] {
+        self.bytes.as_mut_slice()
     }
 
     // clone of vec
@@ -236,12 +250,12 @@ impl self::Bytes {
         &self,
         mut cipher_context: cipher_ctx::CipherCtx,
     ) -> Result<self::Bytes, error::ErrorStack> {
-        let mut buffer = vec![];
+        let mut buffer = self::Bytes::new();
 
-        cipher_context.cipher_update_vec(self.as_slice(), &mut buffer)?;
-        cipher_context.cipher_final_vec(&mut buffer)?;
+        cipher_context.cipher_update_vec(self.as_slice(), buffer.as_mut())?;
+        cipher_context.cipher_final_vec(buffer.as_mut())?;
 
-        Ok(self::Bytes::from(buffer))
+        Ok(buffer)
     }
 
     pub fn transpose_bytes(&self, number_of_blocks: usize) -> Vec<self::Bytes> {
@@ -678,6 +692,8 @@ mod tests {
         assert_eq!(result, expected_result);
     }
 
+    // ----------------
+
     #[test]
     fn unit_conversion_bytes_length_single_byte() {
         let bytes = self::Bytes::from(0xd3);
@@ -740,6 +756,8 @@ mod tests {
         assert_eq!(result, expected_result);
     }
 
+    // ----------------
+
     #[test]
     fn unit_conversion_bytes_push_1() {
         let expected_result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
@@ -783,6 +801,8 @@ mod tests {
         assert_eq!(result, expected_result);
     }
 
+    // ----------------
+
     #[test]
     fn unit_conversion_bytes_iter() {
         let bytes = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
@@ -804,6 +824,41 @@ mod tests {
         assert_eq!(bytes_iter.next(), Some(0x6f));
         assert_eq!(bytes_iter.next(), None);
     }
+
+    #[test]
+    fn unit_conversion_bytes_as_mut_switch_byte() {
+        let expected_result = self::Bytes::from(vec![0xd3, 0xff, 0x6f]);
+
+        let mut result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
+        let result_mut = result.as_mut();
+        result_mut[1] = 0xff;
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_as_mut_extend() {
+        let expected_result = self::Bytes::from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+
+        let mut result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
+        let result_mut = result.as_mut();
+        result_mut.extend_from_slice(&vec![0x12, 0x0d]);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_bytes_as_mut_slice_switch_byte() {
+        let expected_result = self::Bytes::from(vec![0xd3, 0xff, 0x6f]);
+
+        let mut result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
+        let result_mut = result.as_mut_slice();
+        result_mut[1] = 0xff;
+
+        assert_eq!(result, expected_result);
+    }
+
+    // ----------------
 
     #[test]
     fn unit_conversion_byte_to_string() {

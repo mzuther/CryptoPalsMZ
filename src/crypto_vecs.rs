@@ -220,7 +220,6 @@ impl self::Bytes {
 
     // ----------------
 
-    // TODO: add tests
     pub fn aes_128_ecb_encrypt(&self, key: &self::Bytes) -> Result<self::Bytes, error::ErrorStack> {
         let mut cipher_context = cipher_ctx::CipherCtx::new()?;
 
@@ -233,7 +232,6 @@ impl self::Bytes {
         self.process_symmetric_key_algorithm(cipher_context)
     }
 
-    // TODO: add tests
     pub fn aes_128_ecb_decrypt(&self, key: &self::Bytes) -> Result<self::Bytes, error::ErrorStack> {
         let mut cipher_context = cipher_ctx::CipherCtx::new()?;
 
@@ -1422,5 +1420,63 @@ mod tests {
         assert_eq!(transposed_vecs[1], self::Bytes::from(2));
         assert_eq!(transposed_vecs[2], self::Bytes::from(3));
         assert_eq!(transposed_vecs[3], self::Bytes::new());
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_aes_128_ecb_encrypt() {
+        let plain_unicode =
+            self::Unicode::from("Mary had a little lamb whose fleece was white as snow.");
+        let plain = plain_unicode.to_bytes();
+
+        let key_unicode = self::Unicode::from("Little Test 1234");
+        let key = key_unicode.to_bytes();
+
+        // echo -n "Mary had a little lamb whose fleece was white as snow..." | \
+        // openssl enc \
+        //     -aes-128-ecb \
+        //     -nosalt \
+        //     -K "4c6974746c6520546573742031323334" \
+        //     -out cypher.hex
+        let expected_result_hex = self::Hexadecimal::from(
+            "3a1b7e49 d4cbd0aa 25f266db b8fe166e
+             06556a04 f1ba7f64 991d619d e146b609
+             6298d2f8 ef0fceb7 969e88b0 569eb873
+             adc5da56 80f7ecb3 ebbb2030 6b4af841",
+        );
+        let expected_result = expected_result_hex.to_bytes();
+
+        let result = plain.aes_128_ecb_encrypt(&key).unwrap();
+
+        assert_eq!(result, expected_result);
+
+        // ensure padding is needed
+        assert_ne!(plain.len() % 16, 0);
+
+        // ensure padding was added
+        assert_eq!(result.len() % 16, 0);
+    }
+
+    #[test]
+    fn unit_aes_128_ecb_decrypt() {
+        let cypher_hex = self::Hexadecimal::from(
+            "3a1b7e49 d4cbd0aa 25f266db b8fe166e
+             06556a04 f1ba7f64 991d619d e146b609
+             6298d2f8 ef0fceb7 969e88b0 569eb873
+             adc5da56 80f7ecb3 ebbb2030 6b4af841",
+        );
+        let cypher = cypher_hex.to_bytes();
+
+        let key_unicode = self::Unicode::from("Little Test 1234");
+        let key = key_unicode.to_bytes();
+
+        let expected_result_unicode =
+            self::Unicode::from("Mary had a little lamb whose fleece was white as snow.");
+        let expected_result = expected_result_unicode.to_bytes();
+
+        let result = cypher.aes_128_ecb_decrypt(&key).unwrap();
+
+        assert_eq!(result, expected_result);
     }
 }

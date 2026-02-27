@@ -363,6 +363,12 @@ impl ToBytes for self::Hexadecimal {
     }
 }
 
+impl self::Hexadecimal {
+        pub const fn len(&self) -> usize {
+        self.hex_string.len() / 2
+    }
+}
+
 // ----------------
 
 #[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -709,7 +715,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_length_bytes() {
+    fn unit_conversion_bytes_length_several_bytes() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0x33]);
         let expected_result = 3;
 
@@ -988,6 +994,28 @@ mod tests {
         let expected_result = String::from("41c3bce4 bda0");
 
         let result = hexadecimal.to_string();
+
+        assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_conversion_hex_length_single_byte() {
+        let hexadecimal = self::Hexadecimal::from("d3");
+        let expected_result = 1;
+
+        let result = hexadecimal.len();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_conversion_hex_length_several_bytes() {
+        let hexadecimal = self::Hexadecimal::from("41c3bce4 bda0");
+        let expected_result = 6;
+
+        let result = hexadecimal.len();
 
         assert_eq!(result, expected_result);
     }

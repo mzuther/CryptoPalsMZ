@@ -24,14 +24,20 @@ pub trait ToBytes {
 
 // ----------------
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Bytes {
     bytes: Vec<u8>,
 }
 
 impl fmt::Display for self::Bytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "[{}]", self.to_hexadecimal())
+        write!(f, "Bytes[{}] {{ {} }}", self.len(), self.to_hexadecimal())
+    }
+}
+
+impl fmt::Debug for self::Bytes {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Bytes[{}] {{ {} }}", self.len(), self.to_hexadecimal())
     }
 }
 
@@ -861,7 +867,7 @@ mod tests {
     #[test]
     fn unit_conversion_byte_to_string() {
         let bytes = self::Bytes::from(0xaf);
-        let expected_result = String::from("[af]");
+        let expected_result = String::from("Bytes[1] { af }");
 
         let result = bytes.to_string();
 
@@ -871,7 +877,7 @@ mod tests {
     #[test]
     fn unit_conversion_bytes_to_string() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3]);
-        let expected_result = String::from("[4162f3]");
+        let expected_result = String::from("Bytes[3] { 4162f3 }");
 
         let result = bytes.to_string();
 
@@ -881,7 +887,7 @@ mod tests {
     #[test]
     fn unit_conversion_bytes_to_string_three_blocks() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
-        let expected_result = String::from("[4162f3d3 426f120d 1e]");
+        let expected_result = String::from("Bytes[9] { 4162f3d3 426f120d 1e }");
 
         let result = bytes.to_string();
 
@@ -891,7 +897,7 @@ mod tests {
     #[test]
     fn unit_conversion_bytes_to_string_no_space_at_end() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
-        let expected_result = String::from("[4162f3d3 426f120d]");
+        let expected_result = String::from("Bytes[8] { 4162f3d3 426f120d }");
 
         let result = bytes.to_string();
 
@@ -1451,10 +1457,10 @@ mod tests {
 
         assert_eq!(result, expected_result);
 
-        // ensure padding is needed
+        // padding is needed
         assert_ne!(plain.len() % 16, 0);
 
-        // ensure padding was added
+        // padding was added
         assert_eq!(result.len() % 16, 0);
     }
 

@@ -3,6 +3,8 @@ use cryptopals::crypto_vecs::{self, ToBytes};
 
 use std::{collections::HashMap, fs};
 
+// ----------------
+
 #[test]
 fn integration_challenge_01() {
     let hexadecimal = crypto_vecs::Bytes::from_hex_literal(
@@ -74,7 +76,7 @@ fn integration_challenge_04() {
     let expected_result =
         crypto_vecs::Bytes::from_unicode_literal("Now that the party is jumping\n");
 
-    let mut best_score = cryptopals::constants::ScoreXOR {
+    let mut best_score = cryptopals::ScoreXOR {
         score: 1000.0,
         key: crypto_vecs::Bytes::from(0xff),
         plain_text: crypto_vecs::Bytes::new(),

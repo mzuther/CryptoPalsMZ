@@ -6,6 +6,8 @@ use cryptopals;
 use cryptopals::crypto_vecs::{self, ToBytes};
 use std::fs;
 
+// ----------------
+
 fn main() {
     challenge_06();
 }

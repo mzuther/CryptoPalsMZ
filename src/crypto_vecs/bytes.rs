@@ -1,8 +1,11 @@
-use crate::constants;
 use crate::crypto_vecs::{self, ToBytes};
 
 use openssl::{cipher, cipher_ctx, error};
 use std::{convert, fmt, slice, vec};
+
+// ----------------
+
+const LOOKUP_BITS_IN_NIBBLE: [u32; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
 
 // ----------------
 
@@ -232,12 +235,12 @@ impl self::Bytes {
             let nibble_value_low = byte & 0x0f;
             let nibble_value_high = byte >> 4;
 
-            let differing_bits_low = constants::LOOKUP_BITS_IN_NIBBLE
+            let differing_bits_low = LOOKUP_BITS_IN_NIBBLE
                 .get(nibble_value_low as usize)
                 .expect("index must be between 0 and 15")
                 .clone();
 
-            let differing_bits_high = constants::LOOKUP_BITS_IN_NIBBLE
+            let differing_bits_high = LOOKUP_BITS_IN_NIBBLE
                 .get(nibble_value_high as usize)
                 .expect("index must be between 0 and 15")
                 .clone();
@@ -337,6 +340,8 @@ impl self::Bytes {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::constants;
+    use crate::crypto_vecs::base64::{BASE64_COMPLETE_ALPHABET, BASE64_COMPLETE_ALPHABET_BYTES};
 
     #[test]
     fn unit_bytes_new() {
@@ -415,9 +420,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_from_base64_literal() {
-        let expected_result = self::Bytes::from(constants::get_base64_complete_alphabet_as_bytes());
+        let expected_result = self::Bytes::from(BASE64_COMPLETE_ALPHABET_BYTES.to_vec());
 
-        let result = self::Bytes::from_base64_literal(constants::BASE64_COMPLETE_ALPHABET);
+        let result = self::Bytes::from_base64_literal(BASE64_COMPLETE_ALPHABET);
 
         assert_eq!(result, expected_result);
     }

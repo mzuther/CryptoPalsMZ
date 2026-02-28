@@ -1,8 +1,12 @@
-use crate::constants;
 use crate::crypto_vecs;
 
 use hex;
 use std::{convert, fmt};
+
+// ----------------
+
+// all valid hexadecimal characters
+const HEXADECIMAL_VALID_CHARACTERS: &str = "0123456789abcdef";
 
 // ----------------
 
@@ -42,7 +46,7 @@ impl convert::From<String> for self::Hexadecimal {
 
         let invalid_characters: String = string_without_whitespace
             .chars()
-            .filter(|c| !constants::HEXADECIMAL_VALID_CHARACTERS.contains(*c))
+            .filter(|c| !HEXADECIMAL_VALID_CHARACTERS.contains(*c))
             .collect();
 
         assert!(

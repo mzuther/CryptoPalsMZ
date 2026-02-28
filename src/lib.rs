@@ -3,7 +3,24 @@ use std::{cmp, collections::HashMap, ops::Range};
 pub mod constants;
 pub mod crypto_vecs;
 
-pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<constants::ScoreXOR> {
+// ----------------
+
+#[derive(Debug, PartialEq, PartialOrd)]
+pub struct ScoreXOR {
+    pub score: f64,
+    pub key: crypto_vecs::Bytes,
+    pub plain_text: crypto_vecs::Bytes,
+}
+
+#[derive(Debug, PartialEq, PartialOrd)]
+pub struct ScoreKeysize {
+    pub score: f64,
+    pub keysize: usize,
+}
+
+// ----------------
+
+pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<ScoreXOR> {
     let key_range = 0x00..0xff;
 
     let all_keys = key_range.fold(Vec::new(), |mut acc, key_byte| {
@@ -15,7 +32,7 @@ pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<constants::Score
         let bytes_xor = bytes.fixed_xor(&key);
         let score = self::score_letter_frequencies(&bytes_xor);
 
-        let score = constants::ScoreXOR {
+        let score = ScoreXOR {
             score: score,
             key: key,
             plain_text: bytes_xor,
@@ -181,8 +198,8 @@ pub fn guess_keysize_from_hamming_distance(
     bytes: &crypto_vecs::Bytes,
     keysize_range: &Range<usize>,
     number_of_samples: u32,
-) -> Vec<constants::ScoreKeysize> {
-    let mut scores: Vec<constants::ScoreKeysize> = Vec::with_capacity(keysize_range.len());
+) -> Vec<ScoreKeysize> {
+    let mut scores: Vec<ScoreKeysize> = Vec::with_capacity(keysize_range.len());
 
     for keysize in keysize_range.clone() {
         let bytes_vec = bytes.to_vec();
@@ -204,7 +221,7 @@ pub fn guess_keysize_from_hamming_distance(
         let edit_size_average = (edit_size as f64) / (number_of_samples as f64);
         let edit_size_normalized = edit_size_average / (keysize as f64);
 
-        let score = constants::ScoreKeysize {
+        let score = ScoreKeysize {
             score: edit_size_normalized,
             keysize: keysize,
         };

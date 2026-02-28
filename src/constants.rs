@@ -1,30 +1,6 @@
-use crate::crypto_vecs;
+use indexmap;
 
-use indexmap::IndexMap;
-
-// all valid hexadecimal characters
-pub const HEXADECIMAL_VALID_CHARACTERS: &str = "0123456789abcdef";
-
-// base64-encoded string containing complete base64 alphabet
-pub const BASE64_COMPLETE_ALPHABET: &str =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-// plain-text bytes which yields the base64-encoded string above
-pub fn get_base64_complete_alphabet_as_bytes() -> Vec<u8> {
-    vec![
-        0x00, 0x10, 0x83, 0x10, 0x51, 0x87, 0x20, 0x92, 0x8b, 0x30, 0xd3, 0x8f, 0x41, 0x14, 0x93,
-        0x51, 0x55, 0x97, 0x61, 0x96, 0x9b, 0x71, 0xd7, 0x9f, 0x82, 0x18, 0xa3, 0x92, 0x59, 0xa7,
-        0xa2, 0x9a, 0xab, 0xb2, 0xdb, 0xaf, 0xc3, 0x1c, 0xb3, 0xd3, 0x5d, 0xb7, 0xe3, 0x9e, 0xbb,
-        0xf3, 0xdf, 0xbf,
-    ]
-}
-
-// plain-text hexadecimal string which yields the base64-encoded string above
-pub const BASE64_COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
-
-// all valid base64 characters
-pub const BASE64_VALID_CHARACTERS: &str =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+// ----------------
 
 pub const AES_128_BYTES_IN_KEY: usize = 16;
 
@@ -61,8 +37,8 @@ const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 28] = [
     ('*', 0.085),
 ];
 
-pub fn get_english_letter_frequencies() -> IndexMap<u8, f64> {
-    let mut english_letter_frequencies = IndexMap::new();
+pub fn get_english_letter_frequencies() -> indexmap::IndexMap<u8, f64> {
+    let mut english_letter_frequencies = indexmap::IndexMap::new();
 
     for letter in ENGLISH_LETTER_FREQUENCIES {
         let key = letter.0 as u8;
@@ -70,19 +46,4 @@ pub fn get_english_letter_frequencies() -> IndexMap<u8, f64> {
     }
 
     english_letter_frequencies
-}
-
-pub const LOOKUP_BITS_IN_NIBBLE: [u32; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
-
-#[derive(Debug, PartialEq, PartialOrd)]
-pub struct ScoreXOR {
-    pub score: f64,
-    pub key: crypto_vecs::Bytes,
-    pub plain_text: crypto_vecs::Bytes,
-}
-
-#[derive(Debug, PartialEq, PartialOrd)]
-pub struct ScoreKeysize {
-    pub score: f64,
-    pub keysize: usize,
 }

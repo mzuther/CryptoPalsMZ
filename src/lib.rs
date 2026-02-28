@@ -196,7 +196,7 @@ pub fn guess_keysize_from_hamming_distance(
             let chunk_vec_2 = iter_chunks.next().expect("text should be long enough");
             let chunk_2 = crypto_vecs::Bytes::from(chunk_vec_2);
 
-            edit_size += chunk_1.hamming_distance_bits(&chunk_2);
+            edit_size += chunk_1.hamming_distance(&chunk_2);
 
             chunk_1 = chunk_2;
         }
@@ -288,7 +288,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_library_hamming_distance_bits_unicode() {
+    fn unit_library_hamming_distance_unicode() {
         let unicode_bytes = crypto_vecs::Unicode::from("this is a test");
         let unicode_other = crypto_vecs::Unicode::from("wokka wokka!!!");
         let expected_result = 37;
@@ -296,7 +296,7 @@ mod tests {
         let bytes = unicode_bytes.to_bytes();
         let other = unicode_other.to_bytes();
 
-        let result = bytes.hamming_distance_bits(&other);
+        let result = bytes.hamming_distance(&other);
 
         assert_eq!(result, expected_result);
     }

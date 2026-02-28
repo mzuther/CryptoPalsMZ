@@ -36,7 +36,7 @@ fn challenge_06() {
     let bytes = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
     let other = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
 
-    let edit_size = bytes.hamming_distance_bits(&other);
+    let edit_size = bytes.hamming_distance(&other);
     let edit_size_normalized = (edit_size as f64) / (keysize as f64);
 
     assert_eq!(edit_size_normalized, 2.5);
@@ -45,7 +45,7 @@ fn challenge_06() {
     let bytes = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
     let other = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
 
-    let edit_size = bytes.hamming_distance_bits(&other);
+    let edit_size = bytes.hamming_distance(&other);
     let edit_size_normalized = (edit_size as f64) / (keysize as f64);
 
     assert_eq!(edit_size_normalized, 2.0);
@@ -54,7 +54,7 @@ fn challenge_06() {
     let bytes = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
     let other = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
 
-    let edit_size = bytes.hamming_distance_bits(&other);
+    let edit_size = bytes.hamming_distance(&other);
     let edit_size_normalized = (edit_size as f64) / (keysize as f64);
 
     assert_eq!(edit_size_normalized, 1.2);

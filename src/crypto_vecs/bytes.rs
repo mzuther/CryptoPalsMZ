@@ -151,7 +151,7 @@ impl self::Bytes {
         self.bytes.as_mut_slice()
     }
 
-    // clone of vec
+    // clone of underlying vec
     pub fn to_vec(&self) -> Vec<u8> {
         self.bytes.to_vec()
     }
@@ -205,7 +205,7 @@ impl self::Bytes {
         })
     }
 
-    pub fn hamming_distance_bits(&self, other: &Self) -> u32 {
+    pub fn hamming_distance(&self, other: &Self) -> u32 {
         let bytes_with_differing_bits = self.fixed_xor(&other);
 
         bytes_with_differing_bits.iter().fold(0, |acc, &byte| {
@@ -739,58 +739,58 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_bytes_hamming_distance_bits_single_byte() {
+    fn unit_bytes_hamming_distance_single_byte() {
         // from u8
         let bytes = self::Bytes::from(0x02);
         // from Vec<u8>
         let other = self::Bytes::from(vec![0xa0]);
         let expected_result = 3;
 
-        let result = bytes.hamming_distance_bits(&other);
+        let result = bytes.hamming_distance(&other);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_bytes_hamming_distance_bits_two_bytes_1() {
+    fn unit_bytes_hamming_distance_two_bytes_1() {
         let bytes = self::Bytes::from(vec![0x02, 0xb0]);
         let other = self::Bytes::from(vec![0xa0, 0x01]);
         let expected_result = 7;
 
-        let result = bytes.hamming_distance_bits(&other);
+        let result = bytes.hamming_distance(&other);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_bytes_hamming_distance_bits_two_bytes_2() {
+    fn unit_bytes_hamming_distance_two_bytes_2() {
         let bytes = self::Bytes::from(vec![0x1d, 0x42]);
         let other = self::Bytes::from(vec![0x1f, 0x4d]);
         let expected_result = 5;
 
-        let result = bytes.hamming_distance_bits(&other);
+        let result = bytes.hamming_distance(&other);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_bytes_hamming_distance_bits_three_bytes() {
+    fn unit_bytes_hamming_distance_three_bytes() {
         let bytes = self::Bytes::from(vec![0x1d, 0x42, 0x1f]);
         let other = self::Bytes::from(vec![0x4d, 0x0b, 0x0f]);
         let expected_result = 6;
 
-        let result = bytes.hamming_distance_bits(&other);
+        let result = bytes.hamming_distance(&other);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_bytes_hamming_distance_bits_five_bytes() {
+    fn unit_bytes_hamming_distance_five_bytes() {
         let bytes = self::Bytes::from(vec![0x1d, 0x42, 0x1f, 0x4d, 0x0b]);
         let other = self::Bytes::from(vec![0x0f, 0x02, 0x1f, 0x4f, 0x13]);
         let expected_result = 6;
 
-        let result = bytes.hamming_distance_bits(&other);
+        let result = bytes.hamming_distance(&other);
 
         assert_eq!(result, expected_result);
     }

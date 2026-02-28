@@ -193,26 +193,19 @@ fn integration_challenge_08() {
     let all_strings_hex: String =
         fs::read_to_string("original/8.txt").expect("could not read file");
 
-    let cyphers_with_duplicate_blocks = all_strings_hex.lines().enumerate().fold(
+    let duplicate_block_hex = crypto_vecs::Hexadecimal::from("08649af70dc06f4fd5d2d69c744cd283");
+    let duplicate_block = duplicate_block_hex.to_bytes();
+
+    let mut expected_result = HashMap::new();
+    expected_result.insert(132, vec![duplicate_block; 3]);
+
+    let result = all_strings_hex.lines().enumerate().fold(
         HashMap::new(),
         |mut cyphers_with_duplicates: HashMap<usize, _>, (index, string_hex)| {
             let hexadecimal_cypher = crypto_vecs::Hexadecimal::from(string_hex);
             let cypher = hexadecimal_cypher.to_bytes();
 
-            let mut cypher_blocks = cypher.chunks(constants::AES_128_BYTES_IN_KEY);
-            cypher_blocks.sort();
-
-            let duplicate_blocks: Vec<crypto_vecs::Bytes> = cypher_blocks
-                .iter()
-                // compare successive blocks and keep duplicates
-                .zip(cypher_blocks.iter().skip(1))
-                .fold(Vec::new(), |mut duplicates, (block, next_block)| {
-                    if block == next_block {
-                        duplicates.push(block.clone());
-                    }
-
-                    duplicates
-                });
+            let duplicate_blocks = cypher.find_duplicate_blocks(constants::AES_128_BYTES_IN_KEY);
 
             if duplicate_blocks.len() > 0 {
                 cyphers_with_duplicates.insert(index, duplicate_blocks);
@@ -221,10 +214,6 @@ fn integration_challenge_08() {
             cyphers_with_duplicates
         },
     );
-
-    let expected_result: Vec<usize> = vec![132];
-
-    let result: Vec<usize> = cyphers_with_duplicate_blocks.keys().cloned().collect();
 
     assert_eq!(result, expected_result);
 }

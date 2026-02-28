@@ -52,7 +52,8 @@ fn integration_challenge_03() {
         "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736",
     );
 
-    let expected_result = crypto_vecs::Unicode::from("Cooking MC's like a pound of bacon");
+    let expected_result =
+        crypto_vecs::Bytes::from_unicode_literal("Cooking MC's like a pound of bacon");
 
     let mut scores = cryptopals::find_lowest_score_xor(&cypher);
 
@@ -60,7 +61,7 @@ fn integration_challenge_03() {
     scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
 
     let score = scores.pop().expect("there should always be one element");
-    let result = score.plain_text.to_unicode();
+    let result = score.plain_text;
 
     assert_eq!(result, expected_result);
 }
@@ -70,7 +71,8 @@ fn integration_challenge_04() {
     let all_strings_hex: String =
         fs::read_to_string("original/4.txt").expect("could not read file");
 
-    let expected_result = crypto_vecs::Unicode::from("Now that the party is jumping\n");
+    let expected_result =
+        crypto_vecs::Bytes::from_unicode_literal("Now that the party is jumping\n");
 
     let mut best_score = cryptopals::constants::ScoreXOR {
         score: 1000.0,
@@ -92,7 +94,7 @@ fn integration_challenge_04() {
         }
     }
 
-    let result = best_score.plain_text.to_unicode();
+    let result = best_score.plain_text;
 
     assert_eq!(result, expected_result);
 }
@@ -167,13 +169,14 @@ fn integration_challenge_07() {
 
     let plain = cypher.aes_128_ecb_decrypt(&key).unwrap();
 
-    let expected_result_start = crypto_vecs::Unicode::from("I'm back and I'm ringin' the bell");
-    let result_start = plain.first_n(33).unwrap().to_unicode();
+    let expected_result_start =
+        crypto_vecs::Bytes::from_unicode_literal("I'm back and I'm ringin' the bell");
+    let result_start = plain.first_n(33).unwrap();
 
     assert_eq!(result_start, expected_result_start);
 
-    let expected_result_end = crypto_vecs::Unicode::from("Play that funky music \n");
-    let result_end = plain.last_n(23).unwrap().to_unicode();
+    let expected_result_end = crypto_vecs::Bytes::from_unicode_literal("Play that funky music \n");
+    let result_end = plain.last_n(23).unwrap();
 
     assert_eq!(result_end, expected_result_end);
 }

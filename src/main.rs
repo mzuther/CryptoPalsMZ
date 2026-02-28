@@ -60,12 +60,12 @@ fn challenge_06() {
     let (cypher_start_2, _) = cypher_vec_2.split_at(4);
 
     assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_1).to_hexadecimal(),
-        crypto_vecs::Hexadecimal::from("1d1f0b02")
+        crypto_vecs::Bytes::from(cypher_start_1),
+        crypto_vecs::Bytes::from_hex_literal("1d1f0b02")
     );
     assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_2).to_hexadecimal(),
-        crypto_vecs::Hexadecimal::from("424d0f1f")
+        crypto_vecs::Bytes::from(cypher_start_2),
+        crypto_vecs::Bytes::from_hex_literal("424d0f1f")
     );
 
     let keysize = 3;
@@ -80,16 +80,16 @@ fn challenge_06() {
     let (cypher_start_3, _) = cypher_vec_3.split_at(2);
 
     assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_1).to_hexadecimal(),
-        crypto_vecs::Hexadecimal::from("1d4d02")
+        crypto_vecs::Bytes::from(cypher_start_1),
+        crypto_vecs::Bytes::from_hex_literal("1d4d02")
     );
     assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_2).to_hexadecimal(),
-        crypto_vecs::Hexadecimal::from("420b1f")
+        crypto_vecs::Bytes::from(cypher_start_2),
+        crypto_vecs::Bytes::from_hex_literal("420b1f")
     );
     assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_3).to_hexadecimal(),
-        crypto_vecs::Hexadecimal::from("1f0f")
+        crypto_vecs::Bytes::from(cypher_start_3),
+        crypto_vecs::Bytes::from_hex_literal("1f0f")
     );
 
     let keysize = 5;
@@ -108,24 +108,24 @@ fn challenge_06() {
     let (cypher_start_5, _) = cypher_vec_5.split_at(1);
 
     assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_1).to_hexadecimal(),
-        crypto_vecs::Hexadecimal::from("1d0f")
+        crypto_vecs::Bytes::from(cypher_start_1),
+        crypto_vecs::Bytes::from_hex_literal("1d0f")
     );
     assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_2).to_hexadecimal(),
-        crypto_vecs::Hexadecimal::from("4202")
+        crypto_vecs::Bytes::from(cypher_start_2),
+        crypto_vecs::Bytes::from_hex_literal("4202")
     );
     assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_3).to_hexadecimal(),
-        crypto_vecs::Hexadecimal::from("1f1f")
+        crypto_vecs::Bytes::from(cypher_start_3),
+        crypto_vecs::Bytes::from_hex_literal("1f1f")
     );
     assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_4).to_hexadecimal(),
-        crypto_vecs::Hexadecimal::from("4d")
+        crypto_vecs::Bytes::from(cypher_start_4),
+        crypto_vecs::Bytes::from_hex_literal("4d")
     );
     assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_5).to_hexadecimal(),
-        crypto_vecs::Hexadecimal::from("0b")
+        crypto_vecs::Bytes::from(cypher_start_5),
+        crypto_vecs::Bytes::from_hex_literal("0b")
     );
 
     let keysize_range = 2..41;

@@ -74,7 +74,7 @@ mod tests {
     use crate::crypto_vecs::ToBytes;
 
     #[test]
-    fn unit_conversion_bytes_to_unicode_1() {
+    fn unit_unicode_from_bytes_ascii() {
         let bytes = crypto_vecs::Bytes::from(vec![0x41, 0x62, 0x33]);
         let expected_result = self::Unicode::from("Ab3");
 
@@ -84,17 +84,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_to_unicode_2() {
-        let bytes = crypto_vecs::Bytes::from(vec![0x41, 0x62, 0x33]);
-        let expected_result = self::Unicode::from("Ab3");
-
-        let result = bytes.to_unicode();
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_conversion_bytes_to_unicode_3() {
+    fn unit_unicode_from_bytes_unicode() {
         let bytes = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
         let expected_result = self::Unicode::from("Aü你");
 
@@ -104,7 +94,17 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_to_unicode_4() {
+    fn unit_unicode_to_unicode_ascii() {
+        let bytes = crypto_vecs::Bytes::from(vec![0x41, 0x62, 0x33]);
+        let expected_result = self::Unicode::from("Ab3");
+
+        let result = bytes.to_unicode();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_unicode_to_unicode_unicode() {
         let bytes = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
         let expected_result = self::Unicode::from("Aü你");
 
@@ -114,7 +114,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_unicode_to_bytes_1() {
+    fn unit_unicode_to_bytes_ascii() {
         let unicode = self::Unicode::from("Ab3");
         let expected_result = crypto_vecs::Bytes::from(vec![0x41, 0x62, 0x33]);
 
@@ -124,7 +124,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_unicode_to_bytes_2() {
+    fn unit_unicode_to_bytes_unicode() {
         let unicode = self::Unicode::from("Aü你");
         let expected_result = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
@@ -134,7 +134,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_unicode_to_string() {
+    fn unit_unicode_to_string() {
         let unicode = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
         let expected_result = String::from("Unicode[23] { Hi. Servus. Grüezi. 你好. }");
 
@@ -144,7 +144,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_unicode_to_string_keep_whitespace() {
+    fn unit_unicode_to_string_keep_whitespace() {
         let unicode = self::Unicode::from("\n Hi. Servus. Grüezi. 你好.\t");
         let expected_result = String::from("Unicode[26] { \n Hi. Servus. Grüezi. 你好.\t }");
 

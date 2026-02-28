@@ -268,7 +268,7 @@ mod tests {
     use crate::crypto_vecs::ToBytes;
 
     #[test]
-    fn unit_conversion_bytes_to_base64_1() {
+    fn unit_base64_from_bytes() {
         let bytes = crypto_vecs::Bytes::from(constants::get_base64_complete_alphabet_as_bytes());
         let expected_result = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
 
@@ -278,7 +278,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_to_base64_2() {
+    fn unit_base64_to_base64() {
         let bytes = crypto_vecs::Bytes::from(constants::get_base64_complete_alphabet_as_bytes());
         let expected_result = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
 
@@ -288,7 +288,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_to_base64_padding_1() {
+    fn unit_base64_to_base64_padding_one_byte() {
         let mut bytes_raw = constants::get_base64_complete_alphabet_as_bytes();
         bytes_raw.push(0x00);
         bytes_raw.push(0x11);
@@ -303,7 +303,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_to_base64_padding_2() {
+    fn unit_base64_to_base64_padding_two_bytes() {
         let mut bytes_raw = constants::get_base64_complete_alphabet_as_bytes();
         bytes_raw.push(0x00);
 
@@ -318,12 +318,12 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "found invalid base64 characters: ._.")]
-    fn unit_conversion_base64_invalid_string() {
+    fn unit_base64_from_invalid_string() {
         let _ = self::Base64::from("HUIfTQ.sP_A.h9");
     }
 
     #[test]
-    fn unit_conversion_base64_to_bytes() {
+    fn unit_base64_to_bytes() {
         let base64 = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
         let expected_result =
             crypto_vecs::Bytes::from(constants::get_base64_complete_alphabet_as_bytes());
@@ -334,7 +334,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_base64_to_bytes_padding_1() {
+    fn unit_base64_to_bytes_padding_one_byte() {
         let mut expected_result_raw = constants::get_base64_complete_alphabet_as_bytes();
         expected_result_raw.push(0x00);
         expected_result_raw.push(0x11);
@@ -348,7 +348,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_base64_to_bytes_padding_2() {
+    fn unit_base64_to_bytes_padding_two_bytes() {
         let mut expected_result_raw = constants::get_base64_complete_alphabet_as_bytes();
         expected_result_raw.push(0x00);
 
@@ -361,7 +361,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_base64_to_string() {
+    fn unit_base64_to_string() {
         let base64 = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
         let expected_result = String::from(
             "Base64[64] { ABCDEFGH IJKLMNOP QRSTUVWX YZabcdef ghijklmn opqrstuv wxyz0123 456789+/ }",
@@ -373,7 +373,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_base64_to_string_trim_whitespace() {
+    fn unit_base64_to_string_trim_whitespace() {
         let base64 = self::Base64::from(
             "\r\nABCD\nEFGH\n  IJKL\nMNOP\t\nQRSTUV\nW\n\t XYZa\nbcdef\nghi\njklmn\nopqrstuv\nwxyz01234\n5\n67\n89+/\t",
         );
@@ -389,7 +389,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_conversion_hex_to_base64_via_bytes() {
+    fn unit_base64_hex_to_base64_via_bytes() {
         let hexadecimal = crypto_vecs::Hexadecimal::from(constants::BASE64_COMPLETE_ALPHABET_HEX);
         let expected_result = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
 
@@ -399,7 +399,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_base64_to_hex_via_bytes() {
+    fn unit_base64_to_hex_via_bytes() {
         let base64 = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
         let expected_result =
             crypto_vecs::Hexadecimal::from(constants::BASE64_COMPLETE_ALPHABET_HEX);
@@ -410,7 +410,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_unicode_to_base64_via_bytes() {
+    fn unit_base64_unicode_to_base64_via_bytes() {
         let unicode = crypto_vecs::Unicode::from("Hi. Servus. Grüezi. 你好.");
         let expected_result = self::Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
 
@@ -420,7 +420,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_base64_to_unicode_via_bytes() {
+    fn unit_base64_to_unicode_via_bytes() {
         let base64 = self::Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
         let expected_result = crypto_vecs::Unicode::from("Hi. Servus. Grüezi. 你好.");
 

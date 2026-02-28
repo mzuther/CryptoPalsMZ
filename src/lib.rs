@@ -270,7 +270,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn unit_fixed_xor_unicode() {
+    fn unit_library_fixed_xor_unicode() {
         let unicode_plain = crypto_vecs::Unicode::from("Cooking MCs");
         let unicode_key = crypto_vecs::Unicode::from("X");
         let expected_result = crypto_vecs::Bytes::from(vec![
@@ -288,7 +288,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_hamming_distance_bits_unicode() {
+    fn unit_library_hamming_distance_bits_unicode() {
         let unicode_bytes = crypto_vecs::Unicode::from("this is a test");
         let unicode_other = crypto_vecs::Unicode::from("wokka wokka!!!");
         let expected_result = 37;
@@ -304,7 +304,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_transpose_strings_clockwise() {
+    fn unit_library_transpose_strings_clockwise() {
         let strings = vec![
             String::from("äßcd"),
             String::from("efgh"),
@@ -318,7 +318,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_transpose_strings_counterclockwise() {
+    fn unit_library_transpose_strings_counterclockwise() {
         let strings = vec![
             String::from("äßcd"),
             String::from("efgh"),

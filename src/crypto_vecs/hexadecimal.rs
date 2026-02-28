@@ -116,7 +116,7 @@ mod tests {
     use crate::crypto_vecs::ToBytes;
 
     #[test]
-    fn unit_conversion_bytes_to_hex_1() {
+    fn unit_hexadecimal_from_bytes() {
         let bytes = crypto_vecs::Bytes::from(vec![0x3b, 0x44, 0x2c, 0x4e, 0xcc, 0x0f]);
         let expected_result = self::Hexadecimal::from("3b442c4ecc0f");
 
@@ -126,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_to_hex_2() {
+    fn unit_hexadecimal_to_hexadecimal() {
         let bytes = crypto_vecs::Bytes::from(vec![0x3b, 0x44, 0x2c, 0x4e, 0xcc, 0x0f]);
         let expected_result = self::Hexadecimal::from("3b442c4ecc0f");
 
@@ -137,12 +137,12 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "found invalid hexadecimal characters: !!g")]
-    fn unit_conversion_hex_invalid_string() {
+    fn unit_hexadecimal_hex_from_invalid_string() {
         let _ = self::Hexadecimal::from("4A!f3!c6g1D298");
     }
 
     #[test]
-    fn unit_conversion_hex_to_bytes_lowercase() {
+    fn unit_hexadecimal_to_bytes_lowercase() {
         let hexadecimal = self::Hexadecimal::from("41c3bce4bda0");
         let expected_result = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
@@ -152,7 +152,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_hex_to_bytes_uppercase() {
+    fn unit_hexadecimal_to_bytes_uppercase() {
         let hexadecimal = self::Hexadecimal::from("21A3DCF4DBA1");
         let expected_result = crypto_vecs::Bytes::from(vec![0x21, 0xa3, 0xdc, 0xf4, 0xdb, 0xa1]);
 
@@ -162,7 +162,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_hex_to_string() {
+    fn unit_hexadecimal_to_string() {
         let hexadecimal = self::Hexadecimal::from("41c3bc");
         let expected_result = String::from("Hexadecimal[3] { 41c3bc }");
 
@@ -172,7 +172,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_hex_to_string_two_blocks() {
+    fn unit_hexadecimal_to_string_two_blocks() {
         let hexadecimal = self::Hexadecimal::from("21a3dcf4dba1");
         let expected_result = String::from("Hexadecimal[6] { 21a3dcf4 dba1 }");
 
@@ -182,7 +182,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_hex_to_string_no_space_at_end() {
+    fn unit_hexadecimal_to_string_no_space_at_end() {
         let hexadecimal = self::Hexadecimal::from("21a3dcf4dba1bddb");
         let expected_result = String::from("Hexadecimal[8] { 21a3dcf4 dba1bddb }");
 
@@ -192,7 +192,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_hex_to_string_trim_whitespace() {
+    fn unit_hexadecimal_to_string_trim_whitespace() {
         let hexadecimal = self::Hexadecimal::from("\t41\n  c3b\n\tce4b\n da\r\n 0\n\n");
         let expected_result = String::from("Hexadecimal[6] { 41c3bce4 bda0 }");
 
@@ -204,7 +204,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_conversion_hex_length_single_byte() {
+    fn unit_hexadecimal_len_single_byte() {
         let hexadecimal = self::Hexadecimal::from("d3");
         let expected_result = 1;
 
@@ -214,7 +214,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_hex_length_several_bytes() {
+    fn unit_hexadecimal_len_several_bytes() {
         let hexadecimal = self::Hexadecimal::from("41c3bce4 bda0");
         let expected_result = 6;
 

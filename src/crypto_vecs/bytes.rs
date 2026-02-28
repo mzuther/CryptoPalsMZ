@@ -320,7 +320,7 @@ mod tests {
     use crate::crypto_vecs::ToBytes;
 
     #[test]
-    fn unit_conversion_bytes_new() {
+    fn unit_bytes_new() {
         let expected_result = self::Bytes::from(Vec::new());
 
         let result = self::Bytes::new();
@@ -329,7 +329,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_with_capacity_1() {
+    fn unit_bytes_with_capacity_10() {
         let capacity = 10;
         let bytes = self::Bytes::with_capacity(capacity);
 
@@ -338,7 +338,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_with_capacity_2() {
+    fn unit_bytes_with_capacity_100() {
         let capacity = 100;
         let bytes = self::Bytes::with_capacity(capacity);
 
@@ -347,7 +347,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_with_capacity_3() {
+    fn unit_bytes_with_capacity_10_000() {
         let capacity = 10_000;
         let bytes = self::Bytes::with_capacity(capacity);
 
@@ -356,7 +356,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_single_byte_to_bytes() {
+    fn unit_bytes_from_single_byte_vector() {
         // avoid "vec!" macro as this is used by the implementation
         let mut expected_result_vec = Vec::new();
         expected_result_vec.push(0xd3);
@@ -369,7 +369,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_vector_to_bytes() {
+    fn unit_bytes_from_byte_vector() {
         // avoid "vec!" macro as this is used by the implementation
         let mut expected_result_vec = Vec::new();
         expected_result_vec.push(0x41);
@@ -386,7 +386,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_conversion_to_iso_8859_1_01() {
+    fn unit_bytes_to_iso_8859_1_ascii() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0x33]);
         let expected_result = String::from("Ab3");
 
@@ -396,7 +396,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_to_iso_8859_1_02() {
+    fn unit_bytes_to_iso_8859_1_unicode() {
         let bytes = self::Bytes::from(vec![0x46, 0x72, 0xc3, 0xbc, 0x68, 0x6a, 0x61, 0x68, 0x72]);
         let expected_result = String::from("FrÃ¼hjahr");
 
@@ -408,7 +408,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_conversion_bytes_length_single_byte() {
+    fn unit_bytes_len_single_byte() {
         let bytes = self::Bytes::from(0xd3);
         let expected_result = 1;
 
@@ -418,7 +418,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_length_several_bytes() {
+    fn unit_bytes_len_several_bytes() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0x33]);
         let expected_result = 3;
 
@@ -428,7 +428,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_chunks() {
+    fn unit_bytes_chunks() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
 
         let mut expected_result = Vec::new();
@@ -444,7 +444,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_chunks_remainder() {
+    fn unit_bytes_chunks_remainder() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
         let mut expected_result = Vec::new();
@@ -460,7 +460,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_rchunks() {
+    fn unit_bytes_rchunks() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
 
         let mut expected_result = Vec::new();
@@ -476,7 +476,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_rchunks_remainder() {
+    fn unit_bytes_rchunks_remainder() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
         let mut expected_result = Vec::new();
@@ -492,7 +492,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_first() {
+    fn unit_bytes_first_n() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result = self::Bytes::from(vec![0x41, 0x62, 0xf3]);
 
@@ -502,7 +502,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_first_longer_than_original() {
+    fn unit_bytes_first_n_longer_than_original() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result =
             self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
@@ -513,7 +513,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_last() {
+    fn unit_bytes_last_n() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result = self::Bytes::from(vec![0x12, 0x0d, 0x1e]);
 
@@ -523,7 +523,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_last_longer_than_original() {
+    fn unit_bytes_last_n_longer_than_original() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result =
             self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
@@ -536,7 +536,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_conversion_bytes_push_1() {
+    fn unit_bytes_push_to_new() {
         let expected_result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
 
         let mut result = self::Bytes::new();
@@ -548,7 +548,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_push_2() {
+    fn unit_bytes_push_to_existing() {
         let expected_result = self::Bytes::from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
         let mut result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
@@ -559,7 +559,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_extend_1() {
+    fn unit_bytes_extend_to_new() {
         let expected_result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
 
         let mut result = self::Bytes::new();
@@ -569,7 +569,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_extend_2() {
+    fn unit_bytes_extend_to_existing() {
         let expected_result = self::Bytes::from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
         let mut result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
@@ -581,7 +581,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_conversion_bytes_iter() {
+    fn unit_bytes_iter() {
         let bytes = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
         let mut bytes_iter = bytes.iter();
 
@@ -592,7 +592,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_into_iter() {
+    fn unit_bytes_into_iter() {
         let bytes = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
         let mut bytes_iter = bytes.into_iter();
 
@@ -603,7 +603,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_as_mut_switch_byte() {
+    fn unit_bytes_as_mut_to_switch_byte() {
         let expected_result = self::Bytes::from(vec![0xd3, 0xff, 0x6f]);
 
         let mut result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
@@ -614,7 +614,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_as_mut_extend() {
+    fn unit_bytes_as_mut_to_extend() {
         let expected_result = self::Bytes::from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
         let mut result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
@@ -625,7 +625,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_as_mut_slice_switch_byte() {
+    fn unit_bytes_as_mut_slice_to_switch_byte() {
         let expected_result = self::Bytes::from(vec![0xd3, 0xff, 0x6f]);
 
         let mut result = self::Bytes::from(vec![0xd3, 0x42, 0x6f]);
@@ -638,7 +638,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_conversion_byte_to_string() {
+    fn unit_bytes_to_string_single_byte() {
         let bytes = self::Bytes::from(0xaf);
         let expected_result = String::from("Bytes[1] { af }");
 
@@ -648,7 +648,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_to_string() {
+    fn unit_bytes_to_string_byte_vector() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3]);
         let expected_result = String::from("Bytes[3] { 4162f3 }");
 
@@ -658,7 +658,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_to_string_three_blocks() {
+    fn unit_bytes_to_string_three_blocks() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result = String::from("Bytes[9] { 4162f3d3 426f120d 1e }");
 
@@ -668,7 +668,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_conversion_bytes_to_string_no_space_at_end() {
+    fn unit_bytes_to_string_no_space_at_end() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
         let expected_result = String::from("Bytes[8] { 4162f3d3 426f120d }");
 
@@ -680,7 +680,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_fixed_xor_single_byte() {
+    fn unit_bytes_fixed_xor_single_byte() {
         let plain = self::Bytes::from(0x1c);
         let key = self::Bytes::from(0x74);
         let expected_result = self::Bytes::from(0x68);
@@ -691,7 +691,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_fixed_xor_single_byte_key() {
+    fn unit_bytes_fixed_xor_single_byte_key() {
         let plain = self::Bytes::from(vec![
             0x1c, 0x01, 0x11, 0x00, 0x1f, 0xa2, 0x4b, 0x53, 0x98, 0xc5,
         ]);
@@ -706,7 +706,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_fixed_xor_full_length_key() {
+    fn unit_bytes_fixed_xor_full_length_key() {
         let plain = self::Bytes::from(vec![
             0x1c, 0x01, 0x11, 0x00, 0x1f, 0x01, 0x01, 0x00, 0x06, 0x1a, 0x02, 0x4b, 0x53, 0x53,
             0x50, 0x09, 0x18, 0x1c,
@@ -726,7 +726,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_fixed_xor_key_too_long() {
+    fn unit_bytes_fixed_xor_key_too_long() {
         let plain = self::Bytes::from(vec![0x1c, 0x01, 0x11, 0x00]);
         let key = self::Bytes::from(vec![0x68, 0x69, 0x74, 0x20, 0x74, 0x68, 0x65, 0x20]);
         let expected_result = self::Bytes::from(vec![0x74, 0x68, 0x65, 0x20]);
@@ -739,7 +739,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_hamming_distance_bits_1() {
+    fn unit_bytes_hamming_distance_bits_single_byte() {
         // from u8
         let bytes = self::Bytes::from(0x02);
         // from Vec<u8>
@@ -752,7 +752,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_hamming_distance_bits_2() {
+    fn unit_bytes_hamming_distance_bits_two_bytes_1() {
         let bytes = self::Bytes::from(vec![0x02, 0xb0]);
         let other = self::Bytes::from(vec![0xa0, 0x01]);
         let expected_result = 7;
@@ -763,7 +763,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_hamming_distance_bits_3() {
+    fn unit_bytes_hamming_distance_bits_two_bytes_2() {
         let bytes = self::Bytes::from(vec![0x1d, 0x42]);
         let other = self::Bytes::from(vec![0x1f, 0x4d]);
         let expected_result = 5;
@@ -774,7 +774,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_hamming_distance_bits_4() {
+    fn unit_bytes_hamming_distance_bits_three_bytes() {
         let bytes = self::Bytes::from(vec![0x1d, 0x42, 0x1f]);
         let other = self::Bytes::from(vec![0x4d, 0x0b, 0x0f]);
         let expected_result = 6;
@@ -785,7 +785,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_hamming_distance_bits_5() {
+    fn unit_bytes_hamming_distance_bits_five_bytes() {
         let bytes = self::Bytes::from(vec![0x1d, 0x42, 0x1f, 0x4d, 0x0b]);
         let other = self::Bytes::from(vec![0x0f, 0x02, 0x1f, 0x4f, 0x13]);
         let expected_result = 6;
@@ -798,7 +798,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_transpose_bytes_no_transposition() {
+    fn unit_bytes_transpose_bytes_no_transposition() {
         let bytes = self::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 1;
 
@@ -810,7 +810,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_transpose_bytes_equal_distribution() {
+    fn unit_bytes_transpose_bytes_equal_distribution() {
         let bytes = self::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 2;
 
@@ -823,7 +823,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_transpose_bytes_unequal_distribution() {
+    fn unit_bytes_transpose_bytes_unequal_distribution() {
         let bytes = self::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 3;
 
@@ -837,7 +837,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_transpose_bytes_not_enough_elements() {
+    fn unit_bytes_transpose_bytes_not_enough_elements() {
         let bytes = self::Bytes::from(vec![1, 2, 3]);
         let keysize = bytes.len() + 1;
 
@@ -852,7 +852,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_find_duplicate_blocks_1() {
+    fn unit_bytes_find_duplicate_blocks_blocksize_1() {
         let hexadecimal =
             crypto_vecs::Hexadecimal::from("3a 1b d4 cb d0 aa 25 f2 66 db b8 fe 16 6e d4 cb 25 f3");
         let bytes = hexadecimal.to_bytes();
@@ -878,7 +878,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_find_duplicate_blocks_2() {
+    fn unit_bytes_find_duplicate_blocks_blocksize_2() {
         let hexadecimal = crypto_vecs::Hexadecimal::from(
             "3a1b 7e49 d4cb d0aa 25f2 66db b8fe 166e d4cb 7e49 db25 d4cb",
         );
@@ -902,7 +902,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_find_duplicate_blocks_3() {
+    fn unit_bytes_find_duplicate_blocks_blocksize_3() {
         let hexadecimal = crypto_vecs::Hexadecimal::from(
             "3a1b7e 49d4cb d0aa25 f266db b8fe16 6ed4cb d0aadb 25f266",
         );
@@ -917,7 +917,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_find_duplicate_blocks_4() {
+    fn unit_bytes_find_duplicate_blocks_blocksize_4() {
         let hexadecimal =
             crypto_vecs::Hexadecimal::from("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266");
         let bytes = hexadecimal.to_bytes();
@@ -939,7 +939,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_find_duplicate_blocks_4_dangling_end() {
+    fn unit_bytes_find_duplicate_blocks_blocksize_4_dangling_end() {
         let hexadecimal =
             crypto_vecs::Hexadecimal::from("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db");
         let bytes = hexadecimal.to_bytes();
@@ -961,7 +961,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_find_duplicate_blocks_8() {
+    fn unit_bytes_find_duplicate_blocks_blocksize_8() {
         let hexadecimal =
             crypto_vecs::Hexadecimal::from("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266");
         let bytes = hexadecimal.to_bytes();
@@ -977,7 +977,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_aes_128_ecb_encrypt() {
+    fn unit_bytes_aes_128_ecb_encrypt() {
         let plain_unicode =
             crypto_vecs::Unicode::from("Mary had a little lamb whose fleece was white as snow.");
         let plain = plain_unicode.to_bytes();
@@ -1011,7 +1011,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_aes_128_ecb_decrypt() {
+    fn unit_bytes_aes_128_ecb_decrypt() {
         let cypher_hex = crypto_vecs::Hexadecimal::from(
             "3a1b7e49 d4cbd0aa 25f266db b8fe166e
              06556a04 f1ba7f64 991d619d e146b609

@@ -266,7 +266,7 @@ impl self::Bytes {
 
     // ----------------
 
-    pub fn transpose_bytes(&self, number_of_blocks: usize) -> Vec<Self> {
+    pub fn transpose(&self, number_of_blocks: usize) -> Vec<Self> {
         assert!(number_of_blocks > 0);
 
         // performance: handle special case
@@ -798,11 +798,11 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_bytes_transpose_bytes_no_transposition() {
+    fn unit_bytes_transpose_no_transposition() {
         let bytes = self::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 1;
 
-        let transposed_vecs = bytes.transpose_bytes(keysize);
+        let transposed_vecs = bytes.transpose(keysize);
 
         assert_eq!(transposed_vecs.len(), keysize);
 
@@ -810,11 +810,11 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_transpose_bytes_equal_distribution() {
+    fn unit_bytes_transpose_equal_distribution() {
         let bytes = self::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 2;
 
-        let transposed_vecs = bytes.transpose_bytes(keysize);
+        let transposed_vecs = bytes.transpose(keysize);
 
         assert_eq!(transposed_vecs.len(), keysize);
 
@@ -823,11 +823,11 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_transpose_bytes_unequal_distribution() {
+    fn unit_bytes_transpose_unequal_distribution() {
         let bytes = self::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 3;
 
-        let transposed_vecs = bytes.transpose_bytes(keysize);
+        let transposed_vecs = bytes.transpose(keysize);
 
         assert_eq!(transposed_vecs.len(), keysize);
 
@@ -837,11 +837,11 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_transpose_bytes_not_enough_elements() {
+    fn unit_bytes_transpose_not_enough_elements() {
         let bytes = self::Bytes::from(vec![1, 2, 3]);
         let keysize = bytes.len() + 1;
 
-        let transposed_vecs = bytes.transpose_bytes(keysize);
+        let transposed_vecs = bytes.transpose(keysize);
 
         assert_eq!(transposed_vecs.len(), keysize);
 

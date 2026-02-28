@@ -144,7 +144,7 @@ fn integration_challenge_06() {
         .pop()
         .expect("there should always be a few elements");
 
-    let transposed_vecs = cypher.transpose_bytes(best_edit_size.keysize);
+    let transposed_vecs = cypher.transpose(best_edit_size.keysize);
 
     let result_key = transposed_vecs
         .iter()

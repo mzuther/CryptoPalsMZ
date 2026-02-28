@@ -60,7 +60,7 @@ fn challenge_06() {
     assert_eq!(edit_size_normalized, 1.2);
 
     let keysize = 2;
-    let transposed_vecs = cypher.transpose_bytes(keysize);
+    let transposed_vecs = cypher.transpose(keysize);
 
     let cypher_vec_1 = transposed_vecs[0].to_vec();
     let cypher_vec_2 = transposed_vecs[1].to_vec();
@@ -78,7 +78,7 @@ fn challenge_06() {
     );
 
     let keysize = 3;
-    let transposed_vecs = cypher.transpose_bytes(keysize);
+    let transposed_vecs = cypher.transpose(keysize);
 
     let cypher_vec_1 = transposed_vecs[0].to_vec();
     let cypher_vec_2 = transposed_vecs[1].to_vec();
@@ -102,7 +102,7 @@ fn challenge_06() {
     );
 
     let keysize = 5;
-    let transposed_vecs = cypher.transpose_bytes(keysize);
+    let transposed_vecs = cypher.transpose(keysize);
 
     let cypher_vec_1 = transposed_vecs[0].to_vec();
     let cypher_vec_2 = transposed_vecs[1].to_vec();
@@ -155,7 +155,7 @@ fn challenge_06() {
         .expect("there should always be a few elements");
 
     let keysize = score.keysize;
-    let transposed_vecs = cypher.transpose_bytes(keysize);
+    let transposed_vecs = cypher.transpose(keysize);
     let mut proposed_key = crypto_vecs::Bytes::new();
 
     for (index, block) in transposed_vecs.iter().enumerate() {

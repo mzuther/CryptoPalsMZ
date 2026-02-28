@@ -115,6 +115,26 @@ impl self::Bytes {
 
     // ----------------
 
+    pub fn from_hex_literal(string_literal: &str) -> Self {
+        let hexadecimal = crypto_vecs::Hexadecimal::from(string_literal);
+
+        hexadecimal.to_bytes()
+    }
+
+    pub fn from_base64_literal(string_literal: &str) -> Self {
+        let base64 = crypto_vecs::Base64::from(string_literal);
+
+        base64.to_bytes()
+    }
+
+    pub fn from_unicode_literal(string_literal: &str) -> Self {
+        let unicode = crypto_vecs::Unicode::from(string_literal);
+
+        unicode.to_bytes()
+    }
+
+    // ----------------
+
     pub fn iter(&self) -> slice::Iter<'_, u8> {
         self.bytes.iter()
     }
@@ -379,6 +399,35 @@ mod tests {
         let expected_result = self::Bytes::from(expected_result_vec);
 
         let result = self::Bytes::from(vec![0x41, 0x62, 0x33]);
+
+        assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_bytes_from_hex_literal() {
+        let expected_result = self::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+
+        let result = self::Bytes::from_hex_literal("41c3bce4bda0");
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_from_base64_literal() {
+        let expected_result = self::Bytes::from(constants::get_base64_complete_alphabet_as_bytes());
+
+        let result = self::Bytes::from_base64_literal(constants::BASE64_COMPLETE_ALPHABET);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_from_unicode_literal() {
+        let expected_result = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+
+        let result = self::Bytes::from_unicode_literal("Aü你");
 
         assert_eq!(result, expected_result);
     }

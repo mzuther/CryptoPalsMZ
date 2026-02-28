@@ -251,6 +251,33 @@ impl self::Bytes {
 
     // ----------------
 
+    pub fn pad_pkcs7(&self, block_size: usize) -> Self {
+        let mut is_padded = false;
+
+        let mut padded = self
+            .chunks(block_size)
+            .iter()
+            .fold(Self::new(), |mut acc, block| {
+                let mut block_vec = block.to_vec();
+                let missing_blocks = block_size - block_vec.len();
+
+                if missing_blocks > 0 {
+                    is_padded = true;
+
+                    block_vec.extend(vec![missing_blocks as u8; missing_blocks]);
+                }
+
+                acc.extend(block_vec);
+                acc
+            });
+
+        if !is_padded {
+            padded.extend(vec![block_size as u8; block_size]);
+        }
+
+        padded
+    }
+
     pub fn aes_128_ecb_encrypt(&self, key: &Self) -> Result<Self, error::ErrorStack> {
         let mut cipher_context = cipher_ctx::CipherCtx::new()?;
 
@@ -1005,6 +1032,45 @@ mod tests {
     }
 
     // ----------------
+
+    #[test]
+    fn unit_bytes_pad_pkcs7_single_block() {
+        let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
+        let block_size = 20;
+
+        let expected_result =
+            crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04");
+
+        let result = plain.pad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_pad_pkcs7_two_blocks() {
+        let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
+        let block_size = 6;
+
+        let expected_result = self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02");
+
+        let result = plain.pad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_pad_pkcs7_full_block() {
+        let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01");
+        let block_size = 8;
+
+        let expected_result = self::Bytes::from_unicode_literal(
+            "YELLOW SUBMARIN\x01\x08\x08\x08\x08\x08\x08\x08\x08",
+        );
+
+        let result = plain.pad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
 
     #[test]
     fn unit_bytes_aes_128_ecb_encrypt() {

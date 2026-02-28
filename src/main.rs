@@ -12,20 +12,11 @@ fn main() {
 
 fn challenge_06() {
     let cypher_string: String = fs::read_to_string("original/6.txt").expect("could not read file");
-
-    let cypher_base64 = crypto_vecs::Base64::from(cypher_string);
-    let cypher = cypher_base64.to_bytes();
+    let cypher = crypto_vecs::Bytes::from_base64_literal(&cypher_string);
 
     let cypher_vec = cypher.to_vec();
     let (cypher_start_vec, _) = cypher_vec.split_at(8);
     let cypher_start = crypto_vecs::Bytes::from(cypher_start_vec);
-
-    assert_eq!(cypher_base64.to_hexadecimal(), cypher.to_hexadecimal());
-
-    assert_eq!(
-        cypher_base64.to_hexadecimal(),
-        cypher.to_base64().to_hexadecimal()
-    );
 
     assert_eq!(
         cypher_start.to_hexadecimal(),
@@ -175,10 +166,9 @@ fn challenge_06() {
         proposed_key.extend(score.key.as_slice());
     }
 
-    let manual_key_hex = crypto_vecs::Hexadecimal::from(
+    let manual_key = crypto_vecs::Bytes::from_hex_literal(
         "5465726d696e61746f7220583a204272696e6720746865206e6f697365",
     );
-    let manual_key = manual_key_hex.to_bytes();
 
     assert_eq!(manual_key, proposed_key);
 
@@ -192,22 +182,17 @@ fn challenge_06() {
 }
 
 fn play_with_xor() {
-    let unicode_plain =
-        crypto_vecs::Unicode::from("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");
-    let plain = unicode_plain.to_bytes();
-
-    let unicode_key = crypto_vecs::Unicode::from("ESWAREINMAL");
-    let key = unicode_key.to_bytes();
+    let plain =
+        crypto_vecs::Bytes::from_unicode_literal("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");
+    let key = crypto_vecs::Bytes::from_unicode_literal("ESWAREINMAL");
 
     let cypher = plain.fixed_xor(&key);
 
     println!("\n[Plain]");
-    println!("{}", unicode_plain);
     println!("{}", plain.to_hexadecimal());
     println!("{}", plain.to_base64());
 
     println!("\n[Key]");
-    println!("{}", unicode_key);
     println!("{}", key.to_hexadecimal());
     println!("{}", key.to_base64());
 

@@ -337,7 +337,6 @@ impl self::Bytes {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto_vecs::ToBytes;
 
     #[test]
     fn unit_bytes_new() {
@@ -902,23 +901,18 @@ mod tests {
 
     #[test]
     fn unit_bytes_find_duplicate_blocks_blocksize_1() {
-        let hexadecimal =
-            crypto_vecs::Hexadecimal::from("3a 1b d4 cb d0 aa 25 f2 66 db b8 fe 16 6e d4 cb 25 f3");
-        let bytes = hexadecimal.to_bytes();
+        let bytes = crypto_vecs::Bytes::from_hex_literal(
+            "3a 1b d4 cb d0 aa 25 f2 66 db b8 fe 16 6e d4 cb 25 f3",
+        );
 
         let block_size = 1;
         let mut expected_result = Vec::new();
 
-        let duplicate_block_hex = crypto_vecs::Hexadecimal::from("25");
-        let duplicate_block = duplicate_block_hex.to_bytes();
-        expected_result.push(duplicate_block);
+        expected_result.push(crypto_vecs::Bytes::from_hex_literal("25"));
 
-        let duplicate_block_hex = crypto_vecs::Hexadecimal::from("cb");
-        let duplicate_block = duplicate_block_hex.to_bytes();
-        expected_result.push(duplicate_block);
+        expected_result.push(crypto_vecs::Bytes::from_hex_literal("cb"));
 
-        let duplicate_block_hex = crypto_vecs::Hexadecimal::from("d4");
-        let duplicate_block = duplicate_block_hex.to_bytes();
+        let duplicate_block = crypto_vecs::Bytes::from_hex_literal("d4");
         expected_result.push(duplicate_block);
 
         let result = bytes.find_duplicate_blocks(block_size);
@@ -928,22 +922,16 @@ mod tests {
 
     #[test]
     fn unit_bytes_find_duplicate_blocks_blocksize_2() {
-        let hexadecimal = crypto_vecs::Hexadecimal::from(
+        let bytes = crypto_vecs::Bytes::from_hex_literal(
             "3a1b 7e49 d4cb d0aa 25f2 66db b8fe 166e d4cb 7e49 db25 d4cb",
         );
-        let bytes = hexadecimal.to_bytes();
 
         let block_size = 2;
         let mut expected_result = Vec::new();
 
-        let duplicate_block_hex = crypto_vecs::Hexadecimal::from("7e49");
-        let duplicate_block = duplicate_block_hex.to_bytes();
-        expected_result.push(duplicate_block);
-
-        let duplicate_block_hex = crypto_vecs::Hexadecimal::from("d4cb");
-        let duplicate_block = duplicate_block_hex.to_bytes();
-        expected_result.push(duplicate_block.clone());
-        expected_result.push(duplicate_block);
+        expected_result.push(crypto_vecs::Bytes::from_hex_literal("7e49"));
+        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cb"));
+        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cb"));
 
         let result = bytes.find_duplicate_blocks(block_size);
 
@@ -952,10 +940,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_find_duplicate_blocks_blocksize_3() {
-        let hexadecimal = crypto_vecs::Hexadecimal::from(
+        let bytes = crypto_vecs::Bytes::from_hex_literal(
             "3a1b7e 49d4cb d0aa25 f266db b8fe16 6ed4cb d0aadb 25f266",
         );
-        let bytes = hexadecimal.to_bytes();
 
         let block_size = 3;
         let expected_result = Vec::new();
@@ -967,20 +954,15 @@ mod tests {
 
     #[test]
     fn unit_bytes_find_duplicate_blocks_blocksize_4() {
-        let hexadecimal =
-            crypto_vecs::Hexadecimal::from("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266");
-        let bytes = hexadecimal.to_bytes();
+        let bytes = crypto_vecs::Bytes::from_hex_literal(
+            "3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266",
+        );
 
         let block_size = 4;
         let mut expected_result = Vec::new();
 
-        let duplicate_block_hex = crypto_vecs::Hexadecimal::from("3a1b7e49");
-        let duplicate_block = duplicate_block_hex.to_bytes();
-        expected_result.push(duplicate_block);
-
-        let duplicate_block_hex = crypto_vecs::Hexadecimal::from("d4cbd0aa");
-        let duplicate_block = duplicate_block_hex.to_bytes();
-        expected_result.push(duplicate_block);
+        expected_result.push(crypto_vecs::Bytes::from_hex_literal("3a1b7e49"));
+        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cbd0aa"));
 
         let result = bytes.find_duplicate_blocks(block_size);
 
@@ -989,20 +971,14 @@ mod tests {
 
     #[test]
     fn unit_bytes_find_duplicate_blocks_blocksize_4_dangling_end() {
-        let hexadecimal =
-            crypto_vecs::Hexadecimal::from("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db");
-        let bytes = hexadecimal.to_bytes();
+        let bytes =
+            crypto_vecs::Bytes::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db");
 
         let block_size = 4;
         let mut expected_result = Vec::new();
 
-        let duplicate_block_hex = crypto_vecs::Hexadecimal::from("3a1b7e49");
-        let duplicate_block = duplicate_block_hex.to_bytes();
-        expected_result.push(duplicate_block);
-
-        let duplicate_block_hex = crypto_vecs::Hexadecimal::from("d4cbd0aa");
-        let duplicate_block = duplicate_block_hex.to_bytes();
-        expected_result.push(duplicate_block);
+        expected_result.push(crypto_vecs::Bytes::from_hex_literal("3a1b7e49"));
+        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cbd0aa"));
 
         let result = bytes.find_duplicate_blocks(block_size);
 
@@ -1011,9 +987,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_find_duplicate_blocks_blocksize_8() {
-        let hexadecimal =
-            crypto_vecs::Hexadecimal::from("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266");
-        let bytes = hexadecimal.to_bytes();
+        let bytes = crypto_vecs::Bytes::from_hex_literal(
+            "3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266",
+        );
 
         let block_size = 8;
         let expected_result = Vec::new();
@@ -1027,12 +1003,10 @@ mod tests {
 
     #[test]
     fn unit_bytes_aes_128_ecb_encrypt() {
-        let plain_unicode =
-            crypto_vecs::Unicode::from("Mary had a little lamb whose fleece was white as snow.");
-        let plain = plain_unicode.to_bytes();
-
-        let key_unicode = crypto_vecs::Unicode::from("Little Test 1234");
-        let key = key_unicode.to_bytes();
+        let plain = crypto_vecs::Bytes::from_unicode_literal(
+            "Mary had a little lamb whose fleece was white as snow.",
+        );
+        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
 
         // echo -n "Mary had a little lamb whose fleece was white as snow..." | \
         // openssl enc \
@@ -1040,13 +1014,12 @@ mod tests {
         //     -nosalt \
         //     -K "4c6974746c6520546573742031323334" \
         //     -out cypher.hex
-        let expected_result_hex = crypto_vecs::Hexadecimal::from(
+        let expected_result = crypto_vecs::Bytes::from_hex_literal(
             "3a1b7e49 d4cbd0aa 25f266db b8fe166e
              06556a04 f1ba7f64 991d619d e146b609
              6298d2f8 ef0fceb7 969e88b0 569eb873
              adc5da56 80f7ecb3 ebbb2030 6b4af841",
         );
-        let expected_result = expected_result_hex.to_bytes();
 
         let result = plain.aes_128_ecb_encrypt(&key).unwrap();
 
@@ -1061,20 +1034,17 @@ mod tests {
 
     #[test]
     fn unit_bytes_aes_128_ecb_decrypt() {
-        let cypher_hex = crypto_vecs::Hexadecimal::from(
+        let cypher = crypto_vecs::Bytes::from_hex_literal(
             "3a1b7e49 d4cbd0aa 25f266db b8fe166e
              06556a04 f1ba7f64 991d619d e146b609
              6298d2f8 ef0fceb7 969e88b0 569eb873
              adc5da56 80f7ecb3 ebbb2030 6b4af841",
         );
-        let cypher = cypher_hex.to_bytes();
+        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
 
-        let key_unicode = crypto_vecs::Unicode::from("Little Test 1234");
-        let key = key_unicode.to_bytes();
-
-        let expected_result_unicode =
-            crypto_vecs::Unicode::from("Mary had a little lamb whose fleece was white as snow.");
-        let expected_result = expected_result_unicode.to_bytes();
+        let expected_result = crypto_vecs::Bytes::from_unicode_literal(
+            "Mary had a little lamb whose fleece was white as snow.",
+        );
 
         let result = cypher.aes_128_ecb_decrypt(&key).unwrap();
 

@@ -265,20 +265,16 @@ fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<St
 
 #[cfg(test)]
 mod tests {
-    use crate::crypto_vecs::ToBytes;
-
     use super::*;
 
     #[test]
     fn unit_library_fixed_xor_unicode() {
-        let unicode_plain = crypto_vecs::Unicode::from("Cooking MCs");
-        let unicode_key = crypto_vecs::Unicode::from("X");
+        let plain = crypto_vecs::Bytes::from_unicode_literal("Cooking MCs");
+        let key = crypto_vecs::Bytes::from_unicode_literal("X");
+
         let expected_result = crypto_vecs::Bytes::from(vec![
             0x1b, 0x37, 0x37, 0x33, 0x31, 0x36, 0x3f, 0x78, 0x15, 0x1b, 0x2b,
         ]);
-
-        let plain = unicode_plain.to_bytes();
-        let key = unicode_key.to_bytes();
 
         let result = plain.fixed_xor(&key);
 
@@ -289,12 +285,10 @@ mod tests {
 
     #[test]
     fn unit_library_hamming_distance_unicode() {
-        let unicode_bytes = crypto_vecs::Unicode::from("this is a test");
-        let unicode_other = crypto_vecs::Unicode::from("wokka wokka!!!");
-        let expected_result = 37;
+        let bytes = crypto_vecs::Bytes::from_unicode_literal("this is a test");
+        let other = crypto_vecs::Bytes::from_unicode_literal("wokka wokka!!!");
 
-        let bytes = unicode_bytes.to_bytes();
-        let other = unicode_other.to_bytes();
+        let expected_result = 37;
 
         let result = bytes.hamming_distance(&other);
 
@@ -310,6 +304,7 @@ mod tests {
             String::from("efgh"),
             String::from("ijkl"),
         ];
+
         let expected_result = vec!["ieä", "jfß", "kgc", "lhd"];
 
         let result = self::transpose_strings_clockwise(&strings);
@@ -324,6 +319,7 @@ mod tests {
             String::from("efgh"),
             String::from("ijkl"),
         ];
+
         let expected_result = vec!["dhl", "cgk", "ßfj", "äei"];
 
         let result = self::transpose_strings_counterclockwise(&strings);

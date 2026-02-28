@@ -1,5 +1,5 @@
 use crate::constants;
-use crate::crypto_vecs::ToBytes;
+use crate::crypto_vecs;
 
 use std::{convert, fmt};
 
@@ -49,7 +49,7 @@ impl convert::From<String> for self::Base64 {
             invalid_characters
         );
 
-        self::Base64 {
+        Self {
             base64_string: string_without_whitespace,
         }
     }
@@ -61,8 +61,8 @@ impl convert::From<&str> for self::Base64 {
     }
 }
 
-impl convert::From<&super::Bytes> for self::Base64 {
-    fn from(bytes: &super::Bytes) -> Self {
+impl convert::From<&crypto_vecs::Bytes> for self::Base64 {
+    fn from(bytes: &crypto_vecs::Bytes) -> Self {
         let base64_segments = self::split_bytes_into_segments(&bytes, 6);
 
         let base64_string = base64_segments
@@ -103,8 +103,8 @@ impl convert::From<&super::Bytes> for self::Base64 {
     }
 }
 
-impl ToBytes for self::Base64 {
-    fn to_bytes(&self) -> super::Bytes {
+impl crypto_vecs::ToBytes for self::Base64 {
+    fn to_bytes(&self) -> crypto_vecs::Bytes {
         let decoded_bytes = self
             .base64_string
             .bytes()
@@ -143,11 +143,11 @@ impl ToBytes for self::Base64 {
 
         let base64_bytes = self::assemble_bytes_from_segments(&decoded_bytes, 6);
 
-        super::Bytes::from(base64_bytes)
+        crypto_vecs::Bytes::from(base64_bytes)
     }
 
     // performance: prevent intermediate conversion to Bytes
-    fn to_base64(&self) -> self::Base64 {
+    fn to_base64(&self) -> Self {
         self.clone()
     }
 }
@@ -176,7 +176,7 @@ impl self::Base64 {
 
 // ----------------
 
-fn split_bytes_into_segments(bytes: &super::Bytes, bits_per_segment: u8) -> Vec<Option<u8>> {
+fn split_bytes_into_segments(bytes: &crypto_vecs::Bytes, bits_per_segment: u8) -> Vec<Option<u8>> {
     let bits_per_byte = 8;
     let mut bits_with_value = 0;
     let mut remainder = 0;
@@ -216,7 +216,10 @@ fn split_bytes_into_segments(bytes: &super::Bytes, bits_per_segment: u8) -> Vec<
     segments_to_encode
 }
 
-fn assemble_bytes_from_segments(bytes: &Vec<Option<u8>>, bits_per_segment: u8) -> super::Bytes {
+fn assemble_bytes_from_segments(
+    bytes: &Vec<Option<u8>>,
+    bits_per_segment: u8,
+) -> crypto_vecs::Bytes {
     let bits_per_byte = 8;
     let mut inverted_bit_output = 0;
     let mut byte_in_progress = 0;
@@ -224,7 +227,7 @@ fn assemble_bytes_from_segments(bytes: &Vec<Option<u8>>, bits_per_segment: u8) -
     let assembled_segments =
         bytes
             .iter()
-            .fold(super::Bytes::new(), |mut acc, byte_input_option| {
+            .fold(crypto_vecs::Bytes::new(), |mut acc, byte_input_option| {
                 // padding
                 if byte_input_option.is_none() {
                     return acc;
@@ -262,11 +265,11 @@ fn assemble_bytes_from_segments(bytes: &Vec<Option<u8>>, bits_per_segment: u8) -
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto_vecs::{Bytes, Hexadecimal, Unicode};
+    use crate::crypto_vecs::ToBytes;
 
     #[test]
     fn unit_conversion_bytes_to_base64_1() {
-        let bytes = self::Bytes::from(constants::get_base64_complete_alphabet_as_bytes());
+        let bytes = crypto_vecs::Bytes::from(constants::get_base64_complete_alphabet_as_bytes());
         let expected_result = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
 
         let result = self::Base64::from(&bytes);
@@ -276,7 +279,7 @@ mod tests {
 
     #[test]
     fn unit_conversion_bytes_to_base64_2() {
-        let bytes = self::Bytes::from(constants::get_base64_complete_alphabet_as_bytes());
+        let bytes = crypto_vecs::Bytes::from(constants::get_base64_complete_alphabet_as_bytes());
         let expected_result = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
 
         let result = bytes.to_base64();
@@ -290,7 +293,7 @@ mod tests {
         bytes_raw.push(0x00);
         bytes_raw.push(0x11);
 
-        let bytes = self::Bytes::from(bytes_raw);
+        let bytes = crypto_vecs::Bytes::from(bytes_raw);
         let expected_result =
             self::Base64::from(format!("{}ABE=", constants::BASE64_COMPLETE_ALPHABET));
 
@@ -304,7 +307,7 @@ mod tests {
         let mut bytes_raw = constants::get_base64_complete_alphabet_as_bytes();
         bytes_raw.push(0x00);
 
-        let bytes = self::Bytes::from(bytes_raw);
+        let bytes = crypto_vecs::Bytes::from(bytes_raw);
         let expected_result =
             self::Base64::from(format!("{}AA==", constants::BASE64_COMPLETE_ALPHABET));
 
@@ -322,7 +325,8 @@ mod tests {
     #[test]
     fn unit_conversion_base64_to_bytes() {
         let base64 = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
-        let expected_result = self::Bytes::from(constants::get_base64_complete_alphabet_as_bytes());
+        let expected_result =
+            crypto_vecs::Bytes::from(constants::get_base64_complete_alphabet_as_bytes());
 
         let result = base64.to_bytes();
 
@@ -336,7 +340,7 @@ mod tests {
         expected_result_raw.push(0x11);
 
         let base64 = self::Base64::from(format!("{}ABE=", constants::BASE64_COMPLETE_ALPHABET));
-        let expected_result = self::Bytes::from(expected_result_raw);
+        let expected_result = crypto_vecs::Bytes::from(expected_result_raw);
 
         let result = base64.to_bytes();
 
@@ -349,7 +353,7 @@ mod tests {
         expected_result_raw.push(0x00);
 
         let base64 = self::Base64::from(format!("{}AA==", constants::BASE64_COMPLETE_ALPHABET));
-        let expected_result = self::Bytes::from(expected_result_raw);
+        let expected_result = crypto_vecs::Bytes::from(expected_result_raw);
 
         let result = base64.to_bytes();
 
@@ -386,7 +390,7 @@ mod tests {
 
     #[test]
     fn unit_conversion_hex_to_base64_via_bytes() {
-        let hexadecimal = self::Hexadecimal::from(constants::BASE64_COMPLETE_ALPHABET_HEX);
+        let hexadecimal = crypto_vecs::Hexadecimal::from(constants::BASE64_COMPLETE_ALPHABET_HEX);
         let expected_result = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
 
         let result = hexadecimal.to_base64();
@@ -397,7 +401,8 @@ mod tests {
     #[test]
     fn unit_conversion_base64_to_hex_via_bytes() {
         let base64 = self::Base64::from(constants::BASE64_COMPLETE_ALPHABET);
-        let expected_result = self::Hexadecimal::from(constants::BASE64_COMPLETE_ALPHABET_HEX);
+        let expected_result =
+            crypto_vecs::Hexadecimal::from(constants::BASE64_COMPLETE_ALPHABET_HEX);
 
         let result = base64.to_hexadecimal();
 
@@ -406,7 +411,7 @@ mod tests {
 
     #[test]
     fn unit_conversion_unicode_to_base64_via_bytes() {
-        let unicode = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
+        let unicode = crypto_vecs::Unicode::from("Hi. Servus. Grüezi. 你好.");
         let expected_result = self::Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
 
         let result = unicode.to_base64();
@@ -417,7 +422,7 @@ mod tests {
     #[test]
     fn unit_conversion_base64_to_unicode_via_bytes() {
         let base64 = self::Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
-        let expected_result = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
+        let expected_result = crypto_vecs::Unicode::from("Hi. Servus. Grüezi. 你好.");
 
         let result = base64.to_unicode();
 

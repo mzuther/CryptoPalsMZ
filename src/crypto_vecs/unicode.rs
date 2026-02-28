@@ -1,4 +1,4 @@
-use crate::crypto_vecs::ToBytes;
+use crate::crypto_vecs;
 
 use std::{convert, fmt};
 
@@ -33,7 +33,7 @@ impl fmt::Debug for self::Unicode {
 
 impl convert::From<String> for self::Unicode {
     fn from(unicode_string: String) -> Self {
-        self::Unicode {
+        Self {
             unicode_string: unicode_string,
         }
     }
@@ -45,23 +45,23 @@ impl convert::From<&str> for self::Unicode {
     }
 }
 
-impl convert::From<&super::Bytes> for self::Unicode {
-    fn from(bytes: &super::Bytes) -> Self {
+impl convert::From<&crypto_vecs::Bytes> for self::Unicode {
+    fn from(bytes: &crypto_vecs::Bytes) -> Self {
         let unicode_string = String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string");
 
         Self::from(unicode_string)
     }
 }
 
-impl ToBytes for self::Unicode {
-    fn to_bytes(&self) -> super::Bytes {
+impl crypto_vecs::ToBytes for self::Unicode {
+    fn to_bytes(&self) -> crypto_vecs::Bytes {
         let unicode_bytes = Vec::from(self.unicode_string.clone());
 
-        super::Bytes::from(unicode_bytes)
+        crypto_vecs::Bytes::from(unicode_bytes)
     }
 
     // performance: prevent intermediate conversion to Bytes
-    fn to_unicode(&self) -> self::Unicode {
+    fn to_unicode(&self) -> Self {
         self.clone()
     }
 }
@@ -71,11 +71,11 @@ impl ToBytes for self::Unicode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto_vecs::Bytes;
+    use crate::crypto_vecs::ToBytes;
 
     #[test]
     fn unit_conversion_bytes_to_unicode_1() {
-        let bytes = self::Bytes::from(vec![0x41, 0x62, 0x33]);
+        let bytes = crypto_vecs::Bytes::from(vec![0x41, 0x62, 0x33]);
         let expected_result = self::Unicode::from("Ab3");
 
         let result = self::Unicode::from(&bytes);
@@ -85,7 +85,7 @@ mod tests {
 
     #[test]
     fn unit_conversion_bytes_to_unicode_2() {
-        let bytes = self::Bytes::from(vec![0x41, 0x62, 0x33]);
+        let bytes = crypto_vecs::Bytes::from(vec![0x41, 0x62, 0x33]);
         let expected_result = self::Unicode::from("Ab3");
 
         let result = bytes.to_unicode();
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn unit_conversion_bytes_to_unicode_3() {
-        let bytes = self::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let bytes = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
         let expected_result = self::Unicode::from("Aü你");
 
         let result = self::Unicode::from(&bytes);
@@ -105,7 +105,7 @@ mod tests {
 
     #[test]
     fn unit_conversion_bytes_to_unicode_4() {
-        let bytes = self::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let bytes = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
         let expected_result = self::Unicode::from("Aü你");
 
         let result = bytes.to_unicode();
@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn unit_conversion_unicode_to_bytes_1() {
         let unicode = self::Unicode::from("Ab3");
-        let expected_result = self::Bytes::from(vec![0x41, 0x62, 0x33]);
+        let expected_result = crypto_vecs::Bytes::from(vec![0x41, 0x62, 0x33]);
 
         let result = unicode.to_bytes();
 
@@ -126,7 +126,7 @@ mod tests {
     #[test]
     fn unit_conversion_unicode_to_bytes_2() {
         let unicode = self::Unicode::from("Aü你");
-        let expected_result = self::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let expected_result = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
         let result = unicode.to_bytes();
 

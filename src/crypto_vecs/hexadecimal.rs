@@ -1,5 +1,5 @@
 use crate::constants;
-use crate::crypto_vecs::ToBytes;
+use crate::crypto_vecs;
 
 use hex;
 use std::{convert, fmt};
@@ -51,7 +51,7 @@ impl convert::From<String> for self::Hexadecimal {
             invalid_characters
         );
 
-        self::Hexadecimal {
+        Self {
             hex_string: string_without_whitespace,
         }
     }
@@ -63,21 +63,21 @@ impl convert::From<&str> for self::Hexadecimal {
     }
 }
 
-impl convert::From<&super::Bytes> for self::Hexadecimal {
-    fn from(bytes: &super::Bytes) -> Self {
+impl convert::From<&crypto_vecs::Bytes> for self::Hexadecimal {
+    fn from(bytes: &crypto_vecs::Bytes) -> Self {
         Self::from(hex::encode(bytes.as_ref()))
     }
 }
 
-impl ToBytes for self::Hexadecimal {
-    fn to_bytes(&self) -> super::Bytes {
+impl crypto_vecs::ToBytes for self::Hexadecimal {
+    fn to_bytes(&self) -> crypto_vecs::Bytes {
         let hex_bytes = hex::decode(&self.hex_string).expect("Broken conversion");
 
-        super::Bytes::from(hex_bytes)
+        crypto_vecs::Bytes::from(hex_bytes)
     }
 
     // performance: prevent intermediate conversion to Bytes
-    fn to_hexadecimal(&self) -> self::Hexadecimal {
+    fn to_hexadecimal(&self) -> Self {
         self.clone()
     }
 }
@@ -113,11 +113,11 @@ impl self::Hexadecimal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto_vecs::Bytes;
+    use crate::crypto_vecs::ToBytes;
 
     #[test]
     fn unit_conversion_bytes_to_hex_1() {
-        let bytes = self::Bytes::from(vec![0x3b, 0x44, 0x2c, 0x4e, 0xcc, 0x0f]);
+        let bytes = crypto_vecs::Bytes::from(vec![0x3b, 0x44, 0x2c, 0x4e, 0xcc, 0x0f]);
         let expected_result = self::Hexadecimal::from("3b442c4ecc0f");
 
         let result = self::Hexadecimal::from(&bytes);
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn unit_conversion_bytes_to_hex_2() {
-        let bytes = self::Bytes::from(vec![0x3b, 0x44, 0x2c, 0x4e, 0xcc, 0x0f]);
+        let bytes = crypto_vecs::Bytes::from(vec![0x3b, 0x44, 0x2c, 0x4e, 0xcc, 0x0f]);
         let expected_result = self::Hexadecimal::from("3b442c4ecc0f");
 
         let result = bytes.to_hexadecimal();
@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn unit_conversion_hex_to_bytes_lowercase() {
         let hexadecimal = self::Hexadecimal::from("41c3bce4bda0");
-        let expected_result = self::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let expected_result = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
         let result = hexadecimal.to_bytes();
 
@@ -154,7 +154,7 @@ mod tests {
     #[test]
     fn unit_conversion_hex_to_bytes_uppercase() {
         let hexadecimal = self::Hexadecimal::from("21A3DCF4DBA1");
-        let expected_result = self::Bytes::from(vec![0x21, 0xa3, 0xdc, 0xf4, 0xdb, 0xa1]);
+        let expected_result = crypto_vecs::Bytes::from(vec![0x21, 0xa3, 0xdc, 0xf4, 0xdb, 0xa1]);
 
         let result = hexadecimal.to_bytes();
 

@@ -1,5 +1,5 @@
 use crate::constants;
-use crate::crypto_vecs::ToBytes;
+use crate::crypto_vecs::{self, ToBytes};
 
 use openssl::{cipher, cipher_ctx, error};
 use std::{convert, fmt, slice, vec};
@@ -35,7 +35,7 @@ impl fmt::Debug for self::Bytes {
 
 impl convert::From<Vec<u8>> for self::Bytes {
     fn from(bytes: Vec<u8>) -> Self {
-        self::Bytes { bytes: bytes }
+        Self { bytes: bytes }
     }
 }
 
@@ -51,24 +51,25 @@ impl convert::From<u8> for self::Bytes {
     }
 }
 
-impl ToBytes for self::Bytes {
-    fn to_bytes(&self) -> self::Bytes {
+impl crypto_vecs::ToBytes for self::Bytes {
+    // performance: prevent superfluous conversion to Bytes
+    fn to_bytes(&self) -> Self {
         self.clone()
     }
 
     // performance: prevent intermediate conversion to Bytes
-    fn to_hexadecimal(&self) -> super::Hexadecimal {
-        super::Hexadecimal::from(self)
+    fn to_hexadecimal(&self) -> crypto_vecs::Hexadecimal {
+        crypto_vecs::Hexadecimal::from(self)
     }
 
     // performance: prevent intermediate conversion to Bytes
-    fn to_base64(&self) -> super::Base64 {
-        super::Base64::from(self)
+    fn to_base64(&self) -> crypto_vecs::Base64 {
+        crypto_vecs::Base64::from(self)
     }
 
     // performance: prevent intermediate conversion to Bytes
-    fn to_unicode(&self) -> super::Unicode {
-        super::Unicode::from(self)
+    fn to_unicode(&self) -> crypto_vecs::Unicode {
+        crypto_vecs::Unicode::from(self)
     }
 }
 
@@ -189,23 +190,22 @@ impl self::Bytes {
 
     // ----------------
 
-    pub fn fixed_xor(&self, key: &self::Bytes) -> self::Bytes {
+    pub fn fixed_xor(&self, key: &Self) -> Self {
         assert!(key.len() > 0);
 
         let mut bytes_key_endless = key.iter().cycle();
 
-        self.iter()
-            .fold(self::Bytes::new(), |mut acc, &byte_plain| {
-                let byte_key = bytes_key_endless
-                    .next()
-                    .expect("infinite key was finite after all");
+        self.iter().fold(Self::new(), |mut acc, &byte_plain| {
+            let byte_key = bytes_key_endless
+                .next()
+                .expect("infinite key was finite after all");
 
-                acc.push((byte_plain | byte_key) & !(byte_plain & byte_key));
-                acc
-            })
+            acc.push((byte_plain | byte_key) & !(byte_plain & byte_key));
+            acc
+        })
     }
 
-    pub fn hamming_distance_bits(&self, other: &self::Bytes) -> u32 {
+    pub fn hamming_distance_bits(&self, other: &Self) -> u32 {
         let bytes_with_differing_bits = self.fixed_xor(&other);
 
         bytes_with_differing_bits.iter().fold(0, |acc, &byte| {
@@ -228,7 +228,7 @@ impl self::Bytes {
 
     // ----------------
 
-    pub fn aes_128_ecb_encrypt(&self, key: &self::Bytes) -> Result<self::Bytes, error::ErrorStack> {
+    pub fn aes_128_ecb_encrypt(&self, key: &Self) -> Result<Self, error::ErrorStack> {
         let mut cipher_context = cipher_ctx::CipherCtx::new()?;
 
         cipher_context.encrypt_init(
@@ -240,7 +240,7 @@ impl self::Bytes {
         self.process_symmetric_key_algorithm(cipher_context)
     }
 
-    pub fn aes_128_ecb_decrypt(&self, key: &self::Bytes) -> Result<self::Bytes, error::ErrorStack> {
+    pub fn aes_128_ecb_decrypt(&self, key: &Self) -> Result<Self, error::ErrorStack> {
         let mut cipher_context = cipher_ctx::CipherCtx::new()?;
 
         cipher_context.decrypt_init(
@@ -255,8 +255,8 @@ impl self::Bytes {
     fn process_symmetric_key_algorithm(
         &self,
         mut cipher_context: cipher_ctx::CipherCtx,
-    ) -> Result<self::Bytes, error::ErrorStack> {
-        let mut buffer = self::Bytes::new();
+    ) -> Result<Self, error::ErrorStack> {
+        let mut buffer = Self::new();
 
         cipher_context.cipher_update_vec(self.as_slice(), buffer.as_mut())?;
         cipher_context.cipher_final_vec(buffer.as_mut())?;
@@ -264,7 +264,7 @@ impl self::Bytes {
         Ok(buffer)
     }
 
-    pub fn transpose_bytes(&self, number_of_blocks: usize) -> Vec<self::Bytes> {
+    pub fn transpose_bytes(&self, number_of_blocks: usize) -> Vec<Self> {
         assert!(number_of_blocks > 0);
 
         // performance: handle special case
@@ -275,8 +275,7 @@ impl self::Bytes {
         }
 
         let block_capacity = (self.len() / number_of_blocks) + 1;
-        let mut transposed_blocks =
-            vec![self::Bytes::with_capacity(block_capacity); number_of_blocks];
+        let mut transposed_blocks = vec![Self::with_capacity(block_capacity); number_of_blocks];
 
         for (index, &byte) in self.iter().enumerate() {
             let block_index = index % number_of_blocks;
@@ -292,7 +291,7 @@ impl self::Bytes {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto_vecs::{Hexadecimal, Unicode};
+    use crate::crypto_vecs::ToBytes;
 
     #[test]
     fn unit_conversion_bytes_new() {
@@ -831,10 +830,10 @@ mod tests {
     #[test]
     fn unit_aes_128_ecb_encrypt() {
         let plain_unicode =
-            self::Unicode::from("Mary had a little lamb whose fleece was white as snow.");
+            crypto_vecs::Unicode::from("Mary had a little lamb whose fleece was white as snow.");
         let plain = plain_unicode.to_bytes();
 
-        let key_unicode = self::Unicode::from("Little Test 1234");
+        let key_unicode = crypto_vecs::Unicode::from("Little Test 1234");
         let key = key_unicode.to_bytes();
 
         // echo -n "Mary had a little lamb whose fleece was white as snow..." | \
@@ -843,7 +842,7 @@ mod tests {
         //     -nosalt \
         //     -K "4c6974746c6520546573742031323334" \
         //     -out cypher.hex
-        let expected_result_hex = self::Hexadecimal::from(
+        let expected_result_hex = crypto_vecs::Hexadecimal::from(
             "3a1b7e49 d4cbd0aa 25f266db b8fe166e
              06556a04 f1ba7f64 991d619d e146b609
              6298d2f8 ef0fceb7 969e88b0 569eb873
@@ -864,7 +863,7 @@ mod tests {
 
     #[test]
     fn unit_aes_128_ecb_decrypt() {
-        let cypher_hex = self::Hexadecimal::from(
+        let cypher_hex = crypto_vecs::Hexadecimal::from(
             "3a1b7e49 d4cbd0aa 25f266db b8fe166e
              06556a04 f1ba7f64 991d619d e146b609
              6298d2f8 ef0fceb7 969e88b0 569eb873
@@ -872,11 +871,11 @@ mod tests {
         );
         let cypher = cypher_hex.to_bytes();
 
-        let key_unicode = self::Unicode::from("Little Test 1234");
+        let key_unicode = crypto_vecs::Unicode::from("Little Test 1234");
         let key = key_unicode.to_bytes();
 
         let expected_result_unicode =
-            self::Unicode::from("Mary had a little lamb whose fleece was white as snow.");
+            crypto_vecs::Unicode::from("Mary had a little lamb whose fleece was white as snow.");
         let expected_result = expected_result_unicode.to_bytes();
 
         let result = cypher.aes_128_ecb_decrypt(&key).unwrap();

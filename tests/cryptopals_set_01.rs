@@ -167,9 +167,11 @@ fn integration_challenge_07() {
     let cypher_string: String = fs::read_to_string("original/7.txt").expect("could not read file");
 
     let cypher = crypto_vecs::Bytes::from_base64_literal(&cypher_string);
+    let cypher_blocks = cypher.to_blocks(constants::AES_128_BYTES_IN_KEY);
     let key = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE");
 
-    let plain = cypher.aes_128_ecb_decrypt(&key).unwrap();
+    let plain_blocks = cypher_blocks.aes_128_ecb_decrypt(&key).unwrap();
+    let plain = plain_blocks.to_bytes();
 
     let expected_result_start =
         crypto_vecs::Bytes::from_unicode_literal("I'm back and I'm ringin' the bell");

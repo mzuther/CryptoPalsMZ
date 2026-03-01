@@ -362,30 +362,6 @@ impl self::Bytes {
             },
         )
     }
-
-    pub fn find_duplicate_blocks(&self, block_size: usize) -> Vec<Self> {
-        assert!(block_size > 0);
-
-        let mut blocks = self.chunks(block_size);
-        blocks.sort();
-
-        let current_block_iter = blocks.iter();
-        let next_block_iter = current_block_iter.clone().skip(1);
-
-        // compare successive blocks and keep duplicates
-        let duplicate_blocks = current_block_iter.zip(next_block_iter).fold(
-            Vec::new(),
-            |mut duplicates, (current_block, next_block)| {
-                if current_block == next_block {
-                    duplicates.push(current_block.clone());
-                }
-
-                duplicates
-            },
-        );
-
-        duplicate_blocks
-    }
 }
 
 // ----------------
@@ -986,106 +962,6 @@ mod tests {
         expected_result.push(self::Bytes::new());
 
         let result = bytes.transpose(keysize);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_1() {
-        let bytes = crypto_vecs::Bytes::from_hex_literal(
-            "3a 1b d4 cb d0 aa 25 f2 66 db b8 fe 16 6e d4 cb 25 f3",
-        );
-
-        let block_size = 1;
-        let mut expected_result = Vec::new();
-
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("25"));
-
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("cb"));
-
-        let duplicate_block = crypto_vecs::Bytes::from_hex_literal("d4");
-        expected_result.push(duplicate_block);
-
-        let result = bytes.find_duplicate_blocks(block_size);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_2() {
-        let bytes = crypto_vecs::Bytes::from_hex_literal(
-            "3a1b 7e49 d4cb d0aa 25f2 66db b8fe 166e d4cb 7e49 db25 d4cb",
-        );
-
-        let block_size = 2;
-        let mut expected_result = Vec::new();
-
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("7e49"));
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cb"));
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cb"));
-
-        let result = bytes.find_duplicate_blocks(block_size);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_3() {
-        let bytes = crypto_vecs::Bytes::from_hex_literal(
-            "3a1b7e 49d4cb d0aa25 f266db b8fe16 6ed4cb d0aadb 25f266",
-        );
-
-        let block_size = 3;
-        let expected_result = Vec::new();
-
-        let result = bytes.find_duplicate_blocks(block_size);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_4() {
-        let bytes = crypto_vecs::Bytes::from_hex_literal(
-            "3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266",
-        );
-
-        let block_size = 4;
-        let mut expected_result = Vec::new();
-
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("3a1b7e49"));
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cbd0aa"));
-
-        let result = bytes.find_duplicate_blocks(block_size);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_4_dangling_end() {
-        let bytes =
-            crypto_vecs::Bytes::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db");
-
-        let block_size = 4;
-        let mut expected_result = Vec::new();
-
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("3a1b7e49"));
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cbd0aa"));
-
-        let result = bytes.find_duplicate_blocks(block_size);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_8() {
-        let bytes = crypto_vecs::Bytes::from_hex_literal(
-            "3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266",
-        );
-
-        let block_size = 8;
-        let expected_result = Vec::new();
-
-        let result = bytes.find_duplicate_blocks(block_size);
 
         assert_eq!(result, expected_result);
     }

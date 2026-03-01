@@ -190,17 +190,24 @@ fn integration_challenge_08() {
     let all_strings_hex: String =
         fs::read_to_string("original/8.txt").expect("could not read file");
 
+    let block_size = constants::AES_128_BYTES_IN_KEY;
+    let mut expected_duplicates = crypto_vecs::BlockBytes::new(block_size);
+
     let duplicate_block = crypto_vecs::Bytes::from_hex_literal("08649af70dc06f4fd5d2d69c744cd283");
+    expected_duplicates.push(duplicate_block.clone());
+    expected_duplicates.push(duplicate_block.clone());
+    expected_duplicates.push(duplicate_block);
 
     let mut expected_result = HashMap::new();
-    expected_result.insert(132, vec![duplicate_block; 3]);
+    expected_result.insert(132, expected_duplicates);
 
     let result = all_strings_hex.lines().enumerate().fold(
         HashMap::new(),
         |mut cyphers_with_duplicates: HashMap<usize, _>, (index, string_hex)| {
             let cypher = crypto_vecs::Bytes::from_hex_literal(string_hex);
+            let cypher_blocks = cypher.to_blocks(block_size);
 
-            let duplicate_blocks = cypher.find_duplicate_blocks(constants::AES_128_BYTES_IN_KEY);
+            let duplicate_blocks = cypher_blocks.find_duplicate_blocks();
 
             if duplicate_blocks.len() > 0 {
                 cyphers_with_duplicates.insert(index, duplicate_blocks);

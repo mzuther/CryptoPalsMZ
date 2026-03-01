@@ -24,120 +24,6 @@ fn challenge_06() {
     let cypher_string: String = fs::read_to_string("original/6.txt").expect("could not read file");
     let cypher = crypto_vecs::Bytes::from_base64_literal(&cypher_string);
 
-    let cypher_vec = cypher.to_vec();
-    let (cypher_start_vec, _) = cypher_vec.split_at(8);
-    let cypher_start = crypto_vecs::Bytes::from(cypher_start_vec);
-
-    assert_eq!(
-        cypher_start.to_hexadecimal(),
-        crypto_vecs::Hexadecimal::from("1d421f4d0b0f021f")
-    );
-
-    let keysize = 2;
-    let bytes = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
-    let other = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
-
-    let edit_size = bytes.hamming_distance(&other);
-    let edit_size_normalized = (edit_size as f64) / (keysize as f64);
-
-    assert_eq!(edit_size_normalized, 2.5);
-
-    let keysize = 3;
-    let bytes = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
-    let other = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
-
-    let edit_size = bytes.hamming_distance(&other);
-    let edit_size_normalized = (edit_size as f64) / (keysize as f64);
-
-    assert_eq!(edit_size_normalized, 2.0);
-
-    let keysize = 5;
-    let bytes = crypto_vecs::Bytes::from(&cypher_vec[0..keysize]);
-    let other = crypto_vecs::Bytes::from(&cypher_vec[keysize..keysize * 2]);
-
-    let edit_size = bytes.hamming_distance(&other);
-    let edit_size_normalized = (edit_size as f64) / (keysize as f64);
-
-    assert_eq!(edit_size_normalized, 1.2);
-
-    let keysize = 2;
-    let transposed_vecs = cypher.transpose(keysize);
-
-    let cypher_vec_1 = transposed_vecs[0].to_vec();
-    let cypher_vec_2 = transposed_vecs[1].to_vec();
-
-    let (cypher_start_1, _) = cypher_vec_1.split_at(4);
-    let (cypher_start_2, _) = cypher_vec_2.split_at(4);
-
-    assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_1),
-        crypto_vecs::Bytes::from_hex_literal("1d1f0b02")
-    );
-    assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_2),
-        crypto_vecs::Bytes::from_hex_literal("424d0f1f")
-    );
-
-    let keysize = 3;
-    let transposed_vecs = cypher.transpose(keysize);
-
-    let cypher_vec_1 = transposed_vecs[0].to_vec();
-    let cypher_vec_2 = transposed_vecs[1].to_vec();
-    let cypher_vec_3 = transposed_vecs[2].to_vec();
-
-    let (cypher_start_1, _) = cypher_vec_1.split_at(3);
-    let (cypher_start_2, _) = cypher_vec_2.split_at(3);
-    let (cypher_start_3, _) = cypher_vec_3.split_at(2);
-
-    assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_1),
-        crypto_vecs::Bytes::from_hex_literal("1d4d02")
-    );
-    assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_2),
-        crypto_vecs::Bytes::from_hex_literal("420b1f")
-    );
-    assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_3),
-        crypto_vecs::Bytes::from_hex_literal("1f0f")
-    );
-
-    let keysize = 5;
-    let transposed_vecs = cypher.transpose(keysize);
-
-    let cypher_vec_1 = transposed_vecs[0].to_vec();
-    let cypher_vec_2 = transposed_vecs[1].to_vec();
-    let cypher_vec_3 = transposed_vecs[2].to_vec();
-    let cypher_vec_4 = transposed_vecs[3].to_vec();
-    let cypher_vec_5 = transposed_vecs[4].to_vec();
-
-    let (cypher_start_1, _) = cypher_vec_1.split_at(2);
-    let (cypher_start_2, _) = cypher_vec_2.split_at(2);
-    let (cypher_start_3, _) = cypher_vec_3.split_at(2);
-    let (cypher_start_4, _) = cypher_vec_4.split_at(1);
-    let (cypher_start_5, _) = cypher_vec_5.split_at(1);
-
-    assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_1),
-        crypto_vecs::Bytes::from_hex_literal("1d0f")
-    );
-    assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_2),
-        crypto_vecs::Bytes::from_hex_literal("4202")
-    );
-    assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_3),
-        crypto_vecs::Bytes::from_hex_literal("1f1f")
-    );
-    assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_4),
-        crypto_vecs::Bytes::from_hex_literal("4d")
-    );
-    assert_eq!(
-        crypto_vecs::Bytes::from(cypher_start_5),
-        crypto_vecs::Bytes::from_hex_literal("0b")
-    );
-
     let keysize_range = 2..41;
     let mut scores = cryptopals::guess_keysize_from_hamming_distance(&cypher, &keysize_range, 10);
 
@@ -156,10 +42,10 @@ fn challenge_06() {
         .expect("there should always be a few elements");
 
     let keysize = score.keysize;
-    let transposed_vecs = cypher.transpose(keysize);
+    let transposed_blocks = cypher.transpose(keysize);
     let mut proposed_key = crypto_vecs::Bytes::new();
 
-    for (index, block) in transposed_vecs.iter().enumerate() {
+    for (index, block) in transposed_blocks.iter().enumerate() {
         let mut scores = cryptopals::find_lowest_score_xor(&block);
 
         println!("[block {}/{}]", index + 1, keysize);

@@ -141,9 +141,9 @@ fn integration_challenge_06() {
         .pop()
         .expect("there should always be a few elements");
 
-    let transposed_vecs = cypher.transpose(best_edit_size.keysize);
+    let transposed_blocks = cypher.transpose(best_edit_size.keysize);
 
-    let result_key = transposed_vecs
+    let result_key = transposed_blocks
         .iter()
         .fold(crypto_vecs::Bytes::new(), |mut acc, block| {
             let mut block_scores = cryptopals::find_lowest_score_xor(block);

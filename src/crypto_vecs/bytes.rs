@@ -327,14 +327,18 @@ impl self::Bytes {
 
     // ----------------
 
-    pub fn transpose(&self, number_of_blocks: usize) -> Vec<Self> {
+    pub fn transpose(&self, number_of_blocks: usize) -> crypto_vecs::BlockBytes {
         assert!(number_of_blocks > 0);
+        assert!(self.len() > 0);
 
         // performance: handle special case
         //
         // may come in useful when automatically processing single-byte keys
         if number_of_blocks == 1 {
-            return vec![self.clone()];
+            let mut transposed_blocks = crypto_vecs::BlockBytes::new_with_lax_filling(self.len());
+
+            transposed_blocks.push(self.clone());
+            return transposed_blocks;
         }
 
         let block_capacity = (self.len() / number_of_blocks) + 1;
@@ -345,7 +349,18 @@ impl self::Bytes {
             transposed_blocks[block_index].push(byte);
         }
 
-        transposed_blocks
+        let first_block = transposed_blocks
+            .get(0)
+            .expect("number of elements is non-zero");
+        let block_size = first_block.len();
+
+        transposed_blocks.iter().fold(
+            crypto_vecs::BlockBytes::new_with_lax_filling(block_size),
+            |mut acc, block| {
+                acc.push(block.clone());
+                acc
+            },
+        )
     }
 
     pub fn find_duplicate_blocks(&self, block_size: usize) -> Vec<Self> {
@@ -922,11 +937,12 @@ mod tests {
         let bytes = self::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 1;
 
-        let transposed_vecs = bytes.transpose(keysize);
+        let mut expected_result = crypto_vecs::BlockBytes::new_with_lax_filling(10);
+        expected_result.push(bytes.clone());
 
-        assert_eq!(transposed_vecs.len(), keysize);
+        let result = bytes.transpose(keysize);
 
-        assert_eq!(transposed_vecs[0], bytes);
+        assert_eq!(result, expected_result);
     }
 
     #[test]
@@ -934,12 +950,13 @@ mod tests {
         let bytes = self::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 2;
 
-        let transposed_vecs = bytes.transpose(keysize);
+        let mut expected_result = crypto_vecs::BlockBytes::new_with_lax_filling(5);
+        expected_result.push(self::Bytes::from(vec![1, 3, 5, 7, 9]));
+        expected_result.push(self::Bytes::from(vec![2, 4, 6, 8, 10]));
 
-        assert_eq!(transposed_vecs.len(), keysize);
+        let result = bytes.transpose(keysize);
 
-        assert_eq!(transposed_vecs[0], self::Bytes::from(vec![1, 3, 5, 7, 9]));
-        assert_eq!(transposed_vecs[1], self::Bytes::from(vec![2, 4, 6, 8, 10]));
+        assert_eq!(result, expected_result);
     }
 
     #[test]
@@ -947,28 +964,30 @@ mod tests {
         let bytes = self::Bytes::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 3;
 
-        let transposed_vecs = bytes.transpose(keysize);
+        let mut expected_result = crypto_vecs::BlockBytes::new_with_lax_filling(4);
+        expected_result.push(self::Bytes::from(vec![1, 4, 7, 10]));
+        expected_result.push(self::Bytes::from(vec![2, 5, 8]));
+        expected_result.push(self::Bytes::from(vec![3, 6, 9]));
 
-        assert_eq!(transposed_vecs.len(), keysize);
+        let result = bytes.transpose(keysize);
 
-        assert_eq!(transposed_vecs[0], self::Bytes::from(vec![1, 4, 7, 10]));
-        assert_eq!(transposed_vecs[1], self::Bytes::from(vec![2, 5, 8]));
-        assert_eq!(transposed_vecs[2], self::Bytes::from(vec![3, 6, 9]));
+        assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_bytes_transpose_not_enough_elements() {
         let bytes = self::Bytes::from(vec![1, 2, 3]);
-        let keysize = bytes.len() + 1;
+        let keysize = 4;
 
-        let transposed_vecs = bytes.transpose(keysize);
+        let mut expected_result = crypto_vecs::BlockBytes::new_with_lax_filling(1);
+        expected_result.push(self::Bytes::from(1));
+        expected_result.push(self::Bytes::from(2));
+        expected_result.push(self::Bytes::from(3));
+        expected_result.push(self::Bytes::new());
 
-        assert_eq!(transposed_vecs.len(), keysize);
+        let result = bytes.transpose(keysize);
 
-        assert_eq!(transposed_vecs[0], self::Bytes::from(1));
-        assert_eq!(transposed_vecs[1], self::Bytes::from(2));
-        assert_eq!(transposed_vecs[2], self::Bytes::from(3));
-        assert_eq!(transposed_vecs[3], self::Bytes::new());
+        assert_eq!(result, expected_result);
     }
 
     #[test]

@@ -282,7 +282,11 @@ impl self::Bytes {
             .expect("chunk size is less than block size");
         let padding_is_correct = padding.iter().all(|x| *x == padding_length as u8);
 
-        return (padding_is_correct, number_of_missing_bytes);
+        if padding_is_correct {
+            (true, padding_length)
+        } else {
+            (false, number_of_missing_bytes)
+        }
     }
 
     pub fn is_padded_pkcs7(&self, block_size: usize) -> (bool, usize) {
@@ -305,6 +309,21 @@ impl self::Bytes {
         }
 
         padded
+    }
+
+    pub fn unpad_pkcs7(&self, block_size: usize) -> Option<Self> {
+        let unpadded = self.clone();
+        let (is_padded, padding_length) = unpadded.is_padded_pkcs7(block_size);
+
+        if is_padded {
+            Some(
+                unpadded
+                    .first_n(unpadded.len() - padding_length)
+                    .expect("block length has been asserted in is_padded_pkcs7_internal()"),
+            )
+        } else {
+            None
+        }
     }
 
     pub fn aes_128_ecb_encrypt(&self, key: &Self) -> Result<Self, error::ErrorStack> {
@@ -1113,7 +1132,7 @@ mod tests {
         let bytes = self::Bytes::from_hex_literal("db250202");
         let block_size = 4;
 
-        let expected_result = (true, 0);
+        let expected_result = (true, 2);
 
         let result = bytes.is_padded_pkcs7(block_size);
 
@@ -1204,6 +1223,91 @@ mod tests {
         );
 
         let result = unpadded.pad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_unpad_pkcs7_single_block_four_bytes() {
+        let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04");
+        let block_size = 20;
+
+        let expected_result = Some(crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE"));
+
+        let result = padded.unpad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_unpad_pkcs7_two_blocks_single_byte() {
+        let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01");
+        let block_size = 8;
+
+        let expected_result = Some(self::Bytes::from_unicode_literal("YELLOW SUBMARIN"));
+
+        let result = padded.unpad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_unpad_pkcs7_two_blocks_padded_two_bytes() {
+        let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02");
+        let block_size = 6;
+
+        let expected_result = Some(self::Bytes::from_unicode_literal("YELLOW SUBMARINE"));
+
+        let result = padded.unpad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_unpad_pkcs7_full_block_padding() {
+        let padded =
+            self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08");
+        let block_size = 8;
+
+        let expected_result = Some(self::Bytes::from_unicode_literal("YELLOW SUBMARINE"));
+
+        let result = padded.unpad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_unpad_pkcs7_no_padding() {
+        let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
+        let block_size = 8;
+
+        let expected_result = None;
+
+        let result = padded.unpad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_unpad_pkcs7_incorrect_padding_wrong_byte() {
+        let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARI\x01\x02");
+        let block_size = 8;
+
+        let expected_result = None;
+
+        let result = padded.unpad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_unpad_pkcs7_incorrect_padding_overhanging_bytes() {
+        let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02");
+        let block_size = 8;
+
+        let expected_result = None;
+
+        let result = padded.unpad_pkcs7(block_size);
 
         assert_eq!(result, expected_result);
     }

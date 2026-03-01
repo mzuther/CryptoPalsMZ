@@ -75,7 +75,11 @@ impl self::BlockBytes {
     }
 
     pub fn len(&self) -> usize {
-        (self.blocks.len() - 1) * self.block_size + self.get_last_block_size()
+        if self.blocks.len() == 0 {
+            0
+        } else {
+            (self.blocks.len() - 1) * self.block_size + self.get_last_block_size()
+        }
     }
 
     // ----------------

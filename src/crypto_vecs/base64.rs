@@ -45,12 +45,7 @@ impl fmt::Display for self::Base64 {
 
 impl fmt::Debug for self::Base64 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Base64[{}] {{ {} }}",
-            self.base64_string.chars().count(),
-            self.get_representation()
-        )
+        write!(f, "{}", self.to_string(),)
     }
 }
 

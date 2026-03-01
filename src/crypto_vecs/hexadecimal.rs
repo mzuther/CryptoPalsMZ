@@ -28,12 +28,7 @@ impl fmt::Display for self::Hexadecimal {
 
 impl fmt::Debug for self::Hexadecimal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Hexadecimal[{}] {{ {} }}",
-            self.len(),
-            self.get_representation()
-        )
+        write!(f, "{}", self.to_string(),)
     }
 }
 

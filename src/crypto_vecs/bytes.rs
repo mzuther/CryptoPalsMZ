@@ -30,12 +30,7 @@ impl fmt::Display for self::Bytes {
 
 impl fmt::Debug for self::Bytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Bytes[{}] {{ {} }}",
-            self.len(),
-            self.to_hexadecimal().get_representation()
-        )
+        write!(f, "{}", self.to_string(),)
     }
 }
 

@@ -22,12 +22,7 @@ impl fmt::Display for self::Unicode {
 
 impl fmt::Debug for self::Unicode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Unicode[{}] {{ {} }}",
-            self.unicode_string.chars().count(),
-            self.unicode_string
-        )
+        write!(f, "{}", self.to_string(),)
     }
 }
 

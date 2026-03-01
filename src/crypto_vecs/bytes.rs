@@ -3,7 +3,7 @@ use crate::{
     crypto_vecs::{self, ToBytes},
 };
 
-use openssl::{cipher, cipher_ctx, error};
+use openssl::{cipher, cipher_ctx};
 use std::{convert, fmt, slice, vec};
 
 // ----------------
@@ -315,16 +315,16 @@ impl self::Bytes {
         }
     }
 
-    pub fn unpad_pkcs7(&self, block_size: usize) -> Result<Self, &str> {
+    pub fn unpad_pkcs7(&self, block_size: usize) -> Result<Self, String> {
         match self.is_padded_pkcs7(block_size) {
             Ok(padding_length) => Ok(self
                 .first_n(self.len() - padding_length)
                 .expect("block length has been asserted in is_padded_pkcs7_internal()")),
-            Err(_) => Err("invalid PKCS#7 padding"),
+            Err(_) => Err(String::from("invalid PKCS#7 padding")),
         }
     }
 
-    pub fn aes_128_ecb_encrypt(&self, key: &Self) -> Result<Self, error::ErrorStack> {
+    pub fn aes_128_ecb_encrypt(&self, key: &Self) -> Result<Self, String> {
         let mut cypher = self::Bytes::new();
         let block_size = constants::AES_128_BYTES_IN_KEY;
 
@@ -339,32 +339,53 @@ impl self::Bytes {
         Ok(cypher)
     }
 
-    pub fn aes_128_ecb_encrypt_block(
-        &self,
-        key: &Self,
-        block_size: usize,
-    ) -> Result<Self, error::ErrorStack> {
-        let mut cipher_context = cipher_ctx::CipherCtx::new()?;
+    pub fn aes_128_ecb_encrypt_block(&self, key: &Self, block_size: usize) -> Result<Self, String> {
+        let mut cipher_context = cipher_ctx::CipherCtx::new().expect("what can go wrong?");
 
-        cipher_context.encrypt_init(
+        let encryptor_status = cipher_context.encrypt_init(
             Some(cipher::Cipher::aes_128_ecb()),
             Some(key.as_slice()),
             Some(Default::default()),
-        )?;
+        );
+
+        match encryptor_status {
+            Err(error_stack) => return Err(error_stack.to_string()),
+            _ => (),
+        };
 
         cipher_context.set_padding(false);
 
         self.process_block_symmetric_key(cipher_context, block_size)
     }
 
-    pub fn aes_128_ecb_decrypt(&self, key: &Self) -> Result<Self, error::ErrorStack> {
-        let mut cipher_context = cipher_ctx::CipherCtx::new()?;
+    pub fn aes_128_ecb_decrypt(&self, key: &Self) -> Result<Self, String> {
+        let mut padded_plain = self::Bytes::new();
+        let block_size = constants::AES_128_BYTES_IN_KEY;
 
-        cipher_context.decrypt_init(
+        for block in self.chunks(block_size) {
+            let plain_block = block.aes_128_ecb_decrypt_block(key, block_size)?;
+
+            padded_plain.extend(plain_block.to_vec());
+        }
+
+        padded_plain.unpad_pkcs7(block_size)
+    }
+
+    pub fn aes_128_ecb_decrypt_block(&self, key: &Self, block_size: usize) -> Result<Self, String> {
+        let mut cipher_context = cipher_ctx::CipherCtx::new().expect("what can go wrong?");
+
+        let decryptor_status = cipher_context.decrypt_init(
             Some(cipher::Cipher::aes_128_ecb()),
             Some(key.as_slice()),
             Some(Default::default()),
-        )?;
+        );
+
+        match decryptor_status {
+            Err(error_stack) => return Err(error_stack.to_string()),
+            _ => (),
+        };
+
+        cipher_context.set_padding(false);
 
         self.process_block_symmetric_key(cipher_context, block_size)
     }
@@ -373,13 +394,29 @@ impl self::Bytes {
         &self,
         mut cipher_context: cipher_ctx::CipherCtx,
         block_size: usize,
-    ) -> Result<Self, error::ErrorStack> {
+    ) -> Result<Self, String> {
+        assert_eq!(
+            self.len(),
+            block_size,
+            "block has {} bits, expected are {} bits, ",
+            self.len() * 8,
+            block_size * 8,
+        );
+
         let mut buffer = Self::new();
+        let processing_state = cipher_context.cipher_update_vec(self.as_slice(), buffer.as_mut());
 
-        cipher_context.cipher_update_vec(self.as_slice(), buffer.as_mut())?;
-        cipher_context.cipher_final_vec(buffer.as_mut())?;
+        match processing_state {
+            Err(error_stack) => return Err(error_stack.to_string()),
+            _ => (),
+        };
 
-        Ok(buffer)
+        let finalization_state = cipher_context.cipher_final_vec(buffer.as_mut());
+
+        match finalization_state {
+            Err(error_stack) => Err(error_stack.to_string()),
+            _ => Ok(buffer),
+        }
     }
 
     // ----------------
@@ -1279,7 +1316,7 @@ mod tests {
         let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
         let block_size = 8;
 
-        let expected_result = Err("invalid PKCS#7 padding");
+        let expected_result = Err(String::from("invalid PKCS#7 padding"));
 
         let result = padded.unpad_pkcs7(block_size);
 
@@ -1291,7 +1328,7 @@ mod tests {
         let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARI\x01\x02");
         let block_size = 8;
 
-        let expected_result = Err("invalid PKCS#7 padding");
+        let expected_result = Err(String::from("invalid PKCS#7 padding"));
 
         let result = padded.unpad_pkcs7(block_size);
 
@@ -1303,7 +1340,7 @@ mod tests {
         let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02");
         let block_size = 8;
 
-        let expected_result = Err("invalid PKCS#7 padding");
+        let expected_result = Err(String::from("invalid PKCS#7 padding"));
 
         let result = padded.unpad_pkcs7(block_size);
 

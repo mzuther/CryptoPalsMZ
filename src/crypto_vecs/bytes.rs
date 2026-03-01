@@ -1,4 +1,7 @@
-use crate::crypto_vecs::{self, ToBytes};
+use crate::{
+    constants,
+    crypto_vecs::{self, ToBytes},
+};
 
 use openssl::{cipher, cipher_ctx, error};
 use std::{convert, fmt, slice, vec};
@@ -305,6 +308,25 @@ impl self::Bytes {
     }
 
     pub fn aes_128_ecb_encrypt(&self, key: &Self) -> Result<Self, error::ErrorStack> {
+        let mut cypher = self::Bytes::new();
+        let block_size = constants::AES_128_BYTES_IN_KEY;
+
+        let padded_plain = self.pad_pkcs7(block_size);
+
+        for plain_block in padded_plain.chunks(block_size) {
+            let cypher_block = plain_block.aes_128_ecb_encrypt_block(key, block_size)?;
+
+            cypher.extend(cypher_block.to_vec());
+        }
+
+        Ok(cypher)
+    }
+
+    pub fn aes_128_ecb_encrypt_block(
+        &self,
+        key: &Self,
+        block_size: usize,
+    ) -> Result<Self, error::ErrorStack> {
         let mut cipher_context = cipher_ctx::CipherCtx::new()?;
 
         cipher_context.encrypt_init(
@@ -313,7 +335,9 @@ impl self::Bytes {
             Some(Default::default()),
         )?;
 
-        self.process_symmetric_key_algorithm(cipher_context)
+        cipher_context.set_padding(false);
+
+        self.process_block_symmetric_key(cipher_context, block_size)
     }
 
     pub fn aes_128_ecb_decrypt(&self, key: &Self) -> Result<Self, error::ErrorStack> {
@@ -325,12 +349,13 @@ impl self::Bytes {
             Some(Default::default()),
         )?;
 
-        self.process_symmetric_key_algorithm(cipher_context)
+        self.process_block_symmetric_key(cipher_context, block_size)
     }
 
-    fn process_symmetric_key_algorithm(
+    fn process_block_symmetric_key(
         &self,
         mut cipher_context: cipher_ctx::CipherCtx,
+        block_size: usize,
     ) -> Result<Self, error::ErrorStack> {
         let mut buffer = Self::new();
 
@@ -1121,64 +1146,64 @@ mod tests {
 
     #[test]
     fn unit_bytes_pad_pkcs7_single_block() {
-        let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
+        let unpadded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
         let block_size = 20;
 
         let expected_result =
             crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04");
 
-        let result = plain.pad_pkcs7(block_size);
+        let result = unpadded.pad_pkcs7(block_size);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_bytes_pad_pkcs7_two_blocks() {
-        let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
+        let unpadded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
         let block_size = 6;
 
         let expected_result = self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02");
 
-        let result = plain.pad_pkcs7(block_size);
+        let result = unpadded.pad_pkcs7(block_size);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_bytes_pad_pkcs7_full_block_unpadded() {
-        let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
+        let unpadded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
         let block_size = 8;
 
         let expected_result =
             self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08");
 
-        let result = plain.pad_pkcs7(block_size);
+        let result = unpadded.pad_pkcs7(block_size);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_bytes_pad_pkcs7_full_block_correctly_padded() {
-        let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01");
+        let unpadded = self::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01");
         let block_size = 8;
 
         let expected_result = self::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01");
 
-        let result = plain.pad_pkcs7(block_size);
+        let result = unpadded.pad_pkcs7(block_size);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_bytes_pad_pkcs7_full_block_incorrectly_padded() {
-        let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARI\x01\x02");
+        let unpadded = self::Bytes::from_unicode_literal("YELLOW SUBMARI\x01\x02");
         let block_size = 8;
 
         let expected_result = self::Bytes::from_unicode_literal(
             "YELLOW SUBMARI\x01\x02\x08\x08\x08\x08\x08\x08\x08\x08",
         );
 
-        let result = plain.pad_pkcs7(block_size);
+        let result = unpadded.pad_pkcs7(block_size);
 
         assert_eq!(result, expected_result);
     }
@@ -1186,7 +1211,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_bytes_aes_128_ecb_encrypt() {
+    fn unit_bytes_aes_128_ecb_encrypt_unpadded() {
         let plain = crypto_vecs::Bytes::from_unicode_literal(
             "Mary had a little lamb whose fleece was white as snow.",
         );
@@ -1211,6 +1236,37 @@ mod tests {
 
         // padding is needed
         assert_ne!(plain.len() % constants::AES_128_BYTES_IN_KEY, 0);
+
+        // padding was added
+        assert_eq!(result.len() % constants::AES_128_BYTES_IN_KEY, 0);
+    }
+
+    #[test]
+    fn unit_bytes_aes_128_ecb_encrypt_padded() {
+        let plain = crypto_vecs::Bytes::from_unicode_literal(
+            "Mary had a little lamb whose fleece was white as snow.\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a",
+        );
+        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
+
+        // echo -n "Mary had a little lamb whose fleece was white as snow..." | \
+        // openssl enc \
+        //     -aes-128-ecb \
+        //     -nosalt \
+        //     -K "4c6974746c6520546573742031323334" \
+        //     -out cypher.hex
+        let expected_result = crypto_vecs::Bytes::from_hex_literal(
+            "3a1b7e49 d4cbd0aa 25f266db b8fe166e
+             06556a04 f1ba7f64 991d619d e146b609
+             6298d2f8 ef0fceb7 969e88b0 569eb873
+             adc5da56 80f7ecb3 ebbb2030 6b4af841",
+        );
+
+        let result = plain.aes_128_ecb_encrypt(&key).unwrap();
+
+        assert_eq!(result, expected_result);
+
+        // padding not needed
+        assert_eq!(plain.len() % constants::AES_128_BYTES_IN_KEY, 0);
 
         // padding was added
         assert_eq!(result.len() % constants::AES_128_BYTES_IN_KEY, 0);

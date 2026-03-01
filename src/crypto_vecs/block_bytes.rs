@@ -8,6 +8,7 @@ use std::{fmt, slice};
 pub struct BlockBytes {
     blocks: Vec<crypto_vecs::Bytes>,
     block_size: usize,
+    strict_filling: bool,
 }
 
 impl fmt::Display for self::BlockBytes {
@@ -16,8 +17,13 @@ impl fmt::Display for self::BlockBytes {
 
         write!(
             f,
-            "BlockBytes[{}] {{\n    {}\n}}",
+            "BlockBytes[{}{}] {{\n    {}\n}}",
             self.block_size,
+            if self.uses_strict_filling() {
+                ", strict"
+            } else {
+                ""
+            },
             formatted_blocks.join("\n    ")
         )
     }
@@ -46,11 +52,26 @@ impl self::BlockBytes {
         Self {
             blocks: Vec::new(),
             block_size: block_size,
+            strict_filling: true,
+        }
+    }
+
+    pub fn new_with_lax_filling(block_size: usize) -> Self {
+        assert!(block_size > 0);
+
+        Self {
+            blocks: Vec::new(),
+            block_size: block_size,
+            strict_filling: false,
         }
     }
 
     pub const fn get_block_size(&self) -> usize {
         self.block_size
+    }
+
+    pub const fn uses_strict_filling(&self) -> bool {
+        self.strict_filling
     }
 
     pub fn len(&self) -> usize {
@@ -84,12 +105,22 @@ impl self::BlockBytes {
     // ----------------
 
     pub fn push(&mut self, block: crypto_vecs::Bytes) {
-        if self.blocks.len() > 0 {
+        let block_size = self.get_block_size();
+
+        assert!(
+            block.len() <= block_size,
+            "block is too big, {} bytes > {} bytes",
+            block.len(),
+            block_size
+        );
+
+        if self.blocks.len() > 0 && self.uses_strict_filling() {
+            let last_block_size = self.get_last_block_size();
+
             assert_eq!(
-                self.get_last_block_size(),
-                self.get_block_size(),
+                last_block_size, block_size,
                 "last block is not full, has only {} bytes",
-                self.get_last_block_size()
+                last_block_size
             );
         }
 
@@ -106,11 +137,14 @@ impl self::BlockBytes {
     {
         self.get_last_block_mut().extend(bytes.into());
 
+        let block_size = self.get_block_size();
+        let last_block_size = self.get_last_block_size();
+
         assert!(
-            self.get_last_block_size() <= self.get_block_size(),
+            last_block_size <= block_size,
             "last block is too big, {} bytes > {} bytes",
-            self.get_last_block_size(),
-            self.get_block_size()
+            last_block_size,
+            block_size
         );
     }
 

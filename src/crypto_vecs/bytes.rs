@@ -251,28 +251,54 @@ impl self::Bytes {
 
     // ----------------
 
+    #[inline]
+    fn is_padded_pkcs7_internal(&self, block_size: usize) -> (bool, usize) {
+        assert!(block_size > 0);
+
+        let all_blocks = self.chunks(block_size);
+        let last_block = all_blocks.last().expect("block size is non-zero");
+        let number_of_missing_bytes = block_size - last_block.len();
+
+        // block is not full
+        if last_block.len() < block_size {
+            return (false, number_of_missing_bytes);
+        }
+
+        // get padding length from last byte
+        let last_block_vec = last_block.to_vec();
+        let padding_length = *last_block_vec.last().expect("block size is non-zero") as usize;
+
+        // last byte does not designate length of padding
+        if padding_length > block_size {
+            return (false, number_of_missing_bytes);
+        }
+
+        let padding = last_block_vec
+            .rchunks(padding_length)
+            .next()
+            .expect("chunk size is less than block size");
+        let padding_is_correct = padding.iter().all(|x| *x == padding_length as u8);
+
+        return (padding_is_correct, number_of_missing_bytes);
+    }
+
+    pub fn is_padded_pkcs7(&self, block_size: usize) -> (bool, usize) {
+        let (is_padded, mut number_of_missing_bytes) = self.is_padded_pkcs7_internal(block_size);
+
+        if !is_padded && number_of_missing_bytes == 0 {
+            number_of_missing_bytes = block_size;
+        }
+
+        (is_padded, number_of_missing_bytes)
+    }
+
     pub fn pad_pkcs7(&self, block_size: usize) -> Self {
-        let mut is_padded = false;
-
-        let mut padded = self
-            .chunks(block_size)
-            .iter()
-            .fold(Self::new(), |mut acc, block| {
-                let mut block_vec = block.to_vec();
-                let missing_blocks = block_size - block_vec.len();
-
-                if missing_blocks > 0 {
-                    is_padded = true;
-
-                    block_vec.extend(vec![missing_blocks as u8; missing_blocks]);
-                }
-
-                acc.extend(block_vec);
-                acc
-            });
+        let mut padded = self.clone();
+        let (is_padded, number_of_missing_bytes) = padded.is_padded_pkcs7(block_size);
 
         if !is_padded {
-            padded.extend(vec![block_size as u8; block_size]);
+            let padding = vec![number_of_missing_bytes as u8; number_of_missing_bytes];
+            padded.extend(padding);
         }
 
         padded
@@ -1034,6 +1060,66 @@ mod tests {
     // ----------------
 
     #[test]
+    fn unit_bytes_is_padded_pkcs7_single_block_incomplete() {
+        let bytes = self::Bytes::from_hex_literal("db25f2");
+        let block_size = 4;
+
+        let expected_result = (false, 1);
+
+        let result = bytes.is_padded_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_is_padded_pkcs7_single_block_unpadded() {
+        let bytes = self::Bytes::from_hex_literal("db25f266");
+        let block_size = 4;
+
+        let expected_result = (false, 4);
+
+        let result = bytes.is_padded_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_is_padded_pkcs7_single_block_correctly_padded() {
+        let bytes = self::Bytes::from_hex_literal("db250202");
+        let block_size = 4;
+
+        let expected_result = (true, 0);
+
+        let result = bytes.is_padded_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_is_padded_pkcs7_single_block_incorrectly_padded() {
+        let bytes = self::Bytes::from_hex_literal("db25ff02");
+        let block_size = 4;
+
+        let expected_result = (false, 4);
+
+        let result = bytes.is_padded_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_is_padded_pkcs7_two_blocks_incomplete() {
+        let bytes = self::Bytes::from_hex_literal("3a1b7e49 db");
+        let block_size = 4;
+
+        let expected_result = (false, 3);
+
+        let result = bytes.is_padded_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
     fn unit_bytes_pad_pkcs7_single_block() {
         let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
         let block_size = 20;
@@ -1059,18 +1145,45 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_pad_pkcs7_full_block() {
+    fn unit_bytes_pad_pkcs7_full_block_unpadded() {
+        let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
+        let block_size = 8;
+
+        let expected_result =
+            self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08");
+
+        let result = plain.pad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_pad_pkcs7_full_block_correctly_padded() {
         let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01");
         let block_size = 8;
 
+        let expected_result = self::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01");
+
+        let result = plain.pad_pkcs7(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_pad_pkcs7_full_block_incorrectly_padded() {
+        let plain = self::Bytes::from_unicode_literal("YELLOW SUBMARI\x01\x02");
+        let block_size = 8;
+
         let expected_result = self::Bytes::from_unicode_literal(
-            "YELLOW SUBMARIN\x01\x08\x08\x08\x08\x08\x08\x08\x08",
+            "YELLOW SUBMARI\x01\x02\x08\x08\x08\x08\x08\x08\x08\x08",
         );
 
         let result = plain.pad_pkcs7(block_size);
 
         assert_eq!(result, expected_result);
     }
+
+    // ----------------
 
     #[test]
     fn unit_bytes_aes_128_ecb_encrypt() {

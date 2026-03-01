@@ -255,7 +255,7 @@ impl self::Bytes {
     // ----------------
 
     #[inline]
-    fn is_padded_pkcs7_internal(&self, block_size: usize) -> (bool, usize) {
+    fn is_padded_pkcs7_internal(&self, block_size: usize) -> Result<usize, usize> {
         assert!(block_size > 0);
 
         let all_blocks = self.chunks(block_size);
@@ -264,7 +264,7 @@ impl self::Bytes {
 
         // block is not full
         if last_block.len() < block_size {
-            return (false, number_of_missing_bytes);
+            return Err(number_of_missing_bytes);
         }
 
         // get padding length from last byte
@@ -273,7 +273,7 @@ impl self::Bytes {
 
         // last byte does not designate length of padding
         if padding_length > block_size {
-            return (false, number_of_missing_bytes);
+            return Err(number_of_missing_bytes);
         }
 
         let padding = last_block_vec
@@ -283,46 +283,44 @@ impl self::Bytes {
         let padding_is_correct = padding.iter().all(|x| *x == padding_length as u8);
 
         if padding_is_correct {
-            (true, padding_length)
+            Ok(padding_length)
         } else {
-            (false, number_of_missing_bytes)
+            Err(number_of_missing_bytes)
         }
     }
 
-    pub fn is_padded_pkcs7(&self, block_size: usize) -> (bool, usize) {
-        let (is_padded, mut number_of_missing_bytes) = self.is_padded_pkcs7_internal(block_size);
-
-        if !is_padded && number_of_missing_bytes == 0 {
-            number_of_missing_bytes = block_size;
+    pub fn is_padded_pkcs7(&self, block_size: usize) -> Result<usize, usize> {
+        match self.is_padded_pkcs7_internal(block_size) {
+            Ok(padding_length) => Ok(padding_length),
+            Err(number_of_missing_bytes) => {
+                if number_of_missing_bytes == 0 {
+                    Err(block_size)
+                } else {
+                    Err(number_of_missing_bytes)
+                }
+            }
         }
-
-        (is_padded, number_of_missing_bytes)
     }
 
     pub fn pad_pkcs7(&self, block_size: usize) -> Self {
-        let mut padded = self.clone();
-        let (is_padded, number_of_missing_bytes) = padded.is_padded_pkcs7(block_size);
+        match self.is_padded_pkcs7(block_size) {
+            Ok(_) => self.clone(),
+            Err(number_of_missing_bytes) => {
+                let block_padding = vec![number_of_missing_bytes as u8; number_of_missing_bytes];
 
-        if !is_padded {
-            let padding = vec![number_of_missing_bytes as u8; number_of_missing_bytes];
-            padded.extend(padding);
+                let mut padded = self.clone();
+                padded.extend(block_padding);
+                padded
+            }
         }
-
-        padded
     }
 
-    pub fn unpad_pkcs7(&self, block_size: usize) -> Option<Self> {
-        let unpadded = self.clone();
-        let (is_padded, padding_length) = unpadded.is_padded_pkcs7(block_size);
-
-        if is_padded {
-            Some(
-                unpadded
-                    .first_n(unpadded.len() - padding_length)
-                    .expect("block length has been asserted in is_padded_pkcs7_internal()"),
-            )
-        } else {
-            None
+    pub fn unpad_pkcs7(&self, block_size: usize) -> Result<Self, &str> {
+        match self.is_padded_pkcs7(block_size) {
+            Ok(padding_length) => Ok(self
+                .first_n(self.len() - padding_length)
+                .expect("block length has been asserted in is_padded_pkcs7_internal()")),
+            Err(_) => Err("invalid PKCS#7 padding"),
         }
     }
 
@@ -1108,7 +1106,7 @@ mod tests {
         let bytes = self::Bytes::from_hex_literal("db25f2");
         let block_size = 4;
 
-        let expected_result = (false, 1);
+        let expected_result = Err(1);
 
         let result = bytes.is_padded_pkcs7(block_size);
 
@@ -1120,7 +1118,7 @@ mod tests {
         let bytes = self::Bytes::from_hex_literal("db25f266");
         let block_size = 4;
 
-        let expected_result = (false, 4);
+        let expected_result = Err(4);
 
         let result = bytes.is_padded_pkcs7(block_size);
 
@@ -1132,7 +1130,7 @@ mod tests {
         let bytes = self::Bytes::from_hex_literal("db250202");
         let block_size = 4;
 
-        let expected_result = (true, 2);
+        let expected_result = Ok(2);
 
         let result = bytes.is_padded_pkcs7(block_size);
 
@@ -1144,7 +1142,7 @@ mod tests {
         let bytes = self::Bytes::from_hex_literal("db25ff02");
         let block_size = 4;
 
-        let expected_result = (false, 4);
+        let expected_result = Err(4);
 
         let result = bytes.is_padded_pkcs7(block_size);
 
@@ -1156,7 +1154,7 @@ mod tests {
         let bytes = self::Bytes::from_hex_literal("3a1b7e49 db");
         let block_size = 4;
 
-        let expected_result = (false, 3);
+        let expected_result = Err(3);
 
         let result = bytes.is_padded_pkcs7(block_size);
 
@@ -1232,7 +1230,7 @@ mod tests {
         let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04");
         let block_size = 20;
 
-        let expected_result = Some(crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE"));
+        let expected_result = Ok(crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE"));
 
         let result = padded.unpad_pkcs7(block_size);
 
@@ -1244,7 +1242,7 @@ mod tests {
         let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01");
         let block_size = 8;
 
-        let expected_result = Some(self::Bytes::from_unicode_literal("YELLOW SUBMARIN"));
+        let expected_result = Ok(self::Bytes::from_unicode_literal("YELLOW SUBMARIN"));
 
         let result = padded.unpad_pkcs7(block_size);
 
@@ -1256,7 +1254,7 @@ mod tests {
         let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02");
         let block_size = 6;
 
-        let expected_result = Some(self::Bytes::from_unicode_literal("YELLOW SUBMARINE"));
+        let expected_result = Ok(self::Bytes::from_unicode_literal("YELLOW SUBMARINE"));
 
         let result = padded.unpad_pkcs7(block_size);
 
@@ -1269,7 +1267,7 @@ mod tests {
             self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08");
         let block_size = 8;
 
-        let expected_result = Some(self::Bytes::from_unicode_literal("YELLOW SUBMARINE"));
+        let expected_result = Ok(self::Bytes::from_unicode_literal("YELLOW SUBMARINE"));
 
         let result = padded.unpad_pkcs7(block_size);
 
@@ -1281,7 +1279,7 @@ mod tests {
         let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE");
         let block_size = 8;
 
-        let expected_result = None;
+        let expected_result = Err("invalid PKCS#7 padding");
 
         let result = padded.unpad_pkcs7(block_size);
 
@@ -1293,7 +1291,7 @@ mod tests {
         let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARI\x01\x02");
         let block_size = 8;
 
-        let expected_result = None;
+        let expected_result = Err("invalid PKCS#7 padding");
 
         let result = padded.unpad_pkcs7(block_size);
 
@@ -1305,7 +1303,7 @@ mod tests {
         let padded = self::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02");
         let block_size = 8;
 
-        let expected_result = None;
+        let expected_result = Err("invalid PKCS#7 padding");
 
         let result = padded.unpad_pkcs7(block_size);
 

@@ -75,7 +75,7 @@ impl convert::From<&crypto_vecs::Bytes> for self::Hexadecimal {
 
 impl crypto_vecs::ToBytes for self::Hexadecimal {
     fn to_bytes(&self) -> crypto_vecs::Bytes {
-        let hex_bytes = hex::decode(&self.hex_string).expect("Broken conversion");
+        let hex_bytes = hex::decode(&self.hex_string).expect("broken conversion");
 
         crypto_vecs::Bytes::from(hex_bytes)
     }

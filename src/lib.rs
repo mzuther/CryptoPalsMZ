@@ -171,30 +171,34 @@ fn score_letter_frequencies(bytes: &crypto_vecs::Bytes) -> f64 {
     let letter_frequencies = get_letter_frequencies(&bytes);
     let english_letter_frequencies = &constants::ENGLISH_LETTER_FREQUENCIES;
 
-    let mut total_score = 0.0;
-
     // bonus for letters matching expected frequency (lower is better)
-    for (letter, percentage_expected) in english_letter_frequencies.iter() {
-        let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
-        // higher frequencies are just as bad as lower frequencies
-        let score_diff = (percentage_expected - percentage_found).abs();
-        let score_diff = score_diff.powi(4);
+    let total_score =
+        english_letter_frequencies
+            .iter()
+            .fold(0.0, |acc, (letter, percentage_expected)| {
+                let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
 
-        total_score += score_diff;
-    }
+                // higher frequencies are just as bad as lower frequencies
+                let score_diff = (percentage_expected - percentage_found).abs();
+                let score_diff = score_diff.powi(4);
+
+                acc + score_diff
+            });
 
     // malus for non-letters
-    for (letter, percentage_found) in letter_frequencies {
-        // any character except lower-case letters
-        if letter < 0x61 || letter > 0x7a {
-            // with the exception of space, comma, and dot
-            if letter != 0x20 && letter != 0x2c && letter != 0x2e {
-                total_score += 2.0 * percentage_found;
+    english_letter_frequencies
+        .iter()
+        .fold(total_score, |mut acc, (&letter, percentage_found)| {
+            // any character except lower-case letters
+            if letter < 0x61 || letter > 0x7a {
+                // with the exception of space, comma, and dot
+                if letter != 0x20 && letter != 0x2c && letter != 0x2e {
+                    acc += 2.0 * percentage_found;
+                }
             }
-        }
-    }
 
-    total_score
+            acc
+        })
 }
 
 pub fn guess_keysize_from_hamming_distance(

@@ -107,8 +107,14 @@ impl self::Bytes {
         self.bytes.capacity()
     }
 
+    // number of bytes
     pub const fn len(&self) -> usize {
         self.bytes.len()
+    }
+
+    // number of bits
+    pub const fn len_bits(&self) -> usize {
+        self.len() * 8
     }
 
     // ----------------
@@ -491,21 +497,29 @@ mod tests {
     #[test]
     fn unit_bytes_len_single_byte() {
         let bytes = self::Bytes::from(0xd3);
+
         let expected_result = 1;
+        let expected_result_bits = expected_result * 8;
 
         let result = bytes.len();
+        let result_bits = bytes.len_bits();
 
         assert_eq!(result, expected_result);
+        assert_eq!(result_bits, expected_result_bits);
     }
 
     #[test]
     fn unit_bytes_len_several_bytes() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0x33]);
+
         let expected_result = 3;
+        let expected_result_bits = expected_result * 8;
 
         let result = bytes.len();
+        let result_bits = bytes.len_bits();
 
         assert_eq!(result, expected_result);
+        assert_eq!(result_bits, expected_result_bits);
     }
 
     #[test]

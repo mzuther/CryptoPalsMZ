@@ -272,7 +272,21 @@ impl self::Bytes {
 
     // ----------------
 
-    pub fn aes_128_ecb_encrypt_block(&self, key: &Self, block_size_bits: usize) -> Result<Self, String> {
+    pub fn aes_ecb_encrypt_block(
+        &self,
+        key: &Self,
+        block_size_bits: usize,
+    ) -> Result<Self, String> {
+        assert_eq!(block_size_bits, 128);
+
+        assert_eq!(
+            key.len_bits(),
+            block_size_bits,
+            "key has {} bits, block has {} bits, ",
+            key.len_bits(),
+            block_size_bits,
+        );
+
         let mut cipher_context = cipher_ctx::CipherCtx::new().expect("what can go wrong?");
 
         let encryptor_status = cipher_context.encrypt_init(
@@ -291,7 +305,21 @@ impl self::Bytes {
         self.process_block_symmetric_key(cipher_context, block_size_bits)
     }
 
-    pub fn aes_128_ecb_decrypt_block(&self, key: &Self, block_size_bits: usize) -> Result<Self, String> {
+    pub fn aes_ecb_decrypt_block(
+        &self,
+        key: &Self,
+        block_size_bits: usize,
+    ) -> Result<Self, String> {
+        assert_eq!(block_size_bits, 128);
+
+        assert_eq!(
+            key.len_bits(),
+            block_size_bits,
+            "key has {} bits, block has {} bits, ",
+            key.len_bits(),
+            block_size_bits,
+        );
+
         let mut cipher_context = cipher_ctx::CipherCtx::new().expect("what can go wrong?");
 
         let decryptor_status = cipher_context.decrypt_init(

@@ -321,13 +321,13 @@ impl self::BlockBytes {
     // ----------------
 
     pub fn aes_128_ecb_encrypt(&self, key: &crypto_vecs::Bytes) -> Result<Self, String> {
-        let mut cypher = self::BlockBytes::new(self.get_block_size());
+        let block_size = self.get_block_size_bits();
 
+        let mut cypher = self::BlockBytes::new_bits(block_size);
         let padded_plain = self.pad_pkcs7();
 
         for plain_block in padded_plain.iter() {
-            let cypher_block =
-                plain_block.aes_128_ecb_encrypt_block(key, self.get_block_size_bits())?;
+            let cypher_block = plain_block.aes_ecb_encrypt_block(key, block_size)?;
 
             cypher.push(cypher_block);
         }
@@ -336,10 +336,12 @@ impl self::BlockBytes {
     }
 
     pub fn aes_128_ecb_decrypt(&self, key: &crypto_vecs::Bytes) -> Result<Self, String> {
-        let mut padded_cypher = self::BlockBytes::new(self.get_block_size());
+        let block_size = self.get_block_size_bits();
+
+        let mut padded_cypher = self::BlockBytes::new_bits(block_size);
 
         for block in self.iter() {
-            let plain_block = block.aes_128_ecb_decrypt_block(key, self.get_block_size_bits())?;
+            let plain_block = block.aes_ecb_decrypt_block(key, block_size)?;
 
             padded_cypher.push(plain_block);
         }

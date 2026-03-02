@@ -74,6 +74,8 @@ impl self::BlockBytes {
         Self::new_with_lax_filling(crypto_vecs::bits_to_bytes(block_size_bits))
     }
 
+    // ----------------
+
     pub const fn get_block_size(&self) -> usize {
         self.block_size
     }
@@ -85,6 +87,8 @@ impl self::BlockBytes {
     pub const fn uses_strict_filling(&self) -> bool {
         self.strict_filling
     }
+
+    // ----------------
 
     // number of blocks
     pub fn len(&self) -> usize {
@@ -350,6 +354,79 @@ impl self::BlockBytes {
 mod tests {
     use super::*;
     use crate::{constants, crypto_vecs::ToBytes};
+
+    // ----------------
+
+    #[test]
+    fn unit_blockbytes_new_strict() {
+        let block_size = 123;
+        let block_size_bits = block_size * 8;
+
+        let result = self::BlockBytes::new(block_size);
+
+        assert_eq!(result.get_block_size(), block_size);
+        assert_eq!(result.get_block_size_bits(), block_size_bits);
+        assert_eq!(result.uses_strict_filling(), true);
+    }
+
+    #[test]
+    fn unit_blockbytes_new_lax() {
+        let block_size = 321;
+        let block_size_bits = block_size * 8;
+
+        let result = self::BlockBytes::new_with_lax_filling(block_size);
+
+        assert_eq!(result.get_block_size(), block_size);
+        assert_eq!(result.get_block_size_bits(), block_size_bits);
+        assert_eq!(result.uses_strict_filling(), false);
+    }
+
+    #[test]
+    fn unit_blockbytes_new_bits_strict() {
+        let block_size = 13;
+        let block_size_bits = block_size * 8;
+
+        let result = self::BlockBytes::new_bits(block_size_bits);
+
+        assert_eq!(result.get_block_size(), block_size);
+        assert_eq!(result.get_block_size_bits(), block_size_bits);
+        assert_eq!(result.uses_strict_filling(), true);
+    }
+
+    #[test]
+    fn unit_blockbytes_new_bits_lax() {
+        let block_size = 42;
+        let block_size_bits = block_size * 8;
+
+        let result = self::BlockBytes::new_with_lax_filling_bits(block_size_bits);
+
+        assert_eq!(result.get_block_size(), block_size);
+        assert_eq!(result.get_block_size_bits(), block_size_bits);
+        assert_eq!(result.uses_strict_filling(), false);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_blockbytes_len_single_block() {
+        let block_size = 7;
+        let result = crypto_vecs::Bytes::from_hex_literal("4162f3d3 426f12").to_blocks(block_size);
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result.len_bytes(), 7);
+        assert_eq!(result.len_bits(), 56);
+    }
+
+    #[test]
+    fn unit_blockbytes_len_two_blocks() {
+        let block_size = 6;
+        let result =
+            crypto_vecs::Bytes::from_hex_literal("4162f3d3 426f120d ff").to_blocks(block_size);
+
+        assert_eq!(result.len(), 2);
+        assert_eq!(result.len_bytes(), 9);
+        assert_eq!(result.len_bits(), 72);
+    }
 
     // ----------------
 

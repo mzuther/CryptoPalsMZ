@@ -9,15 +9,7 @@ use std::fs;
 // ----------------
 
 fn main() {
-    challenge_10();
-}
-
-fn challenge_10() {
-    let cypher_string: String = fs::read_to_string("original/10.txt").expect("could not read file");
-    let cypher = crypto_vecs::Bytes::from_base64_literal(&cypher_string);
-
-    println!("{}", cypher_string);
-    println!("{}", cypher);
+    challenge_06();
 }
 
 fn challenge_06() {

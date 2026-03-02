@@ -340,8 +340,38 @@ impl self::BlockBytes {
 
         let mut padded_cypher = self::BlockBytes::new_bits(block_size_bits);
 
-        for block in self.iter() {
-            let plain_block = block.aes_ecb_decrypt_block(key, block_size_bits)?;
+        for cypher_block in self.iter() {
+            let plain_block = cypher_block.aes_ecb_decrypt_block(key, block_size_bits)?;
+
+            padded_cypher.push(plain_block);
+        }
+
+        padded_cypher.unpad_pkcs7()
+    }
+
+    pub fn aes_cbc_decrypt(
+        &self,
+        key: &crypto_vecs::Bytes,
+        iv: &crypto_vecs::Bytes,
+    ) -> Result<Self, String> {
+        let block_size_bits = self.get_block_size_bits();
+
+        assert_eq!(
+            iv.len_bits(),
+            block_size_bits,
+            "IV has {} bits, block has {} bits, ",
+            iv.len_bits(),
+            block_size_bits,
+        );
+
+        let mut padded_cypher = self::BlockBytes::new_bits(block_size_bits);
+        let mut previous_cypher_block = iv.clone();
+
+        for cypher_block in self.iter() {
+            let plain_block_scrambled = cypher_block.aes_ecb_decrypt_block(key, block_size_bits)?;
+
+            let plain_block = plain_block_scrambled.fixed_xor(&previous_cypher_block);
+            previous_cypher_block = cypher_block.clone();
 
             padded_cypher.push(plain_block);
         }

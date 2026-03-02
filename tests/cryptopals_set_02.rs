@@ -1,5 +1,7 @@
 use cryptopals::crypto_vecs::{self, ToBytes};
 
+use std::fs;
+
 // ----------------
 
 #[test]
@@ -16,4 +18,32 @@ fn integration_challenge_09() {
     let result = padded_blocks.to_bytes();
 
     assert_eq!(result, expected_result);
+}
+
+#[test]
+fn integration_challenge_10() {
+    let block_size_bits = 128;
+
+    let cypher_string: String = fs::read_to_string("original/10.txt").expect("could not read file");
+
+    let cypher = crypto_vecs::Bytes::from_base64_literal(&cypher_string);
+    let cypher_blocks = cypher.to_blocks_bits(block_size_bits);
+    let key = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE");
+    let initialization_vector = crypto_vecs::Bytes::from(vec![0x00; 16]);
+
+    let plain_blocks = cypher_blocks
+        .aes_cbc_decrypt(&key, &initialization_vector)
+        .unwrap();
+    let plain = plain_blocks.to_bytes();
+
+    let expected_result_start =
+        crypto_vecs::Bytes::from_unicode_literal("I'm back and I'm ringin' the bell");
+    let result_start = plain.first_n(33).unwrap();
+
+    assert_eq!(result_start, expected_result_start);
+
+    let expected_result_end = crypto_vecs::Bytes::from_unicode_literal("Play that funky music \n");
+    let result_end = plain.last_n(23).unwrap();
+
+    assert_eq!(result_end, expected_result_end);
 }

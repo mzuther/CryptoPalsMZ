@@ -44,10 +44,9 @@ pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<ScoreXOR> {
 }
 
 fn get_letter_frequencies(bytes: &crypto_vecs::Bytes) -> HashMap<u8, f64> {
-    let mut letter_frequencies = HashMap::new();
     let percent_per_byte = 1.0 / (bytes.len() as f64);
 
-    for &byte in bytes.iter() {
+    bytes.iter().fold(HashMap::new(), |mut acc, &byte| {
         let mut key = byte;
 
         // space
@@ -65,11 +64,11 @@ fn get_letter_frequencies(bytes: &crypto_vecs::Bytes) -> HashMap<u8, f64> {
             key = 0x2a;
         }
 
-        let count = letter_frequencies.entry(key).or_insert(0.0);
+        let count = acc.entry(key).or_insert(0.0);
         *count += percent_per_byte;
-    }
 
-    letter_frequencies
+        acc
+    })
 }
 
 pub fn print_histogram(
@@ -112,46 +111,49 @@ pub fn print_histogram(
     }
 
     println!("{}", key.to_string());
+    let english_letter_frequencies = &constants::ENGLISH_LETTER_FREQUENCIES;
     let max_bin_size = (magnification_factor * y_max) as i32;
 
-    let english_letter_frequencies = &constants::ENGLISH_LETTER_FREQUENCIES;
-    let mut bins = Vec::with_capacity(english_letter_frequencies.len());
+    let mut bins = english_letter_frequencies.iter().fold(
+        Vec::with_capacity(english_letter_frequencies.len()),
+        |mut acc, (letter, percentage_expected)| {
+            let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
+            let mut letter = *letter;
 
-    for (letter, percentage_expected) in english_letter_frequencies.iter() {
-        let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
-        let mut letter = *letter;
+            let value_found = cmp::min(
+                (percentage_found * magnification_factor).round() as i32,
+                max_bin_size,
+            );
+            let value_expected = (percentage_expected * magnification_factor).round() as i32;
 
-        let value_found = cmp::min(
-            (percentage_found * magnification_factor).round() as i32,
-            max_bin_size,
-        );
-        let value_expected = (percentage_expected * magnification_factor).round() as i32;
+            let bin_bottom = cmp::min(value_found, value_expected);
+            let bin_middle = cmp::max(value_expected - value_found, 0);
+            let bin_top = cmp::min(cmp::max(value_found - value_expected, 0), max_bin_size);
+            let bin_fill_to_border = max_bin_size - cmp::max(value_found, value_expected);
 
-        let bin_bottom = cmp::min(value_found, value_expected);
-        let bin_middle = cmp::max(value_expected - value_found, 0);
-        let bin_top = cmp::min(cmp::max(value_found - value_expected, 0), max_bin_size);
-        let bin_fill_to_border = max_bin_size - cmp::max(value_found, value_expected);
+            if letter == (' ' as u8) {
+                letter = '_' as u8;
+            }
 
-        if letter == (' ' as u8) {
-            letter = '_' as u8;
-        }
+            let bin = format!(
+                "{} {}{}{}{}",
+                letter as char,
+                "█".repeat(bin_bottom as usize),
+                "░".repeat(bin_middle as usize),
+                "🮮".repeat(bin_top as usize),
+                " ".repeat(bin_fill_to_border as usize)
+            );
 
-        let bin = format!(
-            "{} {}{}{}{}",
-            letter as char,
-            "█".repeat(bin_bottom as usize),
-            "░".repeat(bin_middle as usize),
-            "🮮".repeat(bin_top as usize),
-            " ".repeat(bin_fill_to_border as usize)
-        );
+            acc.push(bin);
 
-        bins.push(bin);
+            if rotate_histogram {
+                let filler = " ".repeat((max_bin_size + 2) as usize);
+                acc.push(filler);
+            }
 
-        if rotate_histogram {
-            let filler = " ".repeat((max_bin_size + 2) as usize);
-            bins.push(filler);
-        }
-    }
+            acc
+        },
+    );
 
     if rotate_histogram {
         bins = self::transpose_strings_counterclockwise(&bins);

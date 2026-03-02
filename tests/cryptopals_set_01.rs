@@ -75,25 +75,29 @@ fn integration_challenge_04() {
     let expected_result =
         crypto_vecs::Bytes::from_unicode_literal("Now that the party is jumping\n");
 
-    let mut best_score = cryptopals::ScoreXOR {
+    let initial_score = cryptopals::ScoreXOR {
         score: 1000.0,
-        key: crypto_vecs::Bytes::from(0xff),
+        key: crypto_vecs::Bytes::new(),
         plain_text: crypto_vecs::Bytes::new(),
     };
 
-    for string_hex in all_strings_hex.lines() {
-        let cypher = crypto_vecs::Bytes::from_hex_literal(string_hex);
-        let mut scores = cryptopals::find_lowest_score_xor(&cypher);
+    let best_score = all_strings_hex
+        .lines()
+        .fold(initial_score, |best_score, string_hex| {
+            let cypher = crypto_vecs::Bytes::from_hex_literal(string_hex);
+            let mut scores = cryptopals::find_lowest_score_xor(&cypher);
 
-        // sort by score, resulting in highest score first (to get lowest score with "pop()")
-        scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
+            // sort by score, resulting in highest score first (to get lowest score with "pop()")
+            scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
 
-        let score = scores.pop().expect("there should always be one element");
+            let current_score = scores.pop().expect("there should always be one element");
 
-        if score.score < best_score.score {
-            best_score = score;
-        }
-    }
+            if current_score < best_score {
+                current_score
+            } else {
+                best_score
+            }
+        });
 
     let result = best_score.plain_text;
 

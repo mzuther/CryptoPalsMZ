@@ -1,6 +1,6 @@
 use crate::crypto_vecs;
 
-use std::{fmt, slice};
+use std::{fmt, iter, slice};
 
 // ----------------
 
@@ -365,13 +365,13 @@ impl self::BlockBytes {
         );
 
         let mut padded_cypher = self::BlockBytes::new_bits(block_size_bits);
-        let mut previous_cypher_block = iv.clone();
 
-        for cypher_block in self.iter() {
-            let plain_block_scrambled = cypher_block.aes_ecb_decrypt_block(key, block_size_bits)?;
+        let cypher_iter = self.iter();
+        let previous_cypher_iter = iter::once(iv).chain(cypher_iter.clone());
 
-            let plain_block = plain_block_scrambled.fixed_xor(&previous_cypher_block);
-            previous_cypher_block = cypher_block.clone();
+        for (cypher_block, previous_cypher_block) in cypher_iter.zip(previous_cypher_iter) {
+            let plain_block_xor = cypher_block.aes_ecb_decrypt_block(key, block_size_bits)?;
+            let plain_block = plain_block_xor.fixed_xor(previous_cypher_block);
 
             padded_cypher.push(plain_block);
         }
@@ -842,12 +842,6 @@ mod tests {
         ).to_blocks_bits(block_size_bits);
         let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
 
-        // echo -n "Mary had a little lamb whose fleece was white as snow..." | \
-        // openssl enc \
-        //     -aes-128-ecb \
-        //     -nosalt \
-        //     -K "4c6974746c6520546573742031323334" \
-        //     -out cypher.hex
         let expected_result = crypto_vecs::Bytes::from_hex_literal(
             "3a1b7e49 d4cbd0aa 25f266db b8fe166e
                  06556a04 f1ba7f64 991d619d e146b609

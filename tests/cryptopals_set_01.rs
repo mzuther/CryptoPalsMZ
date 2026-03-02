@@ -1,4 +1,3 @@
-use cryptopals::constants;
 use cryptopals::crypto_vecs::{self, ToBytes};
 
 use std::{collections::HashMap, fs};
@@ -164,13 +163,14 @@ fn integration_challenge_06() {
 
 #[test]
 fn integration_challenge_07() {
+    let block_size_bits = 128;
     let cypher_string: String = fs::read_to_string("original/7.txt").expect("could not read file");
 
     let cypher = crypto_vecs::Bytes::from_base64_literal(&cypher_string);
-    let cypher_blocks = cypher.to_blocks(constants::AES_128_BYTES_IN_KEY);
+    let cypher_blocks = cypher.to_blocks_bits(block_size_bits);
     let key = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE");
 
-    let plain_blocks = cypher_blocks.aes_128_ecb_decrypt(&key).unwrap();
+    let plain_blocks = cypher_blocks.aes_ecb_decrypt(&key).unwrap();
     let plain = plain_blocks.to_bytes();
 
     let expected_result_start =
@@ -190,8 +190,8 @@ fn integration_challenge_08() {
     let all_strings_hex: String =
         fs::read_to_string("original/8.txt").expect("could not read file");
 
-    let block_size = constants::AES_128_BYTES_IN_KEY;
-    let mut expected_duplicates = crypto_vecs::BlockBytes::new(block_size);
+    let block_size_bits = 128;
+    let mut expected_duplicates = crypto_vecs::BlockBytes::new_bits(block_size_bits);
 
     let duplicate_block = crypto_vecs::Bytes::from_hex_literal("08649af70dc06f4fd5d2d69c744cd283");
     expected_duplicates.push(duplicate_block.clone());
@@ -205,7 +205,7 @@ fn integration_challenge_08() {
         HashMap::new(),
         |mut cyphers_with_duplicates: HashMap<usize, _>, (index, string_hex)| {
             let cypher = crypto_vecs::Bytes::from_hex_literal(string_hex);
-            let cypher_blocks = cypher.to_blocks(block_size);
+            let cypher_blocks = cypher.to_blocks_bits(block_size_bits);
 
             let duplicate_blocks = cypher_blocks.find_duplicate_blocks();
 

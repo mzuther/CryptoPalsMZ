@@ -2,8 +2,6 @@ use indexmap;
 
 // ----------------
 
-pub const AES_128_BYTES_IN_KEY: usize = 16;
-
 const ENGLISH_LETTER_FREQUENCIES: [(char, f64); 28] = [
     // https://web.archive.org/web/20170918020907/http://www.data-compression.com/english.html
     (' ', 0.200),

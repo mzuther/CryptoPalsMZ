@@ -320,14 +320,14 @@ impl self::BlockBytes {
 
     // ----------------
 
-    pub fn aes_128_ecb_encrypt(&self, key: &crypto_vecs::Bytes) -> Result<Self, String> {
-        let block_size = self.get_block_size_bits();
+    pub fn aes_ecb_encrypt(&self, key: &crypto_vecs::Bytes) -> Result<Self, String> {
+        let block_size_bits = self.get_block_size_bits();
 
-        let mut cypher = self::BlockBytes::new_bits(block_size);
+        let mut cypher = self::BlockBytes::new_bits(block_size_bits);
         let padded_plain = self.pad_pkcs7();
 
         for plain_block in padded_plain.iter() {
-            let cypher_block = plain_block.aes_ecb_encrypt_block(key, block_size)?;
+            let cypher_block = plain_block.aes_ecb_encrypt_block(key, block_size_bits)?;
 
             cypher.push(cypher_block);
         }
@@ -335,13 +335,13 @@ impl self::BlockBytes {
         Ok(cypher)
     }
 
-    pub fn aes_128_ecb_decrypt(&self, key: &crypto_vecs::Bytes) -> Result<Self, String> {
-        let block_size = self.get_block_size_bits();
+    pub fn aes_ecb_decrypt(&self, key: &crypto_vecs::Bytes) -> Result<Self, String> {
+        let block_size_bits = self.get_block_size_bits();
 
-        let mut padded_cypher = self::BlockBytes::new_bits(block_size);
+        let mut padded_cypher = self::BlockBytes::new_bits(block_size_bits);
 
         for block in self.iter() {
-            let plain_block = block.aes_ecb_decrypt_block(key, block_size)?;
+            let plain_block = block.aes_ecb_decrypt_block(key, block_size_bits)?;
 
             padded_cypher.push(plain_block);
         }
@@ -355,7 +355,7 @@ impl self::BlockBytes {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{constants, crypto_vecs::ToBytes};
+    use crate::crypto_vecs::ToBytes;
 
     // ----------------
 
@@ -770,12 +770,12 @@ mod tests {
 
     #[test]
     fn unit_blockbytes_aes_128_ecb_encrypt_unpadded() {
-        let block_size = 128;
+        let block_size_bits = 128;
 
         let plain = crypto_vecs::Bytes::from_unicode_literal(
             "Mary had a little lamb whose fleece was white as snow.",
         )
-        .to_blocks(constants::AES_128_BYTES_IN_KEY);
+        .to_blocks_bits(block_size_bits);
         let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
 
         // echo -n "Mary had a little lamb whose fleece was white as snow..." | \
@@ -790,26 +790,26 @@ mod tests {
                  6298d2f8 ef0fceb7 969e88b0 569eb873
                  adc5da56 80f7ecb3 ebbb2030 6b4af841",
         )
-        .to_blocks(constants::AES_128_BYTES_IN_KEY);
+        .to_blocks_bits(block_size_bits);
 
-        let result = plain.aes_128_ecb_encrypt(&key).unwrap();
+        let result = plain.aes_ecb_encrypt(&key).unwrap();
 
         assert_eq!(result, expected_result);
 
         // padding is needed
-        assert_ne!(plain.len_bits() % block_size, 0);
+        assert_ne!(plain.len_bits() % block_size_bits, 0);
 
         // padding was added
-        assert_eq!(result.len_bits() % block_size, 0);
+        assert_eq!(result.len_bits() % block_size_bits, 0);
     }
 
     #[test]
     fn unit_blockbytes_aes_128_ecb_encrypt_padded() {
-        let block_size = 128;
+        let block_size_bits = 128;
 
         let plain = crypto_vecs::Bytes::from_unicode_literal(
             "Mary had a little lamb whose fleece was white as snow.\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a",
-        ).to_blocks(constants::AES_128_BYTES_IN_KEY);
+        ).to_blocks_bits(block_size_bits);
         let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
 
         // echo -n "Mary had a little lamb whose fleece was white as snow..." | \
@@ -824,35 +824,37 @@ mod tests {
                  6298d2f8 ef0fceb7 969e88b0 569eb873
                  adc5da56 80f7ecb3 ebbb2030 6b4af841",
         )
-        .to_blocks(constants::AES_128_BYTES_IN_KEY);
+        .to_blocks_bits(128);
 
-        let result = plain.aes_128_ecb_encrypt(&key).unwrap();
+        let result = plain.aes_ecb_encrypt(&key).unwrap();
 
         assert_eq!(result, expected_result);
 
         // padding not needed
-        assert_eq!(plain.len_bits() % block_size, 0);
+        assert_eq!(plain.len_bits() % block_size_bits, 0);
 
         // padding was added
-        assert_eq!(result.len_bits() % block_size, 0);
+        assert_eq!(result.len_bits() % block_size_bits, 0);
     }
 
     #[test]
     fn unit_blockbytes_aes_128_ecb_decrypt() {
+        let block_size_bits = 128;
+
         let cypher = crypto_vecs::Bytes::from_hex_literal(
             "3a1b7e49 d4cbd0aa 25f266db b8fe166e
                  06556a04 f1ba7f64 991d619d e146b609
                  6298d2f8 ef0fceb7 969e88b0 569eb873
                  adc5da56 80f7ecb3 ebbb2030 6b4af841",
         )
-        .to_blocks(constants::AES_128_BYTES_IN_KEY);
+        .to_blocks_bits(block_size_bits);
         let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
 
         let expected_result = crypto_vecs::Bytes::from_unicode_literal(
             "Mary had a little lamb whose fleece was white as snow.",
         );
 
-        let result = cypher.aes_128_ecb_decrypt(&key).unwrap().to_bytes();
+        let result = cypher.aes_ecb_decrypt(&key).unwrap().to_bytes();
 
         assert_eq!(result, expected_result);
     }

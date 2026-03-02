@@ -114,11 +114,12 @@ pub fn print_histogram(
     println!("{}", key.to_string());
     let max_bin_size = (magnification_factor * y_max) as i32;
 
-    let english_letter_frequencies = constants::get_english_letter_frequencies();
+    let english_letter_frequencies = &constants::ENGLISH_LETTER_FREQUENCIES;
     let mut bins = Vec::with_capacity(english_letter_frequencies.len());
 
-    for (mut letter, percentage_expected) in english_letter_frequencies {
+    for (letter, percentage_expected) in english_letter_frequencies.iter() {
         let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
+        let mut letter = *letter;
 
         let value_found = cmp::min(
             (percentage_found * magnification_factor).round() as i32,
@@ -166,12 +167,12 @@ pub fn print_histogram(
 
 fn score_letter_frequencies(bytes: &crypto_vecs::Bytes) -> f64 {
     let letter_frequencies = get_letter_frequencies(&bytes);
-    let english_letter_frequencies = constants::get_english_letter_frequencies();
+    let english_letter_frequencies = &constants::ENGLISH_LETTER_FREQUENCIES;
 
     let mut total_score = 0.0;
 
     // bonus for letters matching expected frequency (lower is better)
-    for (letter, percentage_expected) in english_letter_frequencies {
+    for (letter, percentage_expected) in english_letter_frequencies.iter() {
         let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
         // higher frequencies are just as bad as lower frequencies
         let score_diff = (percentage_expected - percentage_found).abs();

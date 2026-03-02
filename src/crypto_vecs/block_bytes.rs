@@ -349,6 +349,38 @@ impl self::BlockBytes {
         padded_cypher.unpad_pkcs7()
     }
 
+    pub fn aes_cbc_encrypt(
+        &self,
+        key: &crypto_vecs::Bytes,
+        iv: &crypto_vecs::Bytes,
+    ) -> Result<Self, String> {
+        let block_size_bits = self.get_block_size_bits();
+
+        assert_eq!(
+            iv.len_bits(),
+            block_size_bits,
+            "IV has {} bits, block has {} bits, ",
+            iv.len_bits(),
+            block_size_bits,
+        );
+
+        let padded_plain = self.pad_pkcs7();
+
+        let mut cypher = self::BlockBytes::new_bits(block_size_bits);
+        let mut previous_cypher = iv.clone();
+
+        for plain_block in padded_plain.iter() {
+            let plain_block_xor = plain_block.fixed_xor(&previous_cypher);
+
+            let cypher_block = plain_block_xor.aes_ecb_encrypt_block(key, block_size_bits)?;
+            previous_cypher = cypher_block.clone();
+
+            cypher.push(cypher_block);
+        }
+
+        Ok(cypher)
+    }
+
     pub fn aes_cbc_decrypt(
         &self,
         key: &crypto_vecs::Bytes,
@@ -808,7 +840,7 @@ mod tests {
         .to_blocks_bits(block_size_bits);
         let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
 
-        // echo -n "Mary had a little lamb whose fleece was white as snow..." | \
+        // echo -n "Mary had a little lamb whose fleece was white as snow." | \
         // openssl enc \
         //     -aes-128-ecb \
         //     -nosalt \
@@ -879,6 +911,96 @@ mod tests {
         );
 
         let result = cypher.aes_ecb_decrypt(&key).unwrap().to_bytes();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_blockbytes_aes_128_cbc_encrypt_unpadded() {
+        let block_size_bits = 128;
+
+        let plain = crypto_vecs::Bytes::from_unicode_literal(
+            "Mary had a little lamb whose fleece was white as snow.",
+        )
+        .to_blocks_bits(block_size_bits);
+        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
+        let iv = crypto_vecs::Bytes::from_hex_literal("0fcd542b efac4a80 0a1cbf2e 87ccabfe");
+
+        // echo -n "Mary had a little lamb whose fleece was white as snow." | \
+        // openssl enc \
+        //     -aes-128-cbc \
+        //     -nosalt \
+        //     -K "4c6974746c6520546573742031323334" \
+        //     -iv "0fcd542befac4a800a1cbf2e87ccabfe" \
+        //     -out cypher.hex
+        let expected_result = crypto_vecs::Bytes::from_hex_literal(
+            "0a893579 c5a2475b bbb0df78 fb26026c
+                 e787e9bd 050f3af2 f43df9cf 3b864a23
+                 100ed7dc 1d39c623 5ae5aba4 0a515932
+                 128e050c 80c74856 e0aa6510 3f7811d2",
+        )
+        .to_blocks_bits(block_size_bits);
+
+        let result = plain.aes_cbc_encrypt(&key, &iv).unwrap();
+
+        assert_eq!(result, expected_result);
+
+        // padding is needed
+        assert_ne!(plain.len_bits() % block_size_bits, 0);
+
+        // padding was added
+        assert_eq!(result.len_bits() % block_size_bits, 0);
+    }
+
+    #[test]
+    fn unit_blockbytes_aes_128_cbc_encrypt_padded() {
+        let block_size_bits = 128;
+
+        let plain = crypto_vecs::Bytes::from_unicode_literal(
+            "Mary had a little lamb whose fleece was white as snow.\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a",
+        ).to_blocks_bits(block_size_bits);
+        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
+        let iv = crypto_vecs::Bytes::from_hex_literal("0fcd542b efac4a80 0a1cbf2e 87ccabfe");
+
+        let expected_result = crypto_vecs::Bytes::from_hex_literal(
+            "0a893579 c5a2475b bbb0df78 fb26026c
+                 e787e9bd 050f3af2 f43df9cf 3b864a23
+                 100ed7dc 1d39c623 5ae5aba4 0a515932
+                 128e050c 80c74856 e0aa6510 3f7811d2",
+        )
+        .to_blocks_bits(128);
+
+        let result = plain.aes_cbc_encrypt(&key, &iv).unwrap();
+
+        assert_eq!(result, expected_result);
+
+        // padding not needed
+        assert_eq!(plain.len_bits() % block_size_bits, 0);
+
+        // padding was added
+        assert_eq!(result.len_bits() % block_size_bits, 0);
+    }
+
+    #[test]
+    fn unit_blockbytes_aes_128_cbc_decrypt() {
+        let block_size_bits = 128;
+
+        let cypher = crypto_vecs::Bytes::from_hex_literal(
+            "0a893579 c5a2475b bbb0df78 fb26026c
+                 e787e9bd 050f3af2 f43df9cf 3b864a23
+                 100ed7dc 1d39c623 5ae5aba4 0a515932
+                 128e050c 80c74856 e0aa6510 3f7811d2",
+        )
+        .to_blocks_bits(block_size_bits);
+        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
+        let iv = crypto_vecs::Bytes::from_hex_literal("0fcd542b efac4a80 0a1cbf2e 87ccabfe");
+
+        let expected_result = crypto_vecs::Bytes::from_unicode_literal(
+            "Mary had a little lamb whose fleece was white as snow.",
+        );
+
+        let result = cypher.aes_cbc_decrypt(&key, &iv).unwrap().to_bytes();
+        println!("|{}|", result.to_unicode());
 
         assert_eq!(result, expected_result);
     }

@@ -371,30 +371,19 @@ impl self::Bytes {
 
     pub fn transpose(&self, number_of_blocks: usize) -> crypto_vecs::BlockBytes {
         assert!(number_of_blocks > 0);
-        assert!(self.len() > 0);
 
-        // performance: handle special case
-        //
-        // may come in useful when automatically processing single-byte keys
-        if number_of_blocks == 1 {
-            let mut transposed_blocks = crypto_vecs::BlockBytes::new_with_lax_filling(self.len());
+        let block_size = self.len().div_ceil(number_of_blocks);
+        let mut transposed_blocks = vec![Self::with_capacity(block_size); number_of_blocks];
 
-            transposed_blocks.push(self.clone());
-            return transposed_blocks;
-        }
+        transposed_blocks =
+            self.iter()
+                .enumerate()
+                .fold(transposed_blocks, |mut acc, (index, byte)| {
+                    let block_index = index % number_of_blocks;
 
-        let block_capacity = (self.len() / number_of_blocks) + 1;
-        let mut transposed_blocks = vec![Self::with_capacity(block_capacity); number_of_blocks];
-
-        for (index, &byte) in self.iter().enumerate() {
-            let block_index = index % number_of_blocks;
-            transposed_blocks[block_index].push(byte);
-        }
-
-        let first_block = transposed_blocks
-            .get(0)
-            .expect("number of elements is non-zero");
-        let block_size = first_block.len();
+                    acc[block_index].push(*byte);
+                    acc
+                });
 
         transposed_blocks.iter().fold(
             crypto_vecs::BlockBytes::new_with_lax_filling(block_size),

@@ -1,6 +1,6 @@
 use crate::crypto_vecs;
 
-use std::{fmt, iter, slice};
+use std::{convert, fmt, iter, slice, vec};
 
 // ----------------
 
@@ -32,6 +32,22 @@ impl fmt::Display for self::BlockBytes {
 impl fmt::Debug for self::BlockBytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.to_string(),)
+    }
+}
+
+// uses lax filling to maximize usefulness
+impl convert::From<Vec<crypto_vecs::Bytes>> for self::BlockBytes {
+    fn from(blocks: Vec<crypto_vecs::Bytes>) -> Self {
+        assert!(!blocks.is_empty());
+
+        let block_sizes = blocks.iter().map(|block| block.len());
+        let max_block_size = block_sizes.max().unwrap();
+
+        Self {
+            blocks: blocks,
+            block_size: max_block_size,
+            strict_filling: false,
+        }
     }
 }
 
@@ -270,6 +286,8 @@ impl self::BlockBytes {
     }
 
     pub fn is_padded_pkcs7(&self) -> Result<usize, usize> {
+        assert!(self.uses_strict_filling());
+
         match self.is_padded_pkcs7_internal() {
             Ok(padding_length) => Ok(padding_length),
             Err(number_of_missing_bytes) => {
@@ -321,6 +339,8 @@ impl self::BlockBytes {
     // ----------------
 
     pub fn aes_ecb_encrypt(&self, key: &crypto_vecs::Bytes) -> Result<Self, String> {
+        assert!(self.uses_strict_filling());
+
         let block_size_bits = self.get_block_size_bits();
 
         let mut cypher = self::BlockBytes::new_bits(block_size_bits);
@@ -336,6 +356,8 @@ impl self::BlockBytes {
     }
 
     pub fn aes_ecb_decrypt(&self, key: &crypto_vecs::Bytes) -> Result<Self, String> {
+        assert!(self.uses_strict_filling());
+
         let block_size_bits = self.get_block_size_bits();
 
         let mut padded_cypher = self::BlockBytes::new_bits(block_size_bits);
@@ -354,6 +376,8 @@ impl self::BlockBytes {
         key: &crypto_vecs::Bytes,
         iv: &crypto_vecs::Bytes,
     ) -> Result<Self, String> {
+        assert!(self.uses_strict_filling());
+
         let block_size_bits = self.get_block_size_bits();
 
         assert_eq!(
@@ -386,6 +410,8 @@ impl self::BlockBytes {
         key: &crypto_vecs::Bytes,
         iv: &crypto_vecs::Bytes,
     ) -> Result<Self, String> {
+        assert!(self.uses_strict_filling());
+
         let block_size_bits = self.get_block_size_bits();
 
         assert_eq!(

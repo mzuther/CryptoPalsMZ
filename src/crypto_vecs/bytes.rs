@@ -385,13 +385,7 @@ impl self::Bytes {
                     acc
                 });
 
-        transposed_blocks.iter().fold(
-            crypto_vecs::BlockBytes::new_with_lax_filling(block_size),
-            |mut acc, block| {
-                acc.push(block.clone());
-                acc
-            },
-        )
+        crypto_vecs::BlockBytes::from(transposed_blocks)
     }
 }
 

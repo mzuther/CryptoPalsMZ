@@ -114,6 +114,8 @@ mod tests {
     use super::*;
     use crate::crypto_vecs::ToBytes;
 
+    // ----------------
+
     #[test]
     fn unit_hexadecimal_from_bytes() {
         let bytes = crypto_vecs::Bytes::from(vec![0x3b, 0x44, 0x2c, 0x4e, 0xcc, 0x0f]);

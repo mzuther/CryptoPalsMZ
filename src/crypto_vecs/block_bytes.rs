@@ -56,6 +56,10 @@ impl self::BlockBytes {
         }
     }
 
+    pub fn new_bits(block_size_bits: usize) -> Self {
+        Self::new(crypto_vecs::bits_to_bytes(block_size_bits))
+    }
+
     pub fn new_with_lax_filling(block_size: usize) -> Self {
         assert!(block_size > 0);
 
@@ -66,8 +70,16 @@ impl self::BlockBytes {
         }
     }
 
+    pub fn new_with_lax_filling_bits(block_size_bits: usize) -> Self {
+        Self::new_with_lax_filling(crypto_vecs::bits_to_bytes(block_size_bits))
+    }
+
     pub const fn get_block_size(&self) -> usize {
         self.block_size
+    }
+
+    pub const fn get_block_size_bits(&self) -> usize {
+        self.get_block_size() * 8
     }
 
     pub const fn uses_strict_filling(&self) -> bool {
@@ -117,6 +129,10 @@ impl self::BlockBytes {
         self.get_last_block().len()
     }
 
+    pub fn get_last_block_size_bits(&self) -> usize {
+        self.get_last_block_size() * 8
+    }
+
     // ----------------
 
     pub fn push(&mut self, block: crypto_vecs::Bytes) {
@@ -142,7 +158,7 @@ impl self::BlockBytes {
         self.blocks.push(block);
     }
 
-    fn pop(&mut self) -> Option<crypto_vecs::Bytes> {
+    pub fn pop(&mut self) -> Option<crypto_vecs::Bytes> {
         self.blocks.pop()
     }
 
@@ -306,7 +322,8 @@ impl self::BlockBytes {
         let padded_plain = self.pad_pkcs7();
 
         for plain_block in padded_plain.iter() {
-            let cypher_block = plain_block.aes_128_ecb_encrypt_block(key, self.get_block_size())?;
+            let cypher_block =
+                plain_block.aes_128_ecb_encrypt_block(key, self.get_block_size_bits())?;
 
             cypher.push(cypher_block);
         }
@@ -318,7 +335,7 @@ impl self::BlockBytes {
         let mut padded_cypher = self::BlockBytes::new(self.get_block_size());
 
         for block in self.iter() {
-            let plain_block = block.aes_128_ecb_decrypt_block(key, self.get_block_size())?;
+            let plain_block = block.aes_128_ecb_decrypt_block(key, self.get_block_size_bits())?;
 
             padded_cypher.push(plain_block);
         }
@@ -332,11 +349,12 @@ impl self::BlockBytes {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use crate::{constants, crypto_vecs::ToBytes};
 
+    // ----------------
+
     #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_1() {
+    fn unit_blockbytes_find_duplicate_blocks_blocksize_1() {
         let block_size = 1;
 
         let bytes = crypto_vecs::Bytes::from_hex_literal(
@@ -355,7 +373,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_2() {
+    fn unit_blockbytes_find_duplicate_blocks_blocksize_2() {
         let block_size = 2;
 
         let bytes = crypto_vecs::Bytes::from_hex_literal(
@@ -374,7 +392,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_3() {
+    fn unit_blockbytes_find_duplicate_blocks_blocksize_3() {
         let block_size = 3;
 
         let bytes = crypto_vecs::Bytes::from_hex_literal(
@@ -390,7 +408,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_4() {
+    fn unit_blockbytes_find_duplicate_blocks_blocksize_4() {
         let block_size = 4;
 
         let bytes = crypto_vecs::Bytes::from_hex_literal(
@@ -408,7 +426,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_4_dangling_end() {
+    fn unit_blockbytes_find_duplicate_blocks_blocksize_4_dangling_end() {
         let block_size = 4;
 
         let bytes =
@@ -425,7 +443,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_find_duplicate_blocks_blocksize_8() {
+    fn unit_blockbytes_find_duplicate_blocks_blocksize_8() {
         let block_size = 8;
 
         let bytes = crypto_vecs::Bytes::from_hex_literal(
@@ -443,7 +461,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_bytes_is_padded_pkcs7_single_block_incomplete() {
+    fn unit_blockbytes_is_padded_pkcs7_single_block_incomplete() {
         let block_size = 4;
         let blocks = crypto_vecs::Bytes::from_hex_literal("db25f2").to_blocks(block_size);
 
@@ -455,7 +473,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_is_padded_pkcs7_single_block_unpadded() {
+    fn unit_blockbytes_is_padded_pkcs7_single_block_unpadded() {
         let block_size = 4;
         let bytes = crypto_vecs::Bytes::from_hex_literal("db25f266").to_blocks(block_size);
 
@@ -467,7 +485,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_is_padded_pkcs7_single_block_correctly_padded() {
+    fn unit_blockbytes_is_padded_pkcs7_single_block_correctly_padded() {
         let block_size = 4;
         let bytes = crypto_vecs::Bytes::from_hex_literal("db250202").to_blocks(block_size);
 
@@ -479,7 +497,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_is_padded_pkcs7_single_block_incorrectly_padded() {
+    fn unit_blockbytes_is_padded_pkcs7_single_block_incorrectly_padded() {
         let block_size = 4;
         let bytes = crypto_vecs::Bytes::from_hex_literal("db25ff02").to_blocks(block_size);
 
@@ -491,7 +509,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_is_padded_pkcs7_two_blocks_incomplete() {
+    fn unit_blockbytes_is_padded_pkcs7_two_blocks_incomplete() {
         let block_size = 4;
         let bytes = crypto_vecs::Bytes::from_hex_literal("3a1b7e49 db").to_blocks(block_size);
 
@@ -503,7 +521,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_pad_pkcs7_single_block() {
+    fn unit_blockbytes_pad_pkcs7_single_block() {
         let block_size = 20;
         let unpadded =
             crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
@@ -517,7 +535,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_pad_pkcs7_two_blocks() {
+    fn unit_blockbytes_pad_pkcs7_two_blocks() {
         let block_size = 6;
         let unpadded =
             crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
@@ -530,7 +548,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_pad_pkcs7_full_block_unpadded() {
+    fn unit_blockbytes_pad_pkcs7_full_block_unpadded() {
         let block_size = 8;
         let unpadded =
             crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
@@ -545,7 +563,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_pad_pkcs7_full_block_correctly_padded() {
+    fn unit_blockbytes_pad_pkcs7_full_block_correctly_padded() {
         let block_size = 8;
         let unpadded =
             crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01").to_blocks(block_size);
@@ -558,7 +576,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_pad_pkcs7_full_block_incorrectly_padded() {
+    fn unit_blockbytes_pad_pkcs7_full_block_incorrectly_padded() {
         let block_size = 8;
         let unpadded = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARI\x01\x02")
             .to_blocks(block_size);
@@ -573,7 +591,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_unpad_pkcs7_single_block_four_bytes() {
+    fn unit_blockbytes_unpad_pkcs7_single_block_four_bytes() {
         let block_size = 20;
         let padded = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04")
             .to_blocks(block_size);
@@ -587,7 +605,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_unpad_pkcs7_two_blocks_single_byte() {
+    fn unit_blockbytes_unpad_pkcs7_two_blocks_single_byte() {
         let block_size = 8;
         let padded =
             crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01").to_blocks(block_size);
@@ -601,7 +619,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_unpad_pkcs7_two_blocks_padded_two_bytes() {
+    fn unit_blockbytes_unpad_pkcs7_two_blocks_padded_two_bytes() {
         let block_size = 6;
         let padded = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02")
             .to_blocks(block_size);
@@ -615,7 +633,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_unpad_pkcs7_full_block_padding() {
+    fn unit_blockbytes_unpad_pkcs7_full_block_padding() {
         let block_size = 8;
         let padded = crypto_vecs::Bytes::from_unicode_literal(
             "YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08",
@@ -631,7 +649,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_unpad_pkcs7_no_padding() {
+    fn unit_blockbytes_unpad_pkcs7_no_padding() {
         let block_size = 8;
         let padded =
             crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
@@ -644,7 +662,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_unpad_pkcs7_incorrect_padding_wrong_byte() {
+    fn unit_blockbytes_unpad_pkcs7_incorrect_padding_wrong_byte() {
         let block_size = 8;
         let padded = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARI\x01\x02")
             .to_blocks(block_size);
@@ -657,7 +675,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_unpad_pkcs7_incorrect_padding_overhanging_bytes() {
+    fn unit_blockbytes_unpad_pkcs7_incorrect_padding_overhanging_bytes() {
         let block_size = 8;
         let padded = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02")
             .to_blocks(block_size);
@@ -672,7 +690,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_bytes_aes_128_ecb_encrypt_unpadded() {
+    fn unit_blockbytes_aes_128_ecb_encrypt_unpadded() {
         let block_size = 128;
 
         let plain = crypto_vecs::Bytes::from_unicode_literal(
@@ -707,7 +725,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_aes_128_ecb_encrypt_padded() {
+    fn unit_blockbytes_aes_128_ecb_encrypt_padded() {
         let block_size = 128;
 
         let plain = crypto_vecs::Bytes::from_unicode_literal(
@@ -741,7 +759,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_aes_128_ecb_decrypt() {
+    fn unit_blockbytes_aes_128_ecb_decrypt() {
         let cypher = crypto_vecs::Bytes::from_hex_literal(
             "3a1b7e49 d4cbd0aa 25f266db b8fe166e
                  06556a04 f1ba7f64 991d619d e146b609

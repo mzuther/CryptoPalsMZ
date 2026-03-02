@@ -284,6 +284,8 @@ fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<St
 mod tests {
     use super::*;
 
+    // ----------------
+
     #[test]
     fn unit_library_fixed_xor_unicode() {
         let plain = crypto_vecs::Bytes::from_unicode_literal("Cooking MCs");

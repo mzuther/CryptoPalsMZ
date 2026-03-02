@@ -68,6 +68,8 @@ mod tests {
     use super::*;
     use crate::crypto_vecs::ToBytes;
 
+    // ----------------
+
     #[test]
     fn unit_unicode_from_bytes_ascii() {
         let bytes = crypto_vecs::Bytes::from(vec![0x41, 0x62, 0x33]);

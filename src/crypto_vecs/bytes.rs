@@ -103,6 +103,10 @@ impl self::Bytes {
         Self::from(Vec::with_capacity(capacity))
     }
 
+    pub fn with_capacity_bits(capacity_bits: usize) -> Self {
+        Self::with_capacity(crypto_vecs::bits_to_bytes(capacity_bits))
+    }
+
     pub const fn capacity(&self) -> usize {
         self.bytes.capacity()
     }
@@ -153,6 +157,10 @@ impl self::Bytes {
                 acc
             },
         )
+    }
+
+    pub fn to_blocks_bits(&self, block_size_bits: usize) -> crypto_vecs::BlockBytes {
+        self.to_blocks(crypto_vecs::bits_to_bytes(block_size_bits))
     }
 
     pub fn chunks(&self, chunk_size: usize) -> Vec<Self> {
@@ -264,7 +272,7 @@ impl self::Bytes {
 
     // ----------------
 
-    pub fn aes_128_ecb_encrypt_block(&self, key: &Self, block_size: usize) -> Result<Self, String> {
+    pub fn aes_128_ecb_encrypt_block(&self, key: &Self, block_size_bits: usize) -> Result<Self, String> {
         let mut cipher_context = cipher_ctx::CipherCtx::new().expect("what can go wrong?");
 
         let encryptor_status = cipher_context.encrypt_init(
@@ -280,10 +288,10 @@ impl self::Bytes {
 
         cipher_context.set_padding(false);
 
-        self.process_block_symmetric_key(cipher_context, block_size)
+        self.process_block_symmetric_key(cipher_context, block_size_bits)
     }
 
-    pub fn aes_128_ecb_decrypt_block(&self, key: &Self, block_size: usize) -> Result<Self, String> {
+    pub fn aes_128_ecb_decrypt_block(&self, key: &Self, block_size_bits: usize) -> Result<Self, String> {
         let mut cipher_context = cipher_ctx::CipherCtx::new().expect("what can go wrong?");
 
         let decryptor_status = cipher_context.decrypt_init(
@@ -299,20 +307,20 @@ impl self::Bytes {
 
         cipher_context.set_padding(false);
 
-        self.process_block_symmetric_key(cipher_context, block_size)
+        self.process_block_symmetric_key(cipher_context, block_size_bits)
     }
 
     fn process_block_symmetric_key(
         &self,
         mut cipher_context: cipher_ctx::CipherCtx,
-        block_size: usize,
+        block_size_bits: usize,
     ) -> Result<Self, String> {
         assert_eq!(
-            self.len(),
-            block_size,
+            self.len_bits(),
+            block_size_bits,
             "block has {} bits, expected are {} bits, ",
-            self.len() * 8,
-            block_size * 8,
+            self.len_bits(),
+            block_size_bits,
         );
 
         let mut buffer = Self::new();
@@ -376,6 +384,8 @@ impl self::Bytes {
 mod tests {
     use super::*;
     use crate::crypto_vecs::base64::{BASE64_COMPLETE_ALPHABET, BASE64_COMPLETE_ALPHABET_BYTES};
+
+    // ----------------
 
     #[test]
     fn unit_bytes_new() {
@@ -580,6 +590,36 @@ mod tests {
         expected_result.push(self::Bytes::from_hex_literal("120d"));
 
         let result = bytes.to_blocks(block_size);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_to_blocks_bits() {
+        let bytes = self::Bytes::from_hex_literal("4162f3 d3426f 120dff");
+        let block_size_bits = 24;
+
+        let mut expected_result = crypto_vecs::BlockBytes::new_bits(block_size_bits);
+        expected_result.push(self::Bytes::from_hex_literal("4162f3"));
+        expected_result.push(self::Bytes::from_hex_literal("d3426f"));
+        expected_result.push(self::Bytes::from_hex_literal("120dff"));
+
+        let result = bytes.to_blocks_bits(block_size_bits);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_to_blocks_bits_remainder() {
+        let bytes = self::Bytes::from_hex_literal("4162f3 d3426f 120d");
+        let block_size_bits = 24;
+
+        let mut expected_result = crypto_vecs::BlockBytes::new_bits(block_size_bits);
+        expected_result.push(self::Bytes::from_hex_literal("4162f3"));
+        expected_result.push(self::Bytes::from_hex_literal("d3426f"));
+        expected_result.push(self::Bytes::from_hex_literal("120d"));
+
+        let result = bytes.to_blocks_bits(block_size_bits);
 
         assert_eq!(result, expected_result);
     }

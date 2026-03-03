@@ -158,7 +158,7 @@ pub fn print_histogram(
     );
 
     if rotate_histogram {
-        bins = self::transpose_strings_counterclockwise(&bins);
+        bins = self::transpose_strings_reverse(&bins);
     }
 
     for bin in bins {
@@ -237,15 +237,17 @@ pub fn guess_keysize_from_hamming_distance(
         })
 }
 
-pub fn transpose_strings_clockwise(strings: &Vec<String>) -> Vec<String> {
-    self::transpose_strings(strings, true)
+// transpose strings clockwise
+pub fn transpose_strings(strings: &Vec<String>) -> Vec<String> {
+    self::transpose_strings_internal(strings, true)
 }
 
-pub fn transpose_strings_counterclockwise(strings: &Vec<String>) -> Vec<String> {
-    self::transpose_strings(strings, false)
+// transpose strings counterclockwise
+pub fn transpose_strings_reverse(strings: &Vec<String>) -> Vec<String> {
+    self::transpose_strings_internal(strings, false)
 }
 
-fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<String> {
+fn transpose_strings_internal(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<String> {
     assert!(strings.len() > 0);
 
     let max_width = strings
@@ -344,7 +346,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_library_transpose_strings_clockwise() {
+    fn unit_library_transpose_strings() {
         let strings = vec![
             String::from("äßcd"),
             String::from("efgh"),
@@ -353,24 +355,24 @@ mod tests {
 
         let expected_result = vec!["ieä", "jfß", "kgc", "lhd"];
 
-        let result = self::transpose_strings_clockwise(&strings);
+        let result = self::transpose_strings(&strings);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_library_transpose_strings_clockwise_different_lengths() {
+    fn unit_library_transpose_strings_different_lengths() {
         let strings = vec![String::from("1"), String::from("2345"), String::from("678")];
 
         let expected_result = vec!["621", "73 ", "84 ", " 5 "];
 
-        let result = self::transpose_strings_clockwise(&strings);
+        let result = self::transpose_strings(&strings);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_library_transpose_strings_counterclockwise() {
+    fn unit_library_transpose_strings_reverse() {
         let strings = vec![
             String::from("äßcd"),
             String::from("efgh"),
@@ -379,18 +381,18 @@ mod tests {
 
         let expected_result = vec!["dhl", "cgk", "ßfj", "äei"];
 
-        let result = self::transpose_strings_counterclockwise(&strings);
+        let result = self::transpose_strings_reverse(&strings);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_library_transpose_strings_counterclockwise_different_lengths() {
+    fn unit_library_transpose_strings_reverse_different_lengths() {
         let strings = vec![String::from("1"), String::from("2345"), String::from("678")];
 
         let expected_result = vec![" 5 ", " 48", " 37", "126"];
 
-        let result = self::transpose_strings_counterclockwise(&strings);
+        let result = self::transpose_strings_reverse(&strings);
 
         assert_eq!(result, expected_result);
     }

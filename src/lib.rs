@@ -272,27 +272,36 @@ fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<St
         lines_transposed.push(Vec::with_capacity(height));
     }
 
-    for (index, line) in lines.iter().enumerate() {
-        assert_eq!(line.len(), max_width, "string #{} has incorrect size", index);
-
-        for (index, &letter) in line.iter().enumerate() {
-            lines_transposed[index].push(letter);
+    lines_transposed = lines.iter().fold(lines_transposed, |mut acc, line| {
+        for (letter_index, &letter) in line.iter().enumerate() {
+            acc[letter_index].push(letter);
         }
-    }
 
-    let mut strings_transposed: Vec<String> = Vec::with_capacity(max_width);
+        acc
+    });
+
+    let strings_transposed = Vec::with_capacity(max_width);
 
     if transpose_clockwise {
-        for line in lines_transposed {
-            strings_transposed.push(String::from_iter(line.iter().rev()));
-        }
-    } else {
-        for line in lines_transposed.iter().rev() {
-            strings_transposed.push(String::from_iter(line));
-        }
-    }
+        lines_transposed
+            .iter()
+            .fold(strings_transposed, |mut acc, line| {
+                let reversed_chars = line.into_iter().rev();
 
-    strings_transposed
+                acc.push(String::from_iter(reversed_chars));
+                acc
+            })
+    } else {
+        lines_transposed
+            .iter()
+            .rev()
+            .fold(strings_transposed, |mut acc, line| {
+                let chars = line.into_iter();
+
+                acc.push(String::from_iter(chars));
+                acc
+            })
+    }
 }
 
 #[cfg(test)]

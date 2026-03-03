@@ -244,16 +244,24 @@ pub fn transpose_strings_counterclockwise(strings: &Vec<String>) -> Vec<String> 
 }
 
 fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<String> {
-    assert!(strings.len() > 0);
+    let width = strings
+        .iter()
+        .map(|x| x.chars().count())
+        .max()
+        .expect("at least one line must exist");
 
     let height = strings.len();
 
-    let mut lines: Vec<Vec<char>> = Vec::with_capacity(height);
-    for string in strings {
-        lines.push(string.chars().collect());
-    }
+    assert!(height > 0);
 
-    let width = lines[0].len();
+    let lines = strings
+        .iter()
+        .fold(Vec::with_capacity(height), |mut acc, string| {
+            let char_vec: Vec<char> = string.chars().collect();
+
+            acc.push(char_vec);
+            acc
+        });
 
     let mut lines_transposed: Vec<Vec<char>> = Vec::with_capacity(width);
     for _ in 0..width {

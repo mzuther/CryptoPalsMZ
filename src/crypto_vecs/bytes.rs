@@ -94,6 +94,24 @@ impl AsRef<Vec<u8>> for self::Bytes {
     }
 }
 
+impl Extend<u8> for self::Bytes {
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = u8>,
+    {
+        self.bytes.extend(iter);
+    }
+}
+
+impl<'a> Extend<&'a u8> for self::Bytes {
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = &'a u8>,
+    {
+        self.bytes.extend(iter);
+    }
+}
+
 impl self::Bytes {
     pub fn new() -> Self {
         Self::from(Vec::new())
@@ -223,13 +241,6 @@ impl self::Bytes {
 
     pub fn push(&mut self, byte: u8) {
         self.bytes.push(byte);
-    }
-
-    pub fn extend<T>(&mut self, bytes: T)
-    where
-        T: Into<Vec<u8>>,
-    {
-        self.bytes.extend(bytes.into());
     }
 
     // ----------------

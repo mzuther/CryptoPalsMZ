@@ -239,15 +239,15 @@ pub fn guess_keysize_from_hamming_distance(
 
 // transpose strings clockwise
 pub fn transpose_strings(strings: &Vec<String>) -> Vec<String> {
-    self::transpose_strings_internal(strings, true)
+    self::transpose_strings_internal(strings, false)
 }
 
 // transpose strings counterclockwise
 pub fn transpose_strings_reverse(strings: &Vec<String>) -> Vec<String> {
-    self::transpose_strings_internal(strings, false)
+    self::transpose_strings_internal(strings, true)
 }
 
-fn transpose_strings_internal(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<String> {
+fn transpose_strings_internal(strings: &Vec<String>, reverse_transposition: bool) -> Vec<String> {
     assert!(strings.len() > 0);
 
     let max_width = strings
@@ -286,21 +286,23 @@ fn transpose_strings_internal(strings: &Vec<String>, transpose_clockwise: bool) 
                     .skip(chars_to_skip)
                     .step_by(step_size);
 
-                // rotate transposed string clockwise or anticlockwise
-                if transpose_clockwise {
-                    acc.push(Vec::from_iter(transposed_line.rev()));
-                } else {
+                // rotate transposed string counterclockwise
+                if reverse_transposition {
                     acc.push(Vec::from_iter(transposed_line));
+                // rotate transposed string clockwise
+                } else {
+                    acc.push(Vec::from_iter(transposed_line.rev()));
                 }
 
                 acc
             });
 
-    // rotate transposed string clockwise or anticlockwise
-    let transposed_lines_iter = if transpose_clockwise {
-        either::Either::Left(transposed_lines.into_iter())
-    } else {
+    let transposed_lines_iter = if reverse_transposition {
+        // rotate transposed string counterclockwise
         either::Either::Right(transposed_lines.into_iter().rev())
+    } else {
+        // rotate transposed string clockwise
+        either::Either::Left(transposed_lines.into_iter())
     };
 
     transposed_lines_iter.fold(Vec::with_capacity(step_size), |mut acc, line| {

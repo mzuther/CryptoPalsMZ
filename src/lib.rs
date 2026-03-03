@@ -254,42 +254,44 @@ fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<St
 
     let height = strings.len();
 
-    // convert lines to chars and fill with spaces to equal line length
-    let lines = strings
-        .iter()
-        .fold(Vec::with_capacity(height), |mut acc, string| {
-            let mut char_vec = Vec::from_iter(string.chars());
+    // convert lines to chars, fill with spaces to equal line length, and
+    // concatenate them in a single vector
+    let concatenated_lines =
+        strings
+            .iter()
+            .fold(Vec::with_capacity(max_width * height), |mut acc, string| {
+                let char_vec = Vec::from_iter(string.chars());
+                let missing_spaces_at_end = max_width - char_vec.len();
 
-            let missing_spaces_at_end = max_width - char_vec.len();
-            char_vec.extend(vec![' '; missing_spaces_at_end]);
+                acc.extend(Vec::from_iter(char_vec));
+                acc.extend(vec![' '; missing_spaces_at_end]);
 
-            acc.push(String::from_iter(char_vec.to_vec()));
-            acc
-        });
+                acc
+            });
 
-    let combined_lines: String = lines.join("");
     let step_size = max_width;
+    let steps_into_vector = 0..step_size;
 
     // transpose lines
-    let transposed_lines = (0..step_size).into_iter().fold(
-        Vec::with_capacity(step_size),
-        |mut acc, steps_into_vector| {
-            let transposed_line = combined_lines
-                .chars()
-                .skip(steps_into_vector)
-                .step_by(step_size);
+    let transposed_lines =
+        steps_into_vector
+            .into_iter()
+            .fold(Vec::with_capacity(height), |mut acc, chars_to_skip| {
+                let transposed_line = concatenated_lines
+                    .iter()
+                    .skip(chars_to_skip)
+                    .step_by(step_size);
 
-            acc.push(Vec::from_iter(transposed_line));
-            acc
-        },
-    );
+                acc.push(Vec::from_iter(transposed_line));
+                acc
+            });
 
     let transposed_strings = Vec::with_capacity(step_size);
 
     // rotate transposed string clockwise or anticlockwise
     if transpose_clockwise {
         transposed_lines
-            .iter()
+            .into_iter()
             .fold(transposed_strings, |mut acc, line| {
                 let reversed_chars = line.into_iter().rev();
 
@@ -298,7 +300,7 @@ fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<St
             })
     } else {
         transposed_lines
-            .iter()
+            .into_iter()
             .rev()
             .fold(transposed_strings, |mut acc, line| {
                 let chars = line.into_iter();

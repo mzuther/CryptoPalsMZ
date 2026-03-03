@@ -1,3 +1,5 @@
+use either;
+
 use std::{cmp, collections::HashMap, ops::Range};
 
 pub mod constants;
@@ -282,33 +284,27 @@ fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<St
                     .skip(chars_to_skip)
                     .step_by(step_size);
 
-                acc.push(Vec::from_iter(transposed_line));
+                // rotate transposed string clockwise or anticlockwise
+                if transpose_clockwise {
+                    acc.push(Vec::from_iter(transposed_line.rev()));
+                } else {
+                    acc.push(Vec::from_iter(transposed_line));
+                }
+
                 acc
             });
 
-    let transposed_strings = Vec::with_capacity(step_size);
-
     // rotate transposed string clockwise or anticlockwise
-    if transpose_clockwise {
-        transposed_lines
-            .into_iter()
-            .fold(transposed_strings, |mut acc, line| {
-                let reversed_chars = line.into_iter().rev();
-
-                acc.push(String::from_iter(reversed_chars));
-                acc
-            })
+    let transposed_lines_iter = if transpose_clockwise {
+        either::Either::Left(transposed_lines.into_iter())
     } else {
-        transposed_lines
-            .into_iter()
-            .rev()
-            .fold(transposed_strings, |mut acc, line| {
-                let chars = line.into_iter();
+        either::Either::Right(transposed_lines.into_iter().rev())
+    };
 
-                acc.push(String::from_iter(chars));
-                acc
-            })
-    }
+    transposed_lines_iter.fold(Vec::with_capacity(step_size), |mut acc, line| {
+        acc.push(String::from_iter(line.into_iter()));
+        acc
+    })
 }
 
 #[cfg(test)]

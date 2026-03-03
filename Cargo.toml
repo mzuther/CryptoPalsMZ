@@ -4,6 +4,7 @@ version = "0.2.0"
 edition = "2024"
 
 [dependencies]
+either = "1.15.0"
 hex = "0.4.3"
 indexmap = "2.13.0"
 openssl = "0.10.75"

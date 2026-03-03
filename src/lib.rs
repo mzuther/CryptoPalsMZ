@@ -206,37 +206,37 @@ pub fn guess_keysize_from_hamming_distance(
     keysize_range: &Range<usize>,
     number_of_samples: u32,
 ) -> Vec<ScoreKeysize> {
-    let mut scores: Vec<ScoreKeysize> = Vec::with_capacity(keysize_range.len());
+    keysize_range.clone().fold(
+        Vec::with_capacity(keysize_range.len()),
+        |mut acc, keysize| {
+            let bytes_vec = bytes.to_vec();
+            let mut iter_chunks = bytes_vec.chunks_exact(keysize);
+            let mut edit_size = 0;
 
-    for keysize in keysize_range.clone() {
-        let bytes_vec = bytes.to_vec();
-        let mut iter_chunks = bytes_vec.chunks_exact(keysize);
-        let mut edit_size = 0;
+            let chunk_vec_1 = iter_chunks.next().expect("text should be long enough");
+            let mut chunk_1 = crypto_vecs::Bytes::from(chunk_vec_1);
 
-        let chunk_vec_1 = iter_chunks.next().expect("text should be long enough");
-        let mut chunk_1 = crypto_vecs::Bytes::from(chunk_vec_1);
+            for _ in 0..number_of_samples {
+                let chunk_vec_2 = iter_chunks.next().expect("text should be long enough");
+                let chunk_2 = crypto_vecs::Bytes::from(chunk_vec_2);
 
-        for _ in 0..number_of_samples {
-            let chunk_vec_2 = iter_chunks.next().expect("text should be long enough");
-            let chunk_2 = crypto_vecs::Bytes::from(chunk_vec_2);
+                edit_size += chunk_1.hamming_distance(&chunk_2);
 
-            edit_size += chunk_1.hamming_distance(&chunk_2);
+                chunk_1 = chunk_2;
+            }
 
-            chunk_1 = chunk_2;
-        }
+            let edit_size_average = (edit_size as f64) / (number_of_samples as f64);
+            let edit_size_normalized = edit_size_average / (keysize as f64);
 
-        let edit_size_average = (edit_size as f64) / (number_of_samples as f64);
-        let edit_size_normalized = edit_size_average / (keysize as f64);
+            let score = ScoreKeysize {
+                score: edit_size_normalized,
+                keysize: keysize,
+            };
 
-        let score = ScoreKeysize {
-            score: edit_size_normalized,
-            keysize: keysize,
-        };
-
-        scores.push(score);
-    }
-
-    scores
+            acc.push(score);
+            acc
+        },
+    )
 }
 
 pub fn transpose_strings_clockwise(strings: &Vec<String>) -> Vec<String> {

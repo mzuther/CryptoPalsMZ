@@ -10,7 +10,8 @@ pub fn letter_frequencies_from_array(
     indexmap::IndexMap::from_iter(
         frequency_array
             .into_iter()
-            .map(|(key, letter)| (key.clone() as u8, letter.clone())),
+            .cloned()
+            .map(|(key, letter)| (key as u8, letter)),
     )
 }
 

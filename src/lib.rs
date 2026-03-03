@@ -204,26 +204,23 @@ fn score_letter_frequencies(bytes: &crypto_vecs::Bytes) -> f64 {
 pub fn guess_keysize_from_hamming_distance(
     bytes: &crypto_vecs::Bytes,
     keysize_range: &Range<usize>,
-    number_of_samples: u32,
+    number_of_samples: usize,
 ) -> Vec<ScoreKeysize> {
-    keysize_range.clone().fold(
-        Vec::with_capacity(keysize_range.len()),
-        |mut acc, keysize| {
-            let bytes_vec = bytes.to_vec();
-            let mut iter_chunks = bytes_vec.chunks_exact(keysize);
-            let mut edit_size = 0;
+    let number_of_keys = keysize_range.len();
 
-            let chunk_vec_1 = iter_chunks.next().expect("text should be long enough");
-            let mut chunk_1 = crypto_vecs::Bytes::from(chunk_vec_1);
+    keysize_range
+        .clone()
+        .fold(Vec::with_capacity(number_of_keys), |mut acc, keysize| {
+            let blocks = bytes.to_blocks(keysize);
+            let current_chunk_iter = blocks.iter();
+            let next_chunk_iter = blocks.iter().skip(1);
 
-            for _ in 0..number_of_samples {
-                let chunk_vec_2 = iter_chunks.next().expect("text should be long enough");
-                let chunk_2 = crypto_vecs::Bytes::from(chunk_vec_2);
-
-                edit_size += chunk_1.hamming_distance(&chunk_2);
-
-                chunk_1 = chunk_2;
-            }
+            let edit_size = current_chunk_iter
+                .zip(next_chunk_iter)
+                .take(number_of_samples)
+                .fold(0, |acc, (current_chunk, next_chunk)| {
+                    acc + current_chunk.hamming_distance(&next_chunk)
+                });
 
             let edit_size_average = (edit_size as f64) / (number_of_samples as f64);
             let edit_size_normalized = edit_size_average / (keysize as f64);
@@ -235,8 +232,7 @@ pub fn guess_keysize_from_hamming_distance(
 
             acc.push(score);
             acc
-        },
-    )
+        })
 }
 
 pub fn transpose_strings_clockwise(strings: &Vec<String>) -> Vec<String> {

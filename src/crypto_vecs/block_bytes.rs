@@ -233,7 +233,7 @@ impl self::BlockBytes {
         blocks.sort();
 
         let current_block_iter = blocks.iter();
-        let next_block_iter = current_block_iter.clone().skip(1);
+        let next_block_iter = blocks.iter().skip(1);
 
         // compare successive blocks and keep duplicates
         let duplicate_blocks = current_block_iter.zip(next_block_iter).fold(
@@ -301,11 +301,12 @@ impl self::BlockBytes {
     }
 
     pub fn pad_pkcs7(&self) -> Self {
+        let mut padded = self.clone();
+
         match self.is_padded_pkcs7() {
-            Ok(_) => self.clone(),
+            Ok(_) => padded,
             Err(number_of_missing_bytes) => {
                 let block_padding = vec![number_of_missing_bytes as u8; number_of_missing_bytes];
-                let mut padded = self.clone();
 
                 if number_of_missing_bytes == self.get_block_size() {
                     let new_block = crypto_vecs::Bytes::from(block_padding);
@@ -425,7 +426,7 @@ impl self::BlockBytes {
         let mut padded_cypher = self::BlockBytes::new_bits(block_size_bits);
 
         let cypher_iter = self.iter();
-        let previous_cypher_iter = iter::once(iv).chain(cypher_iter.clone());
+        let previous_cypher_iter = iter::once(iv).chain(self.iter());
 
         for (cypher_block, previous_cypher_block) in cypher_iter.zip(previous_cypher_iter) {
             let plain_block_xor = cypher_block.aes_ecb_decrypt_block(key, block_size_bits)?;

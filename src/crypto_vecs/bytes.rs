@@ -14,6 +14,14 @@ pub struct Bytes {
     bytes: Vec<u8>,
 }
 
+#[derive(Clone)]
+pub struct BytesIter<'a> {
+    bytes_ref: &'a self::Bytes,
+    current_index: usize,
+}
+
+// ----------------
+
 impl fmt::Display for self::Bytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -77,6 +85,26 @@ impl IntoIterator for self::Bytes {
 
     fn into_iter(self) -> Self::IntoIter {
         self.bytes.into_iter()
+    }
+}
+
+impl<'a> Iterator for self::BytesIter<'a> {
+    type Item = &'a u8;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let element = self.bytes_ref.get(self.current_index);
+        self.current_index = self.current_index + 1;
+
+        element
+    }
+}
+
+impl<'a> ExactSizeIterator for BytesIter<'a> {
+    fn len(&self) -> usize {
+        let number_of_elements = self.bytes_ref.len();
+        let bounded_index = self.current_index.min(number_of_elements);
+
+        number_of_elements - bounded_index
     }
 }
 
@@ -161,8 +189,11 @@ impl self::Bytes {
 
     // ----------------
 
-    pub fn iter(&self) -> slice::Iter<'_, u8> {
-        self.bytes.iter()
+    pub fn iter(&self) -> self::BytesIter<'_> {
+        self::BytesIter {
+            bytes_ref: &self,
+            current_index: 0,
+        }
     }
 
     pub fn to_blocks(&self, block_size: usize) -> crypto_vecs::BlockBytes {
@@ -224,6 +255,14 @@ impl self::Bytes {
     }
 
     // ----------------
+
+    // TODO: add tests
+    pub fn get<I>(&self, index: I) -> Option<&I::Output>
+    where
+        I: slice::SliceIndex<[u8]>,
+    {
+        self.bytes.get(index)
+    }
 
     pub fn first_n(&self, length: usize) -> Option<Self> {
         assert!(length > 0);

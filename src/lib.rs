@@ -244,7 +244,7 @@ pub fn transpose_strings_counterclockwise(strings: &Vec<String>) -> Vec<String> 
 }
 
 fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<String> {
-    let width = strings
+    let max_width = strings
         .iter()
         .map(|x| x.chars().count())
         .max()
@@ -254,29 +254,33 @@ fn transpose_strings(strings: &Vec<String>, transpose_clockwise: bool) -> Vec<St
 
     assert!(height > 0);
 
+    // convert lines to chars and fill with spaces to equal line length
     let lines = strings
         .iter()
         .fold(Vec::with_capacity(height), |mut acc, string| {
-            let char_vec: Vec<char> = string.chars().collect();
+            let mut char_vec: Vec<char> = string.chars().collect();
+
+            let missing_spaces_at_end = max_width - char_vec.len();
+            char_vec.extend(vec![' '; missing_spaces_at_end]);
 
             acc.push(char_vec);
             acc
         });
 
-    let mut lines_transposed: Vec<Vec<char>> = Vec::with_capacity(width);
-    for _ in 0..width {
+    let mut lines_transposed: Vec<Vec<char>> = Vec::with_capacity(max_width);
+    for _ in 0..max_width {
         lines_transposed.push(Vec::with_capacity(height));
     }
 
     for (index, line) in lines.iter().enumerate() {
-        assert_eq!(line.len(), width, "string #{} has incorrect size", index);
+        assert_eq!(line.len(), max_width, "string #{} has incorrect size", index);
 
         for (index, &letter) in line.iter().enumerate() {
             lines_transposed[index].push(letter);
         }
     }
 
-    let mut strings_transposed: Vec<String> = Vec::with_capacity(width);
+    let mut strings_transposed: Vec<String> = Vec::with_capacity(max_width);
 
     if transpose_clockwise {
         for line in lines_transposed {
@@ -343,6 +347,17 @@ mod tests {
     }
 
     #[test]
+    fn unit_library_transpose_strings_clockwise_different_lengths() {
+        let strings = vec![String::from("1"), String::from("2345"), String::from("678")];
+
+        let expected_result = vec!["621", "73 ", "84 ", " 5 "];
+
+        let result = self::transpose_strings_clockwise(&strings);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
     fn unit_library_transpose_strings_counterclockwise() {
         let strings = vec![
             String::from("äßcd"),
@@ -351,6 +366,17 @@ mod tests {
         ];
 
         let expected_result = vec!["dhl", "cgk", "ßfj", "äei"];
+
+        let result = self::transpose_strings_counterclockwise(&strings);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_library_transpose_strings_counterclockwise_different_lengths() {
+        let strings = vec![String::from("1"), String::from("2345"), String::from("678")];
+
+        let expected_result = vec![" 5 ", " 48", " 37", "126"];
 
         let result = self::transpose_strings_counterclockwise(&strings);
 

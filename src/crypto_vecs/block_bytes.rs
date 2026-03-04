@@ -80,7 +80,7 @@ impl self::BlockBytes {
     }
 
     pub fn new_bits(block_size_bits: usize) -> Self {
-        let bytes = Self::bits_to_bytes(block_size_bits);
+        let bytes = crypto_vecs::bits_to_bytes(block_size_bits);
 
         Self::new(bytes)
     }
@@ -96,7 +96,7 @@ impl self::BlockBytes {
     }
 
     pub fn new_with_lax_filling_bits(block_size_bits: usize) -> Self {
-        let bytes = Self::bits_to_bytes(block_size_bits);
+        let bytes = crypto_vecs::bits_to_bytes(block_size_bits);
 
         Self::new_with_lax_filling(bytes)
     }

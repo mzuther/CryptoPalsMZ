@@ -1,7 +1,7 @@
 use crate::crypto_vecs::{self, LenBytes};
 
 use hex;
-use std::{convert, fmt};
+use std::{convert, fmt, marker};
 
 // ----------------
 
@@ -10,7 +10,10 @@ const HEXADECIMAL_VALID_CHARACTERS: &str = "0123456789abcdef";
 
 // ----------------
 
-pub type Hexadecimal = crypto_vecs::CryptoVec<'h', String>;
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct HexadecimalType;
+
+pub type Hexadecimal = crypto_vecs::CryptoString<self::HexadecimalType>;
 
 // ----------------
 
@@ -51,6 +54,7 @@ impl convert::From<String> for self::Hexadecimal {
 
         Self {
             data: string_without_whitespace,
+            struct_type: marker::PhantomData,
         }
     }
 }

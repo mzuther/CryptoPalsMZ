@@ -1,6 +1,6 @@
 use crate::crypto_vecs::{self, ToBytes};
 
-use std::{convert, fmt};
+use std::{convert, fmt, marker};
 
 // ----------------
 
@@ -27,7 +27,10 @@ pub const BASE64_COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351
 
 // ----------------
 
-pub type Base64 = crypto_vecs::CryptoVec<'6', String>;
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Base64Type;
+
+pub type Base64 = crypto_vecs::CryptoString<self::Base64Type>;
 
 // ----------------
 
@@ -67,6 +70,7 @@ impl convert::From<String> for self::Base64 {
 
         Self {
             data: string_without_whitespace,
+            struct_type: marker::PhantomData,
         }
     }
 }

@@ -1,10 +1,13 @@
 use crate::crypto_vecs;
 
-use std::{convert, fmt};
+use std::{convert, fmt, marker};
 
 // ----------------
 
-pub type Unicode = crypto_vecs::CryptoVec<'u', String>;
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct UnicodeType;
+
+pub type Unicode = crypto_vecs::CryptoString<self::UnicodeType>;
 
 // ----------------
 
@@ -24,6 +27,7 @@ impl convert::From<String> for self::Unicode {
     fn from(unicode_string: String) -> Self {
         Self {
             data: unicode_string,
+            struct_type: marker::PhantomData,
         }
     }
 }

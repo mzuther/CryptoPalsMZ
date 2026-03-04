@@ -1,7 +1,7 @@
 use crate::crypto_vecs::{self, LenBytes, ToBytes};
 
 use openssl::{cipher, cipher_ctx};
-use std::{convert, fmt, slice, vec};
+use std::{convert, fmt, marker, slice, vec};
 
 // ----------------
 
@@ -9,8 +9,10 @@ const LOOKUP_BITS_IN_NIBBLE: [u32; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2,
 
 // ----------------
 
-pub type Bytes = crypto_vecs::CryptoVec<'b', Vec<u8>>;
-pub type BytesIter<'a> = crypto_vecs::CryptoVecIter<'a, 'b', Vec<u8>>;
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct BytesType;
+
+pub type Bytes = crypto_vecs::CryptoVec<self::BytesType>;
 
 // ----------------
 
@@ -35,6 +37,7 @@ impl convert::From<Vec<u8>> for self::Bytes {
     fn from(bytes: Vec<u8>) -> Self {
         Self {
             data: bytes,
+            struct_type: marker::PhantomData,
         }
     }
 }
@@ -79,35 +82,6 @@ impl crypto_vecs::LenBytes for self::Bytes {
     }
 }
 
-impl IntoIterator for self::Bytes {
-    type Item = u8;
-    type IntoIter = vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.data.into_iter()
-    }
-}
-
-impl<'a> Iterator for self::BytesIter<'a> {
-    type Item = &'a u8;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let element = self.data_ref.get(self.current_index);
-        self.current_index += 1;
-
-        element
-    }
-}
-
-impl<'a> ExactSizeIterator for BytesIter<'a> {
-    fn len(&self) -> usize {
-        let number_of_elements = self.data_ref.len_bytes();
-        let bounded_index = self.current_index.min(number_of_elements);
-
-        number_of_elements - bounded_index
-    }
-}
-
 impl AsMut<Vec<u8>> for self::Bytes {
     // reference to mutable vec
     fn as_mut(&mut self) -> &mut Vec<u8> {
@@ -141,26 +115,6 @@ impl<'a> Extend<&'a u8> for self::Bytes {
 }
 
 impl self::Bytes {
-    pub fn new() -> Self {
-        Self::from(Vec::new())
-    }
-
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self::from(Vec::with_capacity(capacity))
-    }
-
-    pub fn with_capacity_bits(capacity_bits: usize) -> Self {
-        let bytes = Self::bits_to_bytes(capacity_bits);
-
-        Self::with_capacity(bytes)
-    }
-
-    pub const fn capacity(&self) -> usize {
-        self.data.capacity()
-    }
-
-    // ----------------
-
     pub fn from_hex_literal(string_literal: &str) -> Self {
         let hexadecimal = crypto_vecs::Hexadecimal::from(string_literal);
 
@@ -181,13 +135,6 @@ impl self::Bytes {
 
     // ----------------
 
-    pub fn iter(&self) -> self::BytesIter<'_> {
-        self::BytesIter {
-            data_ref: &self,
-            current_index: 0,
-        }
-    }
-
     pub fn to_blocks(&self, block_size: usize) -> crypto_vecs::BlockBytes {
         assert!(block_size > 0, "block size must be non-zero");
 
@@ -201,7 +148,7 @@ impl self::Bytes {
     }
 
     pub fn to_blocks_bits(&self, block_size_bits: usize) -> crypto_vecs::BlockBytes {
-        let bytes = Self::bits_to_bytes(block_size_bits);
+        let bytes = crypto_vecs::bits_to_bytes(block_size_bits);
 
         self.to_blocks(bytes)
     }

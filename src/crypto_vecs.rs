@@ -7,24 +7,141 @@ mod unicode;
 
 // ----------------
 
-pub use crate::crypto_vecs::base64::Base64;
+use std::{marker, vec};
+
+use crate::crypto_vecs;
+
+pub use crate::crypto_vecs::base64::{Base64, Base64Type};
 pub use crate::crypto_vecs::block_bytes::BlockBytes;
 pub use crate::crypto_vecs::blocks::Blocks;
-pub use crate::crypto_vecs::bytes::Bytes;
-pub use crate::crypto_vecs::hexadecimal::Hexadecimal;
-pub use crate::crypto_vecs::unicode::Unicode;
+pub use crate::crypto_vecs::bytes::{Bytes, BytesType};
+pub use crate::crypto_vecs::hexadecimal::{Hexadecimal, HexadecimalType};
+pub use crate::crypto_vecs::unicode::{Unicode, UnicodeType};
+
+// ----------------
+
+fn bits_to_bytes(bits: usize) -> usize {
+    assert!(
+        bits.is_multiple_of(8),
+        "{} bits are not divisible by 8",
+        bits
+    );
+
+    bits / 8
+}
 
 // ----------------
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub struct CryptoVec<const T: char, D> {
-    data: D,
+pub struct CryptoString<P> {
+    data: String,
+    struct_type: marker::PhantomData<P>,
+}
+
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub struct CryptoVec<P> {
+    data: Vec<u8>,
+    struct_type: marker::PhantomData<P>,
 }
 
 #[derive(Clone)]
-pub struct CryptoVecIter<'a, const T: char, D> {
-    data_ref: &'a self::CryptoVec<T, D>,
+pub struct CryptoVecIter<'a> {
+    vec_ref: &'a Vec<u8>,
     current_index: usize,
+}
+
+// ----------------
+
+impl<P> self::CryptoVec<P> {
+    pub fn new() -> Self {
+        Self {
+            data: Vec::new(),
+            struct_type: marker::PhantomData,
+        }
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            data: Vec::with_capacity(capacity),
+            struct_type: marker::PhantomData,
+        }
+    }
+
+    pub fn with_capacity_bits(capacity_bits: usize) -> Self {
+        let bytes = crypto_vecs::bits_to_bytes(capacity_bits);
+
+        Self::with_capacity(bytes)
+    }
+
+    pub const fn capacity(&self) -> usize {
+        self.data.capacity()
+    }
+}
+
+impl<P> IntoIterator for self::CryptoVec<P> {
+    type Item = u8;
+    type IntoIter = vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.data.into_iter()
+    }
+}
+
+impl<'a> Iterator for self::CryptoVecIter<'a> {
+    type Item = &'a u8;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let element = self.vec_ref.get(self.current_index);
+        self.current_index += 1;
+
+        element
+    }
+}
+
+impl<'a> ExactSizeIterator for self::CryptoVecIter<'a> {
+    fn len(&self) -> usize {
+        let number_of_elements = self.vec_ref.len();
+        let bounded_index = self.current_index.min(number_of_elements);
+
+        number_of_elements - bounded_index
+    }
+}
+
+impl<P> self::CryptoVec<P> {
+    pub fn iter(&self) -> self::CryptoVecIter<'_> {
+        self::CryptoVecIter {
+            vec_ref: &self.data,
+            current_index: 0,
+        }
+    }
+}
+
+// ----------------
+
+impl<P> CryptoString<P> {
+    pub fn new() -> Self {
+        Self {
+            data: String::new(),
+            struct_type: marker::PhantomData,
+        }
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            data: String::with_capacity(capacity),
+            struct_type: marker::PhantomData,
+        }
+    }
+
+    pub fn with_capacity_bits(capacity_bits: usize) -> Self {
+        let bytes = crypto_vecs::bits_to_bytes(capacity_bits);
+
+        Self::with_capacity(bytes)
+    }
+
+    pub const fn capacity(&self) -> usize {
+        self.data.capacity()
+    }
 }
 
 // ----------------
@@ -38,16 +155,6 @@ pub trait LenBytes {
 
     fn is_empty(&self) -> bool {
         self.len_bytes() == 0
-    }
-
-    fn bits_to_bytes(bits: usize) -> usize {
-        assert!(
-            bits.is_multiple_of(8),
-            "{} bits are not divisible by 8",
-            bits
-        );
-
-        bits / 8
     }
 }
 

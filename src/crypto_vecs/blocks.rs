@@ -7,7 +7,7 @@ use std::{convert, fmt, iter, slice, vec};
 // ----------------
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub struct Blocked<T> {
+pub struct Blocks<T> {
     blocks: Vec<T>,
     block_size: usize,
     strict_filling: bool,
@@ -15,7 +15,7 @@ pub struct Blocked<T> {
 
 // ----------------
 
-impl<T> fmt::Display for self::Blocked<T>
+impl<T> fmt::Display for self::Blocks<T>
 where
     T: Clone + ExactSizeIterator + Extend<T> + Ord + PartialEq + PartialOrd + ToString,
 {
@@ -36,7 +36,7 @@ where
     }
 }
 
-impl<T> fmt::Debug for self::Blocked<T>
+impl<T> fmt::Debug for self::Blocks<T>
 where
     T: Clone + ExactSizeIterator + Extend<T> + Ord + PartialEq + PartialOrd + ToString,
 {
@@ -46,7 +46,7 @@ where
 }
 
 // uses lax filling to maximize usefulness
-impl<T> convert::From<Vec<T>> for crypto_vecs::Blocked<T>
+impl<T> convert::From<Vec<T>> for crypto_vecs::Blocks<T>
 where
     T: Clone + ExactSizeIterator + Extend<T> + Ord + PartialEq + PartialOrd + ToString,
 {
@@ -64,7 +64,7 @@ where
     }
 }
 
-impl<T> IntoIterator for crypto_vecs::Blocked<T>
+impl<T> IntoIterator for crypto_vecs::Blocks<T>
 where
     T: Clone + ExactSizeIterator + Extend<T> + Ord + PartialEq + PartialOrd + ToString,
 {
@@ -76,7 +76,7 @@ where
     }
 }
 
-impl<T> self::Blocked<T>
+impl<T> self::Blocks<T>
 where
     T: Clone + ExactSizeIterator + Extend<T> + Ord + PartialEq + PartialOrd + ToString,
 {

@@ -1,6 +1,6 @@
 mod base64;
 mod block_bytes;
-mod blocked;
+mod blocks;
 mod bytes;
 mod hexadecimal;
 mod unicode;
@@ -9,7 +9,7 @@ mod unicode;
 
 pub use crate::crypto_vecs::base64::Base64;
 pub use crate::crypto_vecs::block_bytes::BlockBytes;
-pub use crate::crypto_vecs::blocked::Blocked;
+pub use crate::crypto_vecs::blocks::Blocks;
 pub use crate::crypto_vecs::bytes::Bytes;
 pub use crate::crypto_vecs::hexadecimal::Hexadecimal;
 pub use crate::crypto_vecs::unicode::Unicode;

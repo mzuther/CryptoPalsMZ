@@ -16,6 +16,34 @@ pub use crate::crypto_vecs::unicode::Unicode;
 
 // ----------------
 
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Base64Type;
+
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub struct BytesType;
+
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub struct HexadecimalType;
+
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub struct UnicodeType;
+
+// ----------------
+
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub struct CryptoVec<T, D> {
+    struct_type: T,
+    data: D,
+}
+
+#[derive(Clone)]
+pub struct CryptoVecIter<'a, T, D> {
+    data_ref: &'a self::CryptoVec<T, D>,
+    current_index: usize,
+}
+
+// ----------------
+
 pub trait LenBytes {
     fn len_bytes(&self) -> usize;
 

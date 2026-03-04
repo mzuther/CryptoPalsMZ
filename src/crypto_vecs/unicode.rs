@@ -4,19 +4,13 @@ use std::{convert, fmt};
 
 // ----------------
 
-#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub struct Unicode {
-    unicode_string: String,
-}
+pub type Unicode = crypto_vecs::CryptoVec<crypto_vecs::UnicodeType, String>;
+
+// ----------------
 
 impl fmt::Display for self::Unicode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Unicode[{}] {{ {} }}",
-            self.len(),
-            self.unicode_string
-        )
+        write!(f, "Unicode[{}] {{ {} }}", self.len(), self.data)
     }
 }
 
@@ -28,7 +22,10 @@ impl fmt::Debug for self::Unicode {
 
 impl convert::From<String> for self::Unicode {
     fn from(unicode_string: String) -> Self {
-        Self { unicode_string }
+        Self {
+            struct_type: crypto_vecs::UnicodeType,
+            data: unicode_string,
+        }
     }
 }
 
@@ -48,7 +45,7 @@ impl convert::From<&crypto_vecs::Bytes> for self::Unicode {
 
 impl crypto_vecs::ToBytes for self::Unicode {
     fn to_bytes(&self) -> crypto_vecs::Bytes {
-        let unicode_bytes = Vec::from(self.unicode_string.clone());
+        let unicode_bytes = Vec::from(self.data.clone());
 
         crypto_vecs::Bytes::from(unicode_bytes)
     }
@@ -61,14 +58,14 @@ impl crypto_vecs::ToBytes for self::Unicode {
 
 impl crypto_vecs::LenBytes for self::Unicode {
     fn len_bytes(&self) -> usize {
-        self.unicode_string.len()
+        self.data.len()
     }
 }
 
 impl self::Unicode {
     // number of characters
     pub fn len(&self) -> usize {
-        self.unicode_string.chars().count()
+        self.data.chars().count()
     }
 }
 

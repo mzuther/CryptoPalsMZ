@@ -27,10 +27,9 @@ pub const BASE64_COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351
 
 // ----------------
 
-#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub struct Base64 {
-    base64_string: String,
-}
+pub type Base64 = crypto_vecs::CryptoVec<crypto_vecs::Base64Type, String>;
+
+// ----------------
 
 impl fmt::Display for self::Base64 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -67,7 +66,8 @@ impl convert::From<String> for self::Base64 {
         );
 
         Self {
-            base64_string: string_without_whitespace,
+            struct_type: crypto_vecs::Base64Type,
+            data: string_without_whitespace,
         }
     }
 }
@@ -122,41 +122,38 @@ impl convert::From<&crypto_vecs::Bytes> for self::Base64 {
 
 impl crypto_vecs::ToBytes for self::Base64 {
     fn to_bytes(&self) -> crypto_vecs::Bytes {
-        let decoded_bytes = self
-            .base64_string
-            .bytes()
-            .fold(Vec::new(), |mut acc, char_int| {
-                let char_option;
+        let decoded_bytes = self.data.bytes().fold(Vec::new(), |mut acc, char_int| {
+            let char_option;
 
-                // plus
-                if char_int == 43 {
-                    char_option = Some(62);
-                // slash
-                } else if char_int == 47 {
-                    char_option = Some(63);
-                // padding character (=)
-                } else if char_int == 61 {
-                    char_option = None;
-                // digit
-                } else if char_int <= 57 {
-                    char_option = Some(char_int + 4);
-                // upper case letter
-                } else if char_int <= 90 {
-                    char_option = Some(char_int - 65);
-                // lower case letter
-                } else {
-                    char_option = Some(char_int - 71);
-                }
+            // plus
+            if char_int == 43 {
+                char_option = Some(62);
+            // slash
+            } else if char_int == 47 {
+                char_option = Some(63);
+            // padding character (=)
+            } else if char_int == 61 {
+                char_option = None;
+            // digit
+            } else if char_int <= 57 {
+                char_option = Some(char_int + 4);
+            // upper case letter
+            } else if char_int <= 90 {
+                char_option = Some(char_int - 65);
+            // lower case letter
+            } else {
+                char_option = Some(char_int - 71);
+            }
 
-                assert!(
-                    char_option.is_none_or(|x| x < 64),
-                    "{:?} is not valid base64",
-                    char_option
-                );
+            assert!(
+                char_option.is_none_or(|x| x < 64),
+                "{:?} is not valid base64",
+                char_option
+            );
 
-                acc.push(char_option);
-                acc
-            });
+            acc.push(char_option);
+            acc
+        });
 
         let base64_bytes = self::assemble_bytes_from_segments(&decoded_bytes, 6);
 
@@ -178,7 +175,7 @@ impl crypto_vecs::LenBytes for self::Base64 {
 impl self::Base64 {
     // number of characters (base64 alphabet)
     pub fn len(&self) -> usize {
-        self.base64_string.chars().count()
+        self.data.chars().count()
     }
 
     // ----------------
@@ -187,7 +184,7 @@ impl self::Base64 {
         let block_size = 8;
 
         let base64_blocks: String =
-            self.base64_string
+            self.data
                 .chars()
                 .enumerate()
                 .fold(String::new(), |mut acc, (index, char)| {

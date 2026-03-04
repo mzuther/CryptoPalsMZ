@@ -9,16 +9,8 @@ const LOOKUP_BITS_IN_NIBBLE: [u32; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2,
 
 // ----------------
 
-#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub struct Bytes {
-    bytes: Vec<u8>,
-}
-
-#[derive(Clone)]
-pub struct BytesIter<'a> {
-    bytes_ref: &'a self::Bytes,
-    current_index: usize,
-}
+pub type Bytes = crypto_vecs::CryptoVec<crypto_vecs::BytesType, Vec<u8>>;
+pub type BytesIter<'a> = crypto_vecs::CryptoVecIter<'a, crypto_vecs::BytesType, Vec<u8>>;
 
 // ----------------
 
@@ -41,7 +33,10 @@ impl fmt::Debug for self::Bytes {
 
 impl convert::From<Vec<u8>> for self::Bytes {
     fn from(bytes: Vec<u8>) -> Self {
-        Self { bytes }
+        Self {
+            struct_type: crypto_vecs::BytesType,
+            data: bytes,
+        }
     }
 }
 
@@ -81,7 +76,7 @@ impl crypto_vecs::ToBytes for self::Bytes {
 
 impl crypto_vecs::LenBytes for self::Bytes {
     fn len_bytes(&self) -> usize {
-        self.bytes.len()
+        self.data.len()
     }
 }
 
@@ -90,7 +85,7 @@ impl IntoIterator for self::Bytes {
     type IntoIter = vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.bytes.into_iter()
+        self.data.into_iter()
     }
 }
 
@@ -98,7 +93,7 @@ impl<'a> Iterator for self::BytesIter<'a> {
     type Item = &'a u8;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let element = self.bytes_ref.get(self.current_index);
+        let element = self.data_ref.get(self.current_index);
         self.current_index += 1;
 
         element
@@ -107,7 +102,7 @@ impl<'a> Iterator for self::BytesIter<'a> {
 
 impl<'a> ExactSizeIterator for BytesIter<'a> {
     fn len(&self) -> usize {
-        let number_of_elements = self.bytes_ref.len_bytes();
+        let number_of_elements = self.data_ref.len_bytes();
         let bounded_index = self.current_index.min(number_of_elements);
 
         number_of_elements - bounded_index
@@ -117,14 +112,14 @@ impl<'a> ExactSizeIterator for BytesIter<'a> {
 impl AsMut<Vec<u8>> for self::Bytes {
     // reference to mutable vec
     fn as_mut(&mut self) -> &mut Vec<u8> {
-        self.bytes.as_mut()
+        self.data.as_mut()
     }
 }
 
 impl AsRef<Vec<u8>> for self::Bytes {
     // reference to vec
     fn as_ref(&self) -> &Vec<u8> {
-        self.bytes.as_ref()
+        self.data.as_ref()
     }
 }
 
@@ -133,7 +128,7 @@ impl Extend<u8> for self::Bytes {
     where
         T: IntoIterator<Item = u8>,
     {
-        self.bytes.extend(iter);
+        self.data.extend(iter);
     }
 }
 
@@ -142,7 +137,7 @@ impl<'a> Extend<&'a u8> for self::Bytes {
     where
         T: IntoIterator<Item = &'a u8>,
     {
-        self.bytes.extend(iter);
+        self.data.extend(iter);
     }
 }
 
@@ -162,7 +157,7 @@ impl self::Bytes {
     }
 
     pub const fn capacity(&self) -> usize {
-        self.bytes.capacity()
+        self.data.capacity()
     }
 
     // ----------------
@@ -189,7 +184,7 @@ impl self::Bytes {
 
     pub fn iter(&self) -> self::BytesIter<'_> {
         self::BytesIter {
-            bytes_ref: &self,
+            data_ref: &self,
             current_index: 0,
         }
     }
@@ -197,7 +192,7 @@ impl self::Bytes {
     pub fn to_blocks(&self, block_size: usize) -> crypto_vecs::BlockBytes {
         assert!(block_size > 0, "block size must be non-zero");
 
-        self.bytes.chunks(block_size).fold(
+        self.data.chunks(block_size).fold(
             crypto_vecs::BlockBytes::new(block_size),
             |mut acc, block| {
                 acc.push(Self::from(block));
@@ -215,7 +210,7 @@ impl self::Bytes {
     pub fn chunks(&self, chunk_size: usize) -> Vec<Self> {
         assert!(chunk_size > 0, "chunk size must be non-zero");
 
-        self.bytes
+        self.data
             .chunks(chunk_size)
             .fold(Vec::new(), |mut acc, chunk| {
                 acc.push(Self::from(chunk));
@@ -226,7 +221,7 @@ impl self::Bytes {
     pub fn rchunks(&self, chunk_size: usize) -> Vec<Self> {
         assert!(chunk_size > 0, "chunk size must be non-zero");
 
-        self.bytes
+        self.data
             .rchunks(chunk_size)
             .fold(Vec::new(), |mut acc, chunk| {
                 acc.push(Self::from(chunk));
@@ -236,17 +231,17 @@ impl self::Bytes {
 
     // reference to array
     pub const fn as_slice(&self) -> &[u8] {
-        self.bytes.as_slice()
+        self.data.as_slice()
     }
 
     // reference to mutable array
     pub const fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.bytes.as_mut_slice()
+        self.data.as_mut_slice()
     }
 
     // clone of underlying vec
     pub fn to_vec(&self) -> Vec<u8> {
-        self.bytes.to_vec()
+        self.data.to_vec()
     }
 
     pub fn to_iso_8859_1(&self) -> String {
@@ -261,7 +256,7 @@ impl self::Bytes {
     where
         I: slice::SliceIndex<[u8]>,
     {
-        self.bytes.get(index)
+        self.data.get(index)
     }
 
     pub fn first_n(&self, length: usize) -> Option<Self> {
@@ -279,7 +274,7 @@ impl self::Bytes {
     // ----------------
 
     pub fn push(&mut self, byte: u8) {
-        self.bytes.push(byte);
+        self.data.push(byte);
     }
 
     // ----------------

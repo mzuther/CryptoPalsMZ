@@ -10,10 +10,9 @@ const HEXADECIMAL_VALID_CHARACTERS: &str = "0123456789abcdef";
 
 // ----------------
 
-#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub struct Hexadecimal {
-    hex_string: String,
-}
+pub type Hexadecimal = crypto_vecs::CryptoVec<crypto_vecs::HexadecimalType, String>;
+
+// ----------------
 
 impl fmt::Display for self::Hexadecimal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -51,7 +50,8 @@ impl convert::From<String> for self::Hexadecimal {
         );
 
         Self {
-            hex_string: string_without_whitespace,
+            struct_type: crypto_vecs::HexadecimalType,
+            data: string_without_whitespace,
         }
     }
 }
@@ -70,7 +70,7 @@ impl convert::From<&crypto_vecs::Bytes> for self::Hexadecimal {
 
 impl crypto_vecs::ToBytes for self::Hexadecimal {
     fn to_bytes(&self) -> crypto_vecs::Bytes {
-        let hex_bytes = hex::decode(&self.hex_string).expect("broken conversion");
+        let hex_bytes = hex::decode(&self.data).expect("broken conversion");
 
         crypto_vecs::Bytes::from(hex_bytes)
     }
@@ -83,7 +83,7 @@ impl crypto_vecs::ToBytes for self::Hexadecimal {
 
 impl crypto_vecs::LenBytes for self::Hexadecimal {
     fn len_bytes(&self) -> usize {
-        self.hex_string.len() / 2
+        self.data.len() / 2
     }
 }
 
@@ -92,7 +92,7 @@ impl self::Hexadecimal {
         let block_size = 8;
 
         let hex_blocks: String =
-            self.hex_string
+            self.data
                 .chars()
                 .enumerate()
                 .fold(String::new(), |mut acc, (index, char)| {

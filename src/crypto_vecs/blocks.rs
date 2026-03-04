@@ -1,8 +1,6 @@
-#[allow(unused)]
 use crate::crypto_vecs;
 
-#[allow(unused)]
-use std::{convert, fmt, iter, slice, vec};
+use std::{convert, fmt, slice, vec};
 
 // ----------------
 
@@ -91,7 +89,10 @@ where
     }
 
     pub fn new_bits(block_size_bits: usize) -> Self {
-        Self::new(crypto_vecs::bits_to_bytes(block_size_bits))
+        // TODO: let bytes = Self::bits_to_bytes(block_size_bits);
+        let bytes = block_size_bits / 8;
+
+        Self::new(bytes)
     }
 
     pub fn new_with_lax_filling(block_size: usize) -> Self {
@@ -105,7 +106,10 @@ where
     }
 
     pub fn new_with_lax_filling_bits(block_size_bits: usize) -> Self {
-        Self::new_with_lax_filling(crypto_vecs::bits_to_bytes(block_size_bits))
+        // TODO: let bytes = Self::bits_to_bytes(block_size_bits);
+        let bytes = block_size_bits / 8;
+
+        Self::new_with_lax_filling(bytes)
     }
 
     // ----------------
@@ -127,16 +131,6 @@ where
     // number of blocks
     pub fn len(&self) -> usize {
         self.blocks.len()
-    }
-
-    // total number of bytes in all blocks
-    pub fn len_bytes(&self) -> usize {
-        self.iter().fold(0, |acc, buffer| acc + buffer.len())
-    }
-
-    // total number of bits in all blocks
-    pub fn len_bits(&self) -> usize {
-        self.len_bytes() * 8
     }
 
     // ----------------

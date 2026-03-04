@@ -1,4 +1,4 @@
-use crate::crypto_vecs;
+use crate::crypto_vecs::{self, LenBytes};
 
 use std::{convert, fmt, iter, slice, vec};
 
@@ -40,7 +40,7 @@ impl convert::From<Vec<crypto_vecs::Bytes>> for self::BlockBytes {
     fn from(blocks: Vec<crypto_vecs::Bytes>) -> Self {
         assert!(!blocks.is_empty());
 
-        let block_sizes = blocks.iter().map(|block| block.len());
+        let block_sizes = blocks.iter().map(|block| block.len_bytes());
         let max_block_size = block_sizes.max().unwrap();
 
         Self {
@@ -61,6 +61,13 @@ impl crypto_vecs::ToBytes for self::BlockBytes {
     }
 }
 
+impl crypto_vecs::LenBytes for self::BlockBytes {
+    // total number of bytes in all blocks
+    fn len_bytes(&self) -> usize {
+        self.iter().fold(0, |acc, buffer| acc + buffer.len_bytes())
+    }
+}
+
 impl self::BlockBytes {
     pub fn new(block_size: usize) -> Self {
         assert!(block_size > 0);
@@ -73,7 +80,9 @@ impl self::BlockBytes {
     }
 
     pub fn new_bits(block_size_bits: usize) -> Self {
-        Self::new(crypto_vecs::bits_to_bytes(block_size_bits))
+        let bytes = Self::bits_to_bytes(block_size_bits);
+
+        Self::new(bytes)
     }
 
     pub fn new_with_lax_filling(block_size: usize) -> Self {
@@ -87,7 +96,9 @@ impl self::BlockBytes {
     }
 
     pub fn new_with_lax_filling_bits(block_size_bits: usize) -> Self {
-        Self::new_with_lax_filling(crypto_vecs::bits_to_bytes(block_size_bits))
+        let bytes = Self::bits_to_bytes(block_size_bits);
+
+        Self::new_with_lax_filling(bytes)
     }
 
     // ----------------
@@ -109,16 +120,6 @@ impl self::BlockBytes {
     // number of blocks
     pub fn len(&self) -> usize {
         self.blocks.len()
-    }
-
-    // total number of bytes in all blocks
-    pub fn len_bytes(&self) -> usize {
-        self.iter().fold(0, |acc, buffer| acc + buffer.len())
-    }
-
-    // total number of bits in all blocks
-    pub fn len_bits(&self) -> usize {
-        self.len_bytes() * 8
     }
 
     // ----------------
@@ -146,7 +147,7 @@ impl self::BlockBytes {
     }
 
     pub fn get_last_block_size(&self) -> usize {
-        self.get_last_block().len()
+        self.get_last_block().len_bytes()
     }
 
     pub fn get_last_block_size_bits(&self) -> usize {
@@ -156,20 +157,20 @@ impl self::BlockBytes {
     // ----------------
 
     pub fn push(&mut self, block: crypto_vecs::Bytes) {
-        let block_size = self.get_block_size();
+        let block_size_bytes = self.get_block_size();
 
         assert!(
-            block.len() <= block_size,
+            block.len_bytes() <= block_size_bytes,
             "block is too big, {} bytes > {} bytes",
-            block.len(),
-            block_size
+            block.len_bytes(),
+            block_size_bytes
         );
 
         if !self.blocks.is_empty() && self.uses_strict_filling() {
             let last_block_size = self.get_last_block_size();
 
             assert_eq!(
-                last_block_size, block_size,
+                last_block_size, block_size_bytes,
                 "last block is not full, has only {} bytes",
                 last_block_size
             );
@@ -503,7 +504,6 @@ mod tests {
 
         assert_eq!(result.len(), 1);
         assert_eq!(result.len_bytes(), 7);
-        assert_eq!(result.len_bits(), 56);
     }
 
     #[test]
@@ -514,7 +514,6 @@ mod tests {
 
         assert_eq!(result.len(), 2);
         assert_eq!(result.len_bytes(), 9);
-        assert_eq!(result.len_bits(), 72);
     }
 
     // ----------------

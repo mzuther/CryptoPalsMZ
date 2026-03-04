@@ -1,3 +1,5 @@
+use crate::crypto_vecs::LenBytes;
+
 use std::{cmp, collections::HashMap, ops::Range};
 
 pub mod constants;
@@ -44,7 +46,7 @@ pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<ScoreXOR> {
 }
 
 fn get_letter_frequencies(bytes: &crypto_vecs::Bytes) -> HashMap<u8, f64> {
-    let percent_per_byte = 1.0 / (bytes.len() as f64);
+    let percent_per_byte = 1.0 / (bytes.len_bytes() as f64);
 
     bytes.iter().fold(HashMap::new(), |mut acc, &byte| {
         let mut key = byte;

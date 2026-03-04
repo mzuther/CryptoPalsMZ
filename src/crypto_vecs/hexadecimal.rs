@@ -1,4 +1,4 @@
-use crate::crypto_vecs;
+use crate::crypto_vecs::{self, LenBytes};
 
 use hex;
 use std::{convert, fmt};
@@ -20,7 +20,7 @@ impl fmt::Display for self::Hexadecimal {
         write!(
             f,
             "Hexadecimal[{}] {{ {} }}",
-            self.len(),
+            self.len_bytes(),
             self.get_representation()
         )
     }
@@ -81,11 +81,13 @@ impl crypto_vecs::ToBytes for self::Hexadecimal {
     }
 }
 
-impl self::Hexadecimal {
-    pub const fn len(&self) -> usize {
+impl crypto_vecs::LenBytes for self::Hexadecimal {
+    fn len_bytes(&self) -> usize {
         self.hex_string.len() / 2
     }
+}
 
+impl self::Hexadecimal {
     pub fn get_representation(&self) -> String {
         let block_size = 8;
 
@@ -205,21 +207,21 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_hexadecimal_len_single_byte() {
+    fn unit_hexadecimal_len_bytes_single_byte() {
         let hexadecimal = self::Hexadecimal::from("d3");
         let expected_result = 1;
 
-        let result = hexadecimal.len();
+        let result = hexadecimal.len_bytes();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_hexadecimal_len_several_bytes() {
+    fn unit_hexadecimal_len_bytes_several_bytes() {
         let hexadecimal = self::Hexadecimal::from("41c3bce4 bda0");
         let expected_result = 6;
 
-        let result = hexadecimal.len();
+        let result = hexadecimal.len_bytes();
 
         assert_eq!(result, expected_result);
     }

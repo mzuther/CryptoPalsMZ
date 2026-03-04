@@ -1,4 +1,4 @@
-use crate::crypto_vecs::{self, ToBytes};
+use crate::crypto_vecs::{self, LenBytes, ToBytes};
 
 use openssl::{cipher, cipher_ctx};
 use std::{convert, fmt, slice, vec};
@@ -27,7 +27,7 @@ impl fmt::Display for self::Bytes {
         write!(
             f,
             "Bytes[{}] {{ {} }}",
-            self.len(),
+            self.len_bytes(),
             self.to_hexadecimal().get_representation()
         )
     }
@@ -79,6 +79,12 @@ impl crypto_vecs::ToBytes for self::Bytes {
     }
 }
 
+impl crypto_vecs::LenBytes for self::Bytes {
+    fn len_bytes(&self) -> usize {
+        self.bytes.len()
+    }
+}
+
 impl IntoIterator for self::Bytes {
     type Item = u8;
     type IntoIter = vec::IntoIter<Self::Item>;
@@ -101,7 +107,7 @@ impl<'a> Iterator for self::BytesIter<'a> {
 
 impl<'a> ExactSizeIterator for BytesIter<'a> {
     fn len(&self) -> usize {
-        let number_of_elements = self.bytes_ref.len();
+        let number_of_elements = self.bytes_ref.len_bytes();
         let bounded_index = self.current_index.min(number_of_elements);
 
         number_of_elements - bounded_index
@@ -150,21 +156,13 @@ impl self::Bytes {
     }
 
     pub fn with_capacity_bits(capacity_bits: usize) -> Self {
-        Self::with_capacity(crypto_vecs::bits_to_bytes(capacity_bits))
+        let bytes = Self::bits_to_bytes(capacity_bits);
+
+        Self::with_capacity(bytes)
     }
 
     pub const fn capacity(&self) -> usize {
         self.bytes.capacity()
-    }
-
-    // number of bytes
-    pub const fn len(&self) -> usize {
-        self.bytes.len()
-    }
-
-    // number of bits
-    pub const fn len_bits(&self) -> usize {
-        self.len() * 8
     }
 
     // ----------------
@@ -209,7 +207,9 @@ impl self::Bytes {
     }
 
     pub fn to_blocks_bits(&self, block_size_bits: usize) -> crypto_vecs::BlockBytes {
-        self.to_blocks(crypto_vecs::bits_to_bytes(block_size_bits))
+        let bytes = Self::bits_to_bytes(block_size_bits);
+
+        self.to_blocks(bytes)
     }
 
     pub fn chunks(&self, chunk_size: usize) -> Vec<Self> {
@@ -285,7 +285,7 @@ impl self::Bytes {
     // ----------------
 
     pub fn fixed_xor(&self, key: &Self) -> Self {
-        assert!(key.len() > 0);
+        assert!(!key.is_empty());
 
         let mut bytes_key_endless = key.iter().cycle();
 
@@ -417,7 +417,7 @@ impl self::Bytes {
     pub fn transpose(&self, number_of_blocks: usize) -> crypto_vecs::BlockBytes {
         assert!(number_of_blocks > 0);
 
-        let block_size = self.len().div_ceil(number_of_blocks);
+        let block_size = self.len_bytes().div_ceil(number_of_blocks);
         let mut transposed_blocks = vec![Self::with_capacity(block_size); number_of_blocks];
 
         transposed_blocks =
@@ -561,31 +561,25 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_bytes_len_single_byte() {
+    fn unit_bytes_len_bytes_single_byte() {
         let bytes = self::Bytes::from(0xd3);
 
         let expected_result = 1;
-        let expected_result_bits = expected_result * 8;
 
-        let result = bytes.len();
-        let result_bits = bytes.len_bits();
+        let result = bytes.len_bytes();
 
         assert_eq!(result, expected_result);
-        assert_eq!(result_bits, expected_result_bits);
     }
 
     #[test]
-    fn unit_bytes_len_several_bytes() {
+    fn unit_bytes_len_bytes_several_bytes() {
         let bytes = self::Bytes::from(vec![0x41, 0x62, 0x33]);
 
         let expected_result = 3;
-        let expected_result_bits = expected_result * 8;
 
-        let result = bytes.len();
-        let result_bits = bytes.len_bits();
+        let result = bytes.len_bytes();
 
         assert_eq!(result, expected_result);
-        assert_eq!(result_bits, expected_result_bits);
     }
 
     #[test]

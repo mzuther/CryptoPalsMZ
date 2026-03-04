@@ -16,15 +16,26 @@ pub use crate::crypto_vecs::unicode::Unicode;
 
 // ----------------
 
-#[inline]
-fn bits_to_bytes(bits: usize) -> usize {
-    assert!(
-        bits.is_multiple_of(8),
-        "{} bits are not divisible by 8",
-        bits
-    );
+pub trait LenBytes {
+    fn len_bytes(&self) -> usize;
 
-    bits / 8
+    fn len_bits(&self) -> usize {
+        self.len_bytes() * 8
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len_bytes() == 0
+    }
+
+    fn bits_to_bytes(bits: usize) -> usize {
+        assert!(
+            bits.is_multiple_of(8),
+            "{} bits are not divisible by 8",
+            bits
+        );
+
+        bits / 8
+    }
 }
 
 // ----------------

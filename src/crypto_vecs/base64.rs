@@ -1,4 +1,4 @@
-use crate::crypto_vecs;
+use crate::crypto_vecs::{self, ToBytes};
 
 use std::{convert, fmt};
 
@@ -37,7 +37,7 @@ impl fmt::Display for self::Base64 {
         write!(
             f,
             "Base64[{}] {{ {} }}",
-            self.base64_string.chars().count(),
+            self.len(),
             self.get_representation()
         )
     }
@@ -169,7 +169,20 @@ impl crypto_vecs::ToBytes for self::Base64 {
     }
 }
 
+impl crypto_vecs::LenBytes for self::Base64 {
+    fn len_bytes(&self) -> usize {
+        self.to_bytes().len_bytes()
+    }
+}
+
 impl self::Base64 {
+    // number of characters (base64 alphabet)
+    pub fn len(&self) -> usize {
+        self.base64_string.chars().count()
+    }
+
+    // ----------------
+
     pub fn get_representation(&self) -> String {
         let block_size = 8;
 
@@ -276,7 +289,7 @@ fn assemble_bytes_from_segments(bytes: &[Option<u8>], bits_per_segment: u8) -> c
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto_vecs::ToBytes;
+    use crate::crypto_vecs::{LenBytes, ToBytes};
 
     // ----------------
 
@@ -434,6 +447,41 @@ mod tests {
         let expected_result = crypto_vecs::Unicode::from("Hi. Servus. Grüezi. 你好.");
 
         let result = base64.to_unicode();
+
+        assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_base64_len() {
+        let base64 = self::Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
+
+        let expected_result = 40;
+
+        let result = base64.len();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_base64_len_bytes() {
+        let base64 = self::Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
+
+        let expected_result = 28;
+
+        let result = base64.len_bytes();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_base64_len_bits() {
+        let base64 = self::Base64::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
+
+        let expected_result = 224;
+
+        let result = base64.len_bits();
 
         assert_eq!(result, expected_result);
     }

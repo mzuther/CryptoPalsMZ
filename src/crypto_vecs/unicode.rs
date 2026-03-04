@@ -14,7 +14,7 @@ impl fmt::Display for self::Unicode {
         write!(
             f,
             "Unicode[{}] {{ {} }}",
-            self.unicode_string.chars().count(),
+            self.len(),
             self.unicode_string
         )
     }
@@ -59,12 +59,25 @@ impl crypto_vecs::ToBytes for self::Unicode {
     }
 }
 
+impl crypto_vecs::LenBytes for self::Unicode {
+    fn len_bytes(&self) -> usize {
+        self.unicode_string.len()
+    }
+}
+
+impl self::Unicode {
+    // number of characters
+    pub fn len(&self) -> usize {
+        self.unicode_string.chars().count()
+    }
+}
+
 // ----------------
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto_vecs::ToBytes;
+    use crate::crypto_vecs::{LenBytes, ToBytes};
 
     // ----------------
 
@@ -144,6 +157,57 @@ mod tests {
         let expected_result = String::from("Unicode[26] { \n Hi. Servus. Grüezi. 你好.\t }");
 
         let result = unicode.to_string();
+
+        assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_unicode_len_ascii() {
+        let unicode = self::Unicode::from("Hi. Servus. Moin.");
+
+        let expected_result = 17;
+
+        let result = unicode.len();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_unicode_len_unicode() {
+        let unicode = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
+
+        let expected_result = 23;
+
+        let result = unicode.len();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_unicode_len_bytes_ascii() {
+        let unicode = self::Unicode::from("Hi. Servus. Moin.");
+
+        let expected_result = 17;
+
+        let result = unicode.len_bytes();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_unicode_len_bytes_unicode() {
+        let unicode = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
+
+        // single-byte characters: ASCII
+        let mut expected_result = 20;
+        // dual-byte characters: ü
+        expected_result += 2;
+        // triple-byte characters: 你好
+        expected_result += 6;
+
+        let result = unicode.len_bytes();
 
         assert_eq!(result, expected_result);
     }

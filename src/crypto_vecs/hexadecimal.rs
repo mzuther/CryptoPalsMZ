@@ -10,7 +10,7 @@ const HEXADECIMAL_VALID_CHARACTERS: &str = "0123456789abcdef";
 
 // ----------------
 
-pub type Hexadecimal = crypto_vecs::CryptoVec<crypto_vecs::HexadecimalType, String>;
+pub type Hexadecimal = crypto_vecs::CryptoVec<'h', String>;
 
 // ----------------
 
@@ -50,7 +50,6 @@ impl convert::From<String> for self::Hexadecimal {
         );
 
         Self {
-            struct_type: crypto_vecs::HexadecimalType,
             data: string_without_whitespace,
         }
     }

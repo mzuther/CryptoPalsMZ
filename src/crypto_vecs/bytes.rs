@@ -9,8 +9,8 @@ const LOOKUP_BITS_IN_NIBBLE: [u32; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2,
 
 // ----------------
 
-pub type Bytes = crypto_vecs::CryptoVec<crypto_vecs::BytesType, Vec<u8>>;
-pub type BytesIter<'a> = crypto_vecs::CryptoVecIter<'a, crypto_vecs::BytesType, Vec<u8>>;
+pub type Bytes = crypto_vecs::CryptoVec<'b', Vec<u8>>;
+pub type BytesIter<'a> = crypto_vecs::CryptoVecIter<'a, 'b', Vec<u8>>;
 
 // ----------------
 
@@ -34,7 +34,6 @@ impl fmt::Debug for self::Bytes {
 impl convert::From<Vec<u8>> for self::Bytes {
     fn from(bytes: Vec<u8>) -> Self {
         Self {
-            struct_type: crypto_vecs::BytesType,
             data: bytes,
         }
     }

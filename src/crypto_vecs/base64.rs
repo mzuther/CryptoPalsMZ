@@ -27,7 +27,7 @@ pub const BASE64_COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351
 
 // ----------------
 
-pub type Base64 = crypto_vecs::CryptoVec<crypto_vecs::Base64Type, String>;
+pub type Base64 = crypto_vecs::CryptoVec<'6', String>;
 
 // ----------------
 
@@ -66,7 +66,6 @@ impl convert::From<String> for self::Base64 {
         );
 
         Self {
-            struct_type: crypto_vecs::Base64Type,
             data: string_without_whitespace,
         }
     }

@@ -4,7 +4,7 @@ use std::{convert, fmt};
 
 // ----------------
 
-pub type Unicode = crypto_vecs::CryptoVec<crypto_vecs::UnicodeType, String>;
+pub type Unicode = crypto_vecs::CryptoVec<'u', String>;
 
 // ----------------
 
@@ -23,7 +23,6 @@ impl fmt::Debug for self::Unicode {
 impl convert::From<String> for self::Unicode {
     fn from(unicode_string: String) -> Self {
         Self {
-            struct_type: crypto_vecs::UnicodeType,
             data: unicode_string,
         }
     }

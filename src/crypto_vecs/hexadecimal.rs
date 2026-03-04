@@ -28,7 +28,7 @@ impl fmt::Display for self::Hexadecimal {
 
 impl fmt::Debug for self::Hexadecimal {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string(),)
+        write!(f, "{}", self)
     }
 }
 
@@ -45,7 +45,7 @@ impl convert::From<String> for self::Hexadecimal {
             .collect();
 
         assert!(
-            invalid_characters.len() == 0,
+            invalid_characters.is_empty(),
             "found invalid hexadecimal characters: {}",
             invalid_characters
         );

@@ -45,7 +45,7 @@ impl fmt::Display for self::Base64 {
 
 impl fmt::Debug for self::Base64 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string(),)
+        write!(f, "{}", self)
     }
 }
 
@@ -61,7 +61,7 @@ impl convert::From<String> for self::Base64 {
             .collect();
 
         assert!(
-            invalid_characters.len() == 0,
+            invalid_characters.is_empty(),
             "found invalid base64 characters: {}",
             invalid_characters
         );
@@ -80,7 +80,7 @@ impl convert::From<&str> for self::Base64 {
 
 impl convert::From<&crypto_vecs::Bytes> for self::Base64 {
     fn from(bytes: &crypto_vecs::Bytes) -> Self {
-        let base64_segments = self::split_bytes_into_segments(&bytes, 6);
+        let base64_segments = self::split_bytes_into_segments(bytes, 6);
 
         let base64_string = base64_segments
             .iter()
@@ -233,48 +233,42 @@ fn split_bytes_into_segments(bytes: &crypto_vecs::Bytes, bits_per_segment: u8) -
     segments_to_encode
 }
 
-fn assemble_bytes_from_segments(
-    bytes: &Vec<Option<u8>>,
-    bits_per_segment: u8,
-) -> crypto_vecs::Bytes {
+fn assemble_bytes_from_segments(bytes: &[Option<u8>], bits_per_segment: u8) -> crypto_vecs::Bytes {
     let bits_per_byte = 8;
     let mut inverted_bit_output = 0;
     let mut byte_in_progress = 0;
 
-    let assembled_segments =
-        bytes
-            .iter()
-            .fold(crypto_vecs::Bytes::new(), |mut acc, byte_input_option| {
-                // padding
-                if byte_input_option.is_none() {
-                    return acc;
+    bytes
+        .iter()
+        .fold(crypto_vecs::Bytes::new(), |mut acc, byte_input_option| {
+            // padding
+            if byte_input_option.is_none() {
+                return acc;
+            }
+
+            let byte_input = byte_input_option.unwrap();
+
+            for inverted_bit_input in 0..bits_per_segment {
+                let current_bit_input = bits_per_segment - inverted_bit_input - 1;
+                let current_bit_output: u8 = bits_per_byte - inverted_bit_output - 1;
+
+                let current_mask_input = 1 << current_bit_input;
+                let current_mask_output = 1 << current_bit_output;
+
+                if (byte_input & current_mask_input) > 0 {
+                    byte_in_progress += current_mask_output;
                 }
 
-                let byte_input = byte_input_option.unwrap();
+                inverted_bit_output = (inverted_bit_output + 1) % bits_per_byte;
 
-                for inverted_bit_input in 0..bits_per_segment {
-                    let current_bit_input = bits_per_segment - inverted_bit_input - 1;
-                    let current_bit_output: u8 = bits_per_byte - inverted_bit_output - 1;
-
-                    let current_mask_input = 1 << current_bit_input;
-                    let current_mask_output = 1 << current_bit_output;
-
-                    if (byte_input & current_mask_input) > 0 {
-                        byte_in_progress += current_mask_output;
-                    }
-
-                    inverted_bit_output = (inverted_bit_output + 1) % bits_per_byte;
-
-                    if inverted_bit_output == 0 {
-                        acc.push(byte_in_progress);
-                        byte_in_progress = 0;
-                    }
+                if inverted_bit_output == 0 {
+                    acc.push(byte_in_progress);
+                    byte_in_progress = 0;
                 }
+            }
 
-                acc
-            });
-
-    assembled_segments
+            acc
+        })
 }
 
 // ----------------

@@ -9,7 +9,7 @@ pub fn letter_frequencies_from_array(
 ) -> indexmap::IndexMap<u8, f64> {
     indexmap::IndexMap::from_iter(
         frequency_array
-            .into_iter()
+            .iter()
             .cloned()
             .map(|(key, letter)| (key as u8, letter)),
     )

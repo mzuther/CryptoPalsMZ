@@ -35,13 +35,13 @@ impl fmt::Display for self::Bytes {
 
 impl fmt::Debug for self::Bytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string(),)
+        write!(f, "{}", self)
     }
 }
 
 impl convert::From<Vec<u8>> for self::Bytes {
     fn from(bytes: Vec<u8>) -> Self {
-        Self { bytes: bytes }
+        Self { bytes }
     }
 }
 
@@ -93,7 +93,7 @@ impl<'a> Iterator for self::BytesIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let element = self.bytes_ref.get(self.current_index);
-        self.current_index = self.current_index + 1;
+        self.current_index += 1;
 
         element
     }
@@ -267,13 +267,13 @@ impl self::Bytes {
     pub fn first_n(&self, length: usize) -> Option<Self> {
         assert!(length > 0);
 
-        self.chunks(length).get(0).cloned()
+        self.chunks(length).first().cloned()
     }
 
     pub fn last_n(&self, length: usize) -> Option<Self> {
         assert!(length > 0);
 
-        self.rchunks(length).get(0).cloned()
+        self.rchunks(length).first().cloned()
     }
 
     // ----------------
@@ -300,21 +300,19 @@ impl self::Bytes {
     }
 
     pub fn hamming_distance(&self, other: &Self) -> u32 {
-        let bytes_with_differing_bits = self.fixed_xor(&other);
+        let bytes_with_differing_bits = self.fixed_xor(other);
 
         bytes_with_differing_bits.iter().fold(0, |acc, &byte| {
             let nibble_value_low = byte & 0x0f;
             let nibble_value_high = byte >> 4;
 
-            let differing_bits_low = LOOKUP_BITS_IN_NIBBLE
+            let differing_bits_low = *LOOKUP_BITS_IN_NIBBLE
                 .get(nibble_value_low as usize)
-                .expect("index must be between 0 and 15")
-                .clone();
+                .expect("index must be between 0 and 15");
 
-            let differing_bits_high = LOOKUP_BITS_IN_NIBBLE
+            let differing_bits_high = *LOOKUP_BITS_IN_NIBBLE
                 .get(nibble_value_high as usize)
-                .expect("index must be between 0 and 15")
-                .clone();
+                .expect("index must be between 0 and 15");
 
             acc + differing_bits_low + differing_bits_high
         })
@@ -345,9 +343,8 @@ impl self::Bytes {
             Some(Default::default()),
         );
 
-        match encryptor_status {
-            Err(error_stack) => return Err(error_stack.to_string()),
-            _ => (),
+        if let Err(error_stack) = encryptor_status {
+            return Err(error_stack.to_string());
         };
 
         cipher_context.set_padding(false);
@@ -378,9 +375,8 @@ impl self::Bytes {
             Some(Default::default()),
         );
 
-        match decryptor_status {
-            Err(error_stack) => return Err(error_stack.to_string()),
-            _ => (),
+        if let Err(error_stack) = decryptor_status {
+            return Err(error_stack.to_string());
         };
 
         cipher_context.set_padding(false);
@@ -404,9 +400,8 @@ impl self::Bytes {
         let mut buffer = Self::new();
         let processing_state = cipher_context.cipher_update_vec(self.as_slice(), buffer.as_mut());
 
-        match processing_state {
-            Err(error_stack) => return Err(error_stack.to_string()),
-            _ => (),
+        if let Err(error_stack) = processing_state {
+            return Err(error_stack.to_string());
         };
 
         let finalization_state = cipher_context.cipher_final_vec(buffer.as_mut());

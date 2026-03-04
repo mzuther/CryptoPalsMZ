@@ -1,5 +1,3 @@
-use either;
-
 use std::{cmp, collections::HashMap, ops::Range};
 
 pub mod constants;
@@ -35,8 +33,8 @@ pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<ScoreXOR> {
         let score = self::score_letter_frequencies(&bytes_xor);
 
         let score = ScoreXOR {
-            score: score,
-            key: key,
+            score,
+            key,
             plain_text: bytes_xor,
         };
 
@@ -82,10 +80,10 @@ pub fn print_histogram(
     min_percentage_spaces: f64,
     min_important_letters: usize,
 ) {
-    let letter_frequencies = self::get_letter_frequencies(&bytes);
+    let letter_frequencies = self::get_letter_frequencies(bytes);
 
     if min_percentage_spaces > 0.0 {
-        let space = ' ' as u8;
+        let space = b' ';
         let percentage_space = letter_frequencies.get(&space).copied().unwrap_or(0.0);
 
         if percentage_space < min_percentage_spaces {
@@ -94,7 +92,7 @@ pub fn print_histogram(
     }
 
     if min_important_letters > 0 {
-        let important_letters = vec!['e', 't', 'a', 'o', 'n', 's', 'h', 'r'];
+        let important_letters = ['e', 't', 'a', 'o', 'n', 's', 'h', 'r'];
 
         let found_count = important_letters.iter().fold(0, |acc, &letter_char| {
             let letter = letter_char as u8;
@@ -112,14 +110,15 @@ pub fn print_histogram(
         }
     }
 
-    println!("{}", key.to_string());
+    println!("{}", key);
+
     let english_letter_frequencies = &constants::ENGLISH_LETTER_FREQUENCIES;
     let max_bin_size = (magnification_factor * y_max) as i32;
 
     let mut bins = english_letter_frequencies.iter().fold(
         Vec::with_capacity(english_letter_frequencies.len()),
         |mut acc, (letter, percentage_expected)| {
-            let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
+            let percentage_found = letter_frequencies.get(letter).copied().unwrap_or(0.0);
             let mut letter = *letter;
 
             let value_found = cmp::min(
@@ -133,8 +132,8 @@ pub fn print_histogram(
             let bin_top = cmp::min(cmp::max(value_found - value_expected, 0), max_bin_size);
             let bin_fill_to_border = max_bin_size - cmp::max(value_found, value_expected);
 
-            if letter == (' ' as u8) {
-                letter = '_' as u8;
+            if letter == b' ' {
+                letter = b'_';
             }
 
             let bin = format!(
@@ -166,11 +165,11 @@ pub fn print_histogram(
     }
 
     // println!("{}", bytes.to_iso_8859_1());
-    println!("");
+    println!();
 }
 
 fn score_letter_frequencies(bytes: &crypto_vecs::Bytes) -> f64 {
-    let letter_frequencies = get_letter_frequencies(&bytes);
+    let letter_frequencies = get_letter_frequencies(bytes);
     let english_letter_frequencies = &constants::ENGLISH_LETTER_FREQUENCIES;
 
     // bonus for letters matching expected frequency (lower is better)
@@ -178,7 +177,7 @@ fn score_letter_frequencies(bytes: &crypto_vecs::Bytes) -> f64 {
         english_letter_frequencies
             .iter()
             .fold(0.0, |acc, (letter, percentage_expected)| {
-                let percentage_found = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
+                let percentage_found = letter_frequencies.get(letter).copied().unwrap_or(0.0);
 
                 // higher frequencies are just as bad as lower frequencies
                 let score_diff = (percentage_expected - percentage_found).abs();
@@ -221,7 +220,7 @@ pub fn guess_keysize_from_hamming_distance(
                 .zip(next_chunk_iter)
                 .take(number_of_samples)
                 .fold(0, |acc, (current_chunk, next_chunk)| {
-                    acc + current_chunk.hamming_distance(&next_chunk)
+                    acc + current_chunk.hamming_distance(next_chunk)
                 });
 
             let edit_size_average = (edit_size as f64) / (number_of_samples as f64);
@@ -229,7 +228,7 @@ pub fn guess_keysize_from_hamming_distance(
 
             let score = ScoreKeysize {
                 score: edit_size_normalized,
-                keysize: keysize,
+                keysize,
             };
 
             acc.push(score);
@@ -238,17 +237,17 @@ pub fn guess_keysize_from_hamming_distance(
 }
 
 // transpose strings clockwise
-pub fn transpose_strings(strings: &Vec<String>) -> Vec<String> {
+pub fn transpose_strings(strings: &[String]) -> Vec<String> {
     self::transpose_strings_internal(strings, false)
 }
 
 // transpose strings counterclockwise
-pub fn transpose_strings_reverse(strings: &Vec<String>) -> Vec<String> {
+pub fn transpose_strings_reverse(strings: &[String]) -> Vec<String> {
     self::transpose_strings_internal(strings, true)
 }
 
-fn transpose_strings_internal(strings: &Vec<String>, reverse_transposition: bool) -> Vec<String> {
-    assert!(strings.len() > 0);
+fn transpose_strings_internal(strings: &[String], reverse_transposition: bool) -> Vec<String> {
+    assert!(!strings.is_empty());
 
     let max_width = strings
         .iter()
@@ -306,7 +305,7 @@ fn transpose_strings_internal(strings: &Vec<String>, reverse_transposition: bool
     };
 
     transposed_lines_iter.fold(Vec::with_capacity(step_size), |mut acc, line| {
-        acc.push(String::from_iter(line.into_iter()));
+        acc.push(String::from_iter(line));
         acc
     })
 }

@@ -2,7 +2,6 @@
 
 use cryptopals::constants;
 
-use cryptopals;
 use cryptopals::crypto_vecs::{self, ToBytes};
 use std::fs;
 
@@ -20,13 +19,13 @@ fn challenge_06() {
     let mut scores = cryptopals::guess_keysize_from_hamming_distance(&cypher, &keysize_range, 10);
 
     // order by score, with lowest score first
-    scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
+    scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     println!("[keysizes]");
     for score in scores.get(0..5).expect("all keysizes should be processed") {
         println!("{}: {}", score.keysize, score.score);
     }
-    println!("");
+    println!();
 
     let take_xth_score = 0;
     let score = scores
@@ -38,17 +37,17 @@ fn challenge_06() {
     let mut proposed_key = crypto_vecs::Bytes::new();
 
     for (index, block) in transposed_blocks.iter().enumerate() {
-        let mut scores = cryptopals::find_lowest_score_xor(&block);
+        let mut scores = cryptopals::find_lowest_score_xor(block);
 
         println!("[block {}/{}]", index + 1, keysize);
         scores.sort_by(|a, b| a.key.cmp(&b.key));
         for score in &scores {
             cryptopals::print_histogram(&score.key, &score.plain_text, 0.22, 235.0, true, 0.005, 5);
         }
-        println!("");
+        println!();
 
         // sort by score, resulting in lowest score first
-        scores.sort_by(|a, b| a.partial_cmp(&b).unwrap());
+        scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let score = scores.first().expect("there should always be one element");
         proposed_key.extend(score.key.as_slice());
@@ -64,7 +63,7 @@ fn challenge_06() {
     let result_iso = plain.to_iso_8859_1();
 
     println!("{result_iso}");
-    println!("");
+    println!();
 
     // assert_eq!(result, expected_result);
 }
@@ -88,5 +87,5 @@ fn play_with_xor() {
     println!("{}", cypher.to_hexadecimal());
     println!("{}", cypher.to_base64());
 
-    println!("");
+    println!();
 }

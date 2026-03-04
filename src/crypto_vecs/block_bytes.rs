@@ -31,7 +31,7 @@ impl fmt::Display for self::BlockBytes {
 
 impl fmt::Debug for self::BlockBytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string(),)
+        write!(f, "{}", self)
     }
 }
 
@@ -44,7 +44,7 @@ impl convert::From<Vec<crypto_vecs::Bytes>> for self::BlockBytes {
         let max_block_size = block_sizes.max().unwrap();
 
         Self {
-            blocks: blocks,
+            blocks,
             block_size: max_block_size,
             strict_filling: false,
         }
@@ -67,7 +67,7 @@ impl self::BlockBytes {
 
         Self {
             blocks: Vec::new(),
-            block_size: block_size,
+            block_size,
             strict_filling: true,
         }
     }
@@ -81,7 +81,7 @@ impl self::BlockBytes {
 
         Self {
             blocks: Vec::new(),
-            block_size: block_size,
+            block_size,
             strict_filling: false,
         }
     }
@@ -165,7 +165,7 @@ impl self::BlockBytes {
             block_size
         );
 
-        if self.blocks.len() > 0 && self.uses_strict_filling() {
+        if !self.blocks.is_empty() && self.uses_strict_filling() {
             let last_block_size = self.get_last_block_size();
 
             assert_eq!(
@@ -236,7 +236,7 @@ impl self::BlockBytes {
         let next_block_iter = blocks.iter().skip(1);
 
         // compare successive blocks and keep duplicates
-        let duplicate_blocks = current_block_iter.zip(next_block_iter).fold(
+        current_block_iter.zip(next_block_iter).fold(
             Self::new(block_size),
             |mut duplicates, (current_block, next_block)| {
                 if current_block == next_block {
@@ -245,9 +245,7 @@ impl self::BlockBytes {
 
                 duplicates
             },
-        );
-
-        duplicate_blocks
+        )
     }
 
     // ----------------

@@ -18,7 +18,11 @@ pub use crate::crypto_vecs::unicode::Unicode;
 
 #[inline]
 fn bits_to_bytes(bits: usize) -> usize {
-    assert!(bits % 8 == 0, "{} bits are not divisible by 8", bits);
+    assert!(
+        bits.is_multiple_of(8),
+        "{} bits are not divisible by 8",
+        bits
+    );
 
     bits / 8
 }

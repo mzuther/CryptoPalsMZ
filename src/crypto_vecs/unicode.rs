@@ -22,15 +22,13 @@ impl fmt::Display for self::Unicode {
 
 impl fmt::Debug for self::Unicode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string(),)
+        write!(f, "{}", self)
     }
 }
 
 impl convert::From<String> for self::Unicode {
     fn from(unicode_string: String) -> Self {
-        Self {
-            unicode_string: unicode_string,
-        }
+        Self { unicode_string }
     }
 }
 

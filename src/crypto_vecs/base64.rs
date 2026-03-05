@@ -35,7 +35,7 @@ impl InternalData for Base64 {
 
         let invalid_characters: String = string_without_whitespace
             .chars()
-            .filter(|c| !Base64Type::VALID_CHARACTERS.contains(*c))
+            .filter(|c| !Base64::VALID_CHARACTERS.contains(*c))
             .collect();
 
         if invalid_characters.is_empty() {
@@ -142,6 +142,29 @@ impl ToBytes for Base64 {
 
 // ----------------
 
+impl Base64 {
+    // all valid base64 characters
+    const VALID_CHARACTERS: &str =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+    // base64-encoded string containing complete base64 alphabet
+    pub const COMPLETE_ALPHABET: &str =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    // plain-text bytes which yield the base64-encoded string above
+    pub const COMPLETE_ALPHABET_BYTES: [u8; 48] = [
+        0x00, 0x10, 0x83, 0x10, 0x51, 0x87, 0x20, 0x92, 0x8b, 0x30, 0xd3, 0x8f, 0x41, 0x14, 0x93,
+        0x51, 0x55, 0x97, 0x61, 0x96, 0x9b, 0x71, 0xd7, 0x9f, 0x82, 0x18, 0xa3, 0x92, 0x59, 0xa7,
+        0xa2, 0x9a, 0xab, 0xb2, 0xdb, 0xaf, 0xc3, 0x1c, 0xb3, 0xd3, 0x5d, 0xb7, 0xe3, 0x9e, 0xbb,
+        0xf3, 0xdf, 0xbf,
+    ];
+
+    // plain-text hexadecimal string which yields the base64-encoded string above
+    pub const COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
+}
+
+// ----------------
+
 impl convert::From<&BytesType> for Base64Type {
     fn from(bytes: &BytesType) -> Self {
         let base64_segments = self::split_bytes_into_segments(bytes, 6);
@@ -182,27 +205,6 @@ impl convert::From<&BytesType> for Base64Type {
 
         Self::from(base64_string)
     }
-}
-
-impl Base64Type {
-    // all valid base64 characters
-    const VALID_CHARACTERS: &str =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
-    // base64-encoded string containing complete base64 alphabet
-    pub const COMPLETE_ALPHABET: &str =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    // plain-text bytes which yield the base64-encoded string above
-    pub const COMPLETE_ALPHABET_BYTES: [u8; 48] = [
-        0x00, 0x10, 0x83, 0x10, 0x51, 0x87, 0x20, 0x92, 0x8b, 0x30, 0xd3, 0x8f, 0x41, 0x14, 0x93,
-        0x51, 0x55, 0x97, 0x61, 0x96, 0x9b, 0x71, 0xd7, 0x9f, 0x82, 0x18, 0xa3, 0x92, 0x59, 0xa7,
-        0xa2, 0x9a, 0xab, 0xb2, 0xdb, 0xaf, 0xc3, 0x1c, 0xb3, 0xd3, 0x5d, 0xb7, 0xe3, 0x9e, 0xbb,
-        0xf3, 0xdf, 0xbf,
-    ];
-
-    // plain-text hexadecimal string which yields the base64-encoded string above
-    pub const COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
 }
 
 // ----------------
@@ -296,8 +298,8 @@ mod tests {
 
     #[test]
     fn unit_base64_from_bytes() {
-        let bytes = BytesType::from(Base64Type::COMPLETE_ALPHABET_BYTES.to_vec());
-        let expected_result = Base64Type::from(Base64Type::COMPLETE_ALPHABET);
+        let bytes = BytesType::from(Base64::COMPLETE_ALPHABET_BYTES.to_vec());
+        let expected_result = Base64Type::from(Base64::COMPLETE_ALPHABET);
 
         let result = Base64Type::from(&bytes);
 
@@ -306,8 +308,8 @@ mod tests {
 
     #[test]
     fn unit_base64_to_base64() {
-        let bytes = BytesType::from(Base64Type::COMPLETE_ALPHABET_BYTES.to_vec());
-        let expected_result = Base64Type::from(Base64Type::COMPLETE_ALPHABET);
+        let bytes = BytesType::from(Base64::COMPLETE_ALPHABET_BYTES.to_vec());
+        let expected_result = Base64Type::from(Base64::COMPLETE_ALPHABET);
 
         let result = bytes.to_base64();
 
@@ -316,12 +318,12 @@ mod tests {
 
     #[test]
     fn unit_base64_to_base64_padding_one_byte() {
-        let mut bytes_raw = Base64Type::COMPLETE_ALPHABET_BYTES.to_vec();
+        let mut bytes_raw = Base64::COMPLETE_ALPHABET_BYTES.to_vec();
         bytes_raw.push(0x00);
         bytes_raw.push(0x11);
 
         let bytes = BytesType::from(bytes_raw);
-        let expected_result = Base64Type::from(format!("{}ABE=", Base64Type::COMPLETE_ALPHABET));
+        let expected_result = Base64Type::from(format!("{}ABE=", Base64::COMPLETE_ALPHABET));
 
         let result = bytes.to_base64();
 
@@ -330,11 +332,11 @@ mod tests {
 
     #[test]
     fn unit_base64_to_base64_padding_two_bytes() {
-        let mut bytes_raw = Base64Type::COMPLETE_ALPHABET_BYTES.to_vec();
+        let mut bytes_raw = Base64::COMPLETE_ALPHABET_BYTES.to_vec();
         bytes_raw.push(0x00);
 
         let bytes = BytesType::from(bytes_raw);
-        let expected_result = Base64Type::from(format!("{}AA==", Base64Type::COMPLETE_ALPHABET));
+        let expected_result = Base64Type::from(format!("{}AA==", Base64::COMPLETE_ALPHABET));
 
         let result = bytes.to_base64();
 
@@ -349,8 +351,8 @@ mod tests {
 
     #[test]
     fn unit_base64_to_bytes() {
-        let base64 = Base64Type::from(Base64Type::COMPLETE_ALPHABET);
-        let expected_result = BytesType::from(Base64Type::COMPLETE_ALPHABET_BYTES.to_vec());
+        let base64 = Base64Type::from(Base64::COMPLETE_ALPHABET);
+        let expected_result = BytesType::from(Base64::COMPLETE_ALPHABET_BYTES.to_vec());
 
         let result = base64.to_bytes();
 
@@ -359,11 +361,11 @@ mod tests {
 
     #[test]
     fn unit_base64_to_bytes_padding_one_byte() {
-        let mut expected_result_raw = Base64Type::COMPLETE_ALPHABET_BYTES.to_vec();
+        let mut expected_result_raw = Base64::COMPLETE_ALPHABET_BYTES.to_vec();
         expected_result_raw.push(0x00);
         expected_result_raw.push(0x11);
 
-        let base64 = Base64Type::from(format!("{}ABE=", Base64Type::COMPLETE_ALPHABET));
+        let base64 = Base64Type::from(format!("{}ABE=", Base64::COMPLETE_ALPHABET));
         let expected_result = BytesType::from(expected_result_raw);
 
         let result = base64.to_bytes();
@@ -373,10 +375,10 @@ mod tests {
 
     #[test]
     fn unit_base64_to_bytes_padding_two_bytes() {
-        let mut expected_result_raw = Base64Type::COMPLETE_ALPHABET_BYTES.to_vec();
+        let mut expected_result_raw = Base64::COMPLETE_ALPHABET_BYTES.to_vec();
         expected_result_raw.push(0x00);
 
-        let base64 = Base64Type::from(format!("{}AA==", Base64Type::COMPLETE_ALPHABET));
+        let base64 = Base64Type::from(format!("{}AA==", Base64::COMPLETE_ALPHABET));
         let expected_result = BytesType::from(expected_result_raw);
 
         let result = base64.to_bytes();
@@ -386,7 +388,7 @@ mod tests {
 
     #[test]
     fn unit_base64_to_string() {
-        let base64 = Base64Type::from(Base64Type::COMPLETE_ALPHABET);
+        let base64 = Base64Type::from(Base64::COMPLETE_ALPHABET);
         let expected_result = String::from(
             "Base64[64] { ABCDEFGH IJKLMNOP QRSTUVWX YZabcdef ghijklmn opqrstuv wxyz0123 456789+/ }",
         );
@@ -414,8 +416,8 @@ mod tests {
 
     #[test]
     fn unit_base64_hex_to_base64_via_bytes() {
-        let hexadecimal = HexadecimalType::from(Base64Type::COMPLETE_ALPHABET_HEX);
-        let expected_result = Base64Type::from(Base64Type::COMPLETE_ALPHABET);
+        let hexadecimal = HexadecimalType::from(Base64::COMPLETE_ALPHABET_HEX);
+        let expected_result = Base64Type::from(Base64::COMPLETE_ALPHABET);
 
         let result = hexadecimal.to_base64();
 
@@ -424,8 +426,8 @@ mod tests {
 
     #[test]
     fn unit_base64_to_hex_via_bytes() {
-        let base64 = Base64Type::from(Base64Type::COMPLETE_ALPHABET);
-        let expected_result = HexadecimalType::from(Base64Type::COMPLETE_ALPHABET_HEX);
+        let base64 = Base64Type::from(Base64::COMPLETE_ALPHABET);
+        let expected_result = HexadecimalType::from(Base64::COMPLETE_ALPHABET_HEX);
 
         let result = base64.to_hexadecimal();
 

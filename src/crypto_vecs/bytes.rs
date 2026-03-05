@@ -268,6 +268,7 @@ impl BytesType {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::crypto_vecs::base64::Base64;
 
     // ----------------
 
@@ -348,9 +349,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_from_base64_literal() {
-        let expected_result = BytesType::from(Base64Type::COMPLETE_ALPHABET_BYTES.to_vec());
+        let expected_result = BytesType::from(Base64::COMPLETE_ALPHABET_BYTES.to_vec());
 
-        let result = BytesType::from_base64_literal(Base64Type::COMPLETE_ALPHABET);
+        let result = BytesType::from_base64_literal(Base64::COMPLETE_ALPHABET);
 
         assert_eq!(result, expected_result);
     }

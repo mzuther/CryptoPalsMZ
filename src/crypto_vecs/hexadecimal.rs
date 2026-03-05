@@ -37,7 +37,7 @@ impl InternalData for Hexadecimal {
 
         let invalid_characters: String = string_without_whitespace
             .chars()
-            .filter(|c| !HexadecimalType::VALID_CHARACTERS.contains(*c))
+            .filter(|c| !Hexadecimal::VALID_CHARACTERS.contains(*c))
             .collect();
 
         if invalid_characters.is_empty() {
@@ -111,15 +111,18 @@ impl ToBytes for Hexadecimal {
 
 // ----------------
 
+impl Hexadecimal {
+    // all valid hexadecimal characters
+    pub const VALID_CHARACTERS: &str = "0123456789abcdef";
+}
+
+
+// ----------------
+
 impl convert::From<&BytesType> for HexadecimalType {
     fn from(bytes: &BytesType) -> Self {
         Self::from(hex::encode(bytes.as_ref()))
     }
-}
-
-impl HexadecimalType {
-    // all valid hexadecimal characters
-    pub const VALID_CHARACTERS: &str = "0123456789abcdef";
 }
 
 // ----------------

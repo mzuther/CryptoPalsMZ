@@ -15,9 +15,9 @@ pub type HexadecimalType = CryptoString<self::Hexadecimal>;
 // ----------------
 
 impl InternalData for Hexadecimal {
-    type Data = String;
+    type Collection = String;
 
-    fn new_from(data: Self::Data) -> Self {
+    fn new_from(data: Self::Collection) -> Self {
         match Self::clean_and_validate(data) {
             Ok(data) => Self { hexadecimal: data },
             Err(error) => panic!("{}", error),
@@ -28,7 +28,7 @@ impl InternalData for Hexadecimal {
         self.hexadecimal.capacity()
     }
 
-    fn clean_and_validate(data: Self::Data) -> Result<Self::Data, String> {
+    fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
         let string_without_whitespace = data
             .split_ascii_whitespace()
             .fold(String::new(), |acc, string_slice| acc + string_slice)

@@ -17,7 +17,7 @@ where
 
 impl<T> CryptoString<T>
 where
-    T: InternalData<Data = String>,
+    T: InternalData<Collection = String>,
 {
     pub fn new() -> Self {
         Self::new_from(String::new())
@@ -38,11 +38,11 @@ where
 
 impl<T> InternalData for CryptoString<T>
 where
-    T: InternalData<Data = String>,
+    T: InternalData<Collection = String>,
 {
-    type Data = String;
+    type Collection = String;
 
-    fn new_from(data: Self::Data) -> Self {
+    fn new_from(data: Self::Collection) -> Self {
         Self {
             data: T::new_from(data),
         }
@@ -52,7 +52,7 @@ where
         self.data.capacity()
     }
 
-    fn clean_and_validate(data: Self::Data) -> Result<Self::Data, String> {
+    fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
         T::clean_and_validate(data)
     }
 
@@ -108,7 +108,7 @@ where
 
 impl<T> convert::From<String> for CryptoString<T>
 where
-    T: InternalData<Data = String>,
+    T: InternalData<Collection = String>,
 {
     fn from(data: String) -> Self {
         Self::new_from(data)
@@ -117,7 +117,7 @@ where
 
 impl<T> convert::From<&str> for CryptoString<T>
 where
-    T: InternalData<Data = String>,
+    T: InternalData<Collection = String>,
 {
     fn from(data: &str) -> Self {
         Self::new_from(String::from(data))

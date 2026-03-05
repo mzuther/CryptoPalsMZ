@@ -3,11 +3,11 @@ use crate::crypto_vecs::{Base64Type, BytesType, HexadecimalType, UnicodeType};
 // ----------------
 
 pub trait InternalData {
-    type Data;
+    type Collection;
 
-    fn new_from(data: Self::Data) -> Self;
+    fn new_from(data: Self::Collection) -> Self;
     fn capacity(&self) -> usize;
-    fn clean_and_validate(data: Self::Data) -> Result<Self::Data, String>;
+    fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String>;
 
     fn len(&self) -> usize;
 

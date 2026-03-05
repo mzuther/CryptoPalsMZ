@@ -5,11 +5,6 @@ use std::{convert, fmt, marker};
 
 // ----------------
 
-// all valid hexadecimal characters
-const HEXADECIMAL_VALID_CHARACTERS: &str = "0123456789abcdef";
-
-// ----------------
-
 impl fmt::Display for HexadecimalType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -36,7 +31,7 @@ impl convert::From<String> for HexadecimalType {
 
         let invalid_characters: String = string_without_whitespace
             .chars()
-            .filter(|c| !HEXADECIMAL_VALID_CHARACTERS.contains(*c))
+            .filter(|c| !HexadecimalType::VALID_CHARACTERS.contains(*c))
             .collect();
 
         assert!(
@@ -84,6 +79,11 @@ impl LenBytes for HexadecimalType {
 }
 
 impl HexadecimalType {
+    // all valid hexadecimal characters
+    pub const VALID_CHARACTERS: &str = "0123456789abcdef";
+
+    // ----------------
+
     pub fn get_representation(&self) -> String {
         let block_size = 8;
 

@@ -7,10 +7,6 @@ use std::{convert, fmt, marker, slice, vec};
 
 // ----------------
 
-const LOOKUP_BITS_IN_NIBBLE: [u32; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
-
-// ----------------
-
 impl fmt::Display for BytesType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -110,6 +106,10 @@ impl<'a> Extend<&'a u8> for BytesType {
 }
 
 impl BytesType {
+    const LOOKUP_BITS_IN_NIBBLE: [u32; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
+
+    // ----------------
+
     pub fn from_hex_literal(string_literal: &str) -> Self {
         let hexadecimal = HexadecimalType::from(string_literal);
 
@@ -241,11 +241,11 @@ impl BytesType {
             let nibble_value_low = byte & 0x0f;
             let nibble_value_high = byte >> 4;
 
-            let differing_bits_low = *LOOKUP_BITS_IN_NIBBLE
+            let differing_bits_low = *BytesType::LOOKUP_BITS_IN_NIBBLE
                 .get(nibble_value_low as usize)
                 .expect("index must be between 0 and 15");
 
-            let differing_bits_high = *LOOKUP_BITS_IN_NIBBLE
+            let differing_bits_high = *BytesType::LOOKUP_BITS_IN_NIBBLE
                 .get(nibble_value_high as usize)
                 .expect("index must be between 0 and 15");
 
@@ -374,7 +374,6 @@ impl BytesType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto_vecs::base64::{BASE64_COMPLETE_ALPHABET, BASE64_COMPLETE_ALPHABET_BYTES};
 
     // ----------------
 
@@ -455,9 +454,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_from_base64_literal() {
-        let expected_result = BytesType::from(BASE64_COMPLETE_ALPHABET_BYTES.to_vec());
+        let expected_result = BytesType::from(Base64Type::COMPLETE_ALPHABET_BYTES.to_vec());
 
-        let result = BytesType::from_base64_literal(BASE64_COMPLETE_ALPHABET);
+        let result = BytesType::from_base64_literal(Base64Type::COMPLETE_ALPHABET);
 
         assert_eq!(result, expected_result);
     }

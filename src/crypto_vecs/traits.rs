@@ -2,8 +2,24 @@ use crate::crypto_vecs::{Base64Type, BytesType, HexadecimalType, UnicodeType};
 
 // ----------------
 
+pub trait DataAccess {
+    fn new_from(data: String) -> Self;
+
+    fn get_data(&self) -> &str;
+    fn capacity(&self) -> usize;
+    fn len(&self) -> usize;
+
+    fn get_representation_name(&self) -> String;
+    fn get_representation_len(&self) -> usize;
+    fn get_representation(&self) -> String;
+}
+
+// ----------------
+
 pub trait LenBytes {
     fn len_bytes(&self) -> usize;
+
+    // ----------------
 
     fn len_bits(&self) -> usize {
         self.len_bytes() * 8
@@ -18,6 +34,8 @@ pub trait LenBytes {
 
 pub trait ToBytes {
     fn to_bytes(&self) -> self::BytesType;
+
+    // ----------------
 
     fn to_hexadecimal(&self) -> self::HexadecimalType {
         self::HexadecimalType::from(&self.to_bytes())

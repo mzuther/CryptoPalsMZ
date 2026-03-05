@@ -1,7 +1,7 @@
 use openssl::{cipher, cipher_ctx};
 use std::{fmt, vec};
 
-use crate::crypto_vecs::traits::{LenBytes, ToBytes};
+use crate::crypto_vecs::traits::{DataAccess, LenBytes, ToBytes};
 use crate::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType};
 
 // ----------------

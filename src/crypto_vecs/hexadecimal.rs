@@ -1,27 +1,87 @@
 use hex;
-use std::{convert, fmt};
+use std::convert;
 
-use crate::crypto_vecs::traits::{LenBytes, ToBytes};
-use crate::crypto_vecs::{BytesType, CryptoString, HexadecimalType};
+use crate::crypto_vecs::traits::{DataAccess, LenBytes, ToBytes};
+use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
 
-impl fmt::Display for HexadecimalType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Hexadecimal[{}] {{ {} }}",
-            self.len_bytes(),
-            self.get_representation()
-        )
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Hexadecimal {
+    hexadecimal: String,
+}
+
+pub type HexadecimalType = CryptoString<self::Hexadecimal>;
+
+// ----------------
+
+impl DataAccess for Hexadecimal {
+    fn new_from(data: String) -> Self {
+        Self { hexadecimal: data }
+    }
+
+    fn get_data(&self) -> &str {
+        &self.hexadecimal
+    }
+
+    fn capacity(&self) -> usize {
+        self.hexadecimal.capacity()
+    }
+
+    // number of characters (hexadecimal alphabet)
+    fn len(&self) -> usize {
+        self.hexadecimal.chars().count()
+    }
+
+    fn get_representation_len(&self) -> usize {
+        self.len_bytes()
+    }
+
+    fn get_representation_name(&self) -> String {
+        String::from("Hexadecimal")
+    }
+
+    fn get_representation(&self) -> String {
+        let block_size = 8;
+
+        let hex_blocks: String =
+            self.hexadecimal
+                .chars()
+                .enumerate()
+                .fold(String::new(), |mut acc, (index, char)| {
+                    acc.push(char);
+
+                    // separate blocks
+                    if index % block_size == block_size - 1 {
+                        acc.push(' ');
+                    }
+
+                    acc
+                });
+
+        String::from(hex_blocks.trim_end())
     }
 }
 
-impl fmt::Debug for HexadecimalType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+// ----------------
+
+impl LenBytes for Hexadecimal {
+    fn len_bytes(&self) -> usize {
+        self.hexadecimal.len() / 2
     }
 }
+
+// ----------------
+
+impl ToBytes for Hexadecimal {
+    fn to_bytes(&self) -> BytesType {
+        let hex_bytes = hex::decode(&self.hexadecimal).expect("broken conversion");
+
+        BytesType::from(hex_bytes)
+    }
+}
+
+// ----------------
 
 impl convert::From<String> for HexadecimalType {
     fn from(hex_string: String) -> Self {
@@ -57,50 +117,9 @@ impl convert::From<&BytesType> for HexadecimalType {
     }
 }
 
-impl ToBytes for HexadecimalType {
-    fn to_bytes(&self) -> BytesType {
-        let hex_bytes = hex::decode(&self.data()).expect("broken conversion");
-
-        BytesType::from(hex_bytes)
-    }
-
-    // performance: prevent intermediate conversion to Bytes
-    fn to_hexadecimal(&self) -> Self {
-        self.clone()
-    }
-}
-
-impl LenBytes for HexadecimalType {
-    fn len_bytes(&self) -> usize {
-        self.data().len() / 2
-    }
-}
-
 impl HexadecimalType {
     // all valid hexadecimal characters
     pub const VALID_CHARACTERS: &str = "0123456789abcdef";
-
-    // ----------------
-
-    pub fn get_representation(&self) -> String {
-        let block_size = 8;
-
-        let hex_blocks: String =
-            self.data()
-                .chars()
-                .enumerate()
-                .fold(String::new(), |mut acc, (index, char)| {
-                    acc.push(char);
-
-                    if index % block_size == block_size - 1 {
-                        acc.push(' ');
-                    }
-
-                    acc
-                });
-
-        String::from(hex_blocks.trim_end())
-    }
 }
 
 // ----------------

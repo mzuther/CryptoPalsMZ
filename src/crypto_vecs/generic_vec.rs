@@ -86,7 +86,6 @@ impl<P> self::CryptoVec<P>
 where
     P: Clone,
 {
-    #[inline]
     pub fn new_from(data: Vec<u8>) -> Self {
         Self {
             data,

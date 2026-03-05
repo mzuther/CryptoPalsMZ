@@ -1,21 +1,69 @@
-use std::{convert, fmt};
+use std::convert;
 
-use crate::crypto_vecs::traits::{LenBytes, ToBytes};
-use crate::crypto_vecs::{BytesType, CryptoString, UnicodeType};
+use crate::crypto_vecs::traits::{DataAccess, LenBytes, ToBytes};
+use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
 
-impl fmt::Display for UnicodeType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Unicode[{}] {{ {} }}", self.len(), self.data())
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Unicode {
+    unicode: String,
+}
+
+pub type UnicodeType = CryptoString<self::Unicode>;
+
+// ----------------
+
+impl DataAccess for Unicode {
+    fn new_from(data: String) -> Self {
+        Self { unicode: data }
+    }
+
+    fn get_data(&self) -> &str {
+        &self.unicode
+    }
+
+    fn capacity(&self) -> usize {
+        self.unicode.capacity()
+    }
+
+    // number of characters (graphemes)
+    fn len(&self) -> usize {
+        self.unicode.chars().count()
+    }
+
+    fn get_representation_name(&self) -> String {
+        String::from("Unicode")
+    }
+
+    fn get_representation_len(&self) -> usize {
+        self.len()
+    }
+
+    fn get_representation(&self) -> String {
+        self.unicode.clone()
     }
 }
 
-impl fmt::Debug for UnicodeType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+// ----------------
+
+impl LenBytes for Unicode {
+    fn len_bytes(&self) -> usize {
+        self.unicode.len()
     }
 }
+
+// ----------------
+
+impl ToBytes for Unicode {
+    fn to_bytes(&self) -> BytesType {
+        let unicode_bytes = Vec::from(self.unicode.clone());
+
+        BytesType::from(unicode_bytes)
+    }
+}
+
+// ----------------
 
 impl convert::From<String> for UnicodeType {
     fn from(unicode_string: String) -> Self {
@@ -34,32 +82,6 @@ impl convert::From<&BytesType> for UnicodeType {
         let unicode_string = String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string");
 
         Self::from(unicode_string)
-    }
-}
-
-impl ToBytes for UnicodeType {
-    fn to_bytes(&self) -> BytesType {
-        let unicode_bytes = Vec::from(self.data());
-
-        BytesType::from(unicode_bytes)
-    }
-
-    // performance: prevent intermediate conversion to Bytes
-    fn to_unicode(&self) -> Self {
-        self.clone()
-    }
-}
-
-impl LenBytes for UnicodeType {
-    fn len_bytes(&self) -> usize {
-        self.data().len()
-    }
-}
-
-impl UnicodeType {
-    // number of characters
-    pub fn len(&self) -> usize {
-        self.data().chars().count()
     }
 }
 

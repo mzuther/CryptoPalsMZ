@@ -1,26 +1,119 @@
-use std::{convert, fmt};
+use std::convert;
 
-use crate::crypto_vecs::traits::{LenBytes, ToBytes};
-use crate::crypto_vecs::{Base64Type, BytesType, CryptoString};
+use crate::crypto_vecs::traits::{DataAccess, LenBytes, ToBytes};
+use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
 
-impl fmt::Display for Base64Type {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Base64[{}] {{ {} }}",
-            self.len(),
-            self.get_representation()
-        )
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Base64 {
+    base64: String,
+}
+
+pub type Base64Type = CryptoString<Base64>;
+
+// ----------------
+
+impl DataAccess for Base64 {
+    fn new_from(data: String) -> Self {
+        Self { base64: data }
+    }
+
+    fn get_data(&self) -> &str {
+        &self.base64
+    }
+
+    fn capacity(&self) -> usize {
+        self.base64.capacity()
+    }
+
+    // number of characters (base64 alphabet)
+    fn len(&self) -> usize {
+        self.base64.chars().count()
+    }
+
+    fn get_representation_name(&self) -> String {
+        String::from("Base64")
+    }
+
+    fn get_representation_len(&self) -> usize {
+        self.len()
+    }
+
+    fn get_representation(&self) -> String {
+        let block_size = 8;
+
+        let base64_blocks: String =
+            self.base64
+                .chars()
+                .enumerate()
+                .fold(String::new(), |mut acc, (index, char)| {
+                    acc.push(char);
+
+                    // separate blocks
+                    if index % block_size == block_size - 1 {
+                        acc.push(' ');
+                    }
+
+                    acc
+                });
+
+        String::from(base64_blocks.trim_end())
     }
 }
 
-impl fmt::Debug for Base64Type {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+// ----------------
+
+impl LenBytes for Base64 {
+    fn len_bytes(&self) -> usize {
+        self.to_bytes().len_bytes()
     }
 }
+
+// ----------------
+
+impl ToBytes for Base64 {
+    fn to_bytes(&self) -> BytesType {
+        let decoded_bytes = self.base64.bytes().fold(Vec::new(), |mut acc, char_int| {
+            let char_option;
+
+            // plus
+            if char_int == 43 {
+                char_option = Some(62);
+            // slash
+            } else if char_int == 47 {
+                char_option = Some(63);
+            // padding character (=)
+            } else if char_int == 61 {
+                char_option = None;
+            // digit
+            } else if char_int <= 57 {
+                char_option = Some(char_int + 4);
+            // upper case letter
+            } else if char_int <= 90 {
+                char_option = Some(char_int - 65);
+            // lower case letter
+            } else {
+                char_option = Some(char_int - 71);
+            }
+
+            assert!(
+                char_option.is_none_or(|x| x < 64),
+                "{:?} is not valid base64",
+                char_option
+            );
+
+            acc.push(char_option);
+            acc
+        });
+
+        let base64_bytes = self::assemble_bytes_from_segments(&decoded_bytes, 6);
+
+        BytesType::from(base64_bytes)
+    }
+}
+
+// ----------------
 
 impl convert::From<String> for Base64Type {
     fn from(base64_string: String) -> Self {
@@ -91,58 +184,6 @@ impl convert::From<&BytesType> for Base64Type {
     }
 }
 
-impl ToBytes for Base64Type {
-    fn to_bytes(&self) -> BytesType {
-        let decoded_bytes = self.data().bytes().fold(Vec::new(), |mut acc, char_int| {
-            let char_option;
-
-            // plus
-            if char_int == 43 {
-                char_option = Some(62);
-            // slash
-            } else if char_int == 47 {
-                char_option = Some(63);
-            // padding character (=)
-            } else if char_int == 61 {
-                char_option = None;
-            // digit
-            } else if char_int <= 57 {
-                char_option = Some(char_int + 4);
-            // upper case letter
-            } else if char_int <= 90 {
-                char_option = Some(char_int - 65);
-            // lower case letter
-            } else {
-                char_option = Some(char_int - 71);
-            }
-
-            assert!(
-                char_option.is_none_or(|x| x < 64),
-                "{:?} is not valid base64",
-                char_option
-            );
-
-            acc.push(char_option);
-            acc
-        });
-
-        let base64_bytes = self::assemble_bytes_from_segments(&decoded_bytes, 6);
-
-        BytesType::from(base64_bytes)
-    }
-
-    // performance: prevent intermediate conversion to Bytes
-    fn to_base64(&self) -> Self {
-        self.clone()
-    }
-}
-
-impl LenBytes for Base64Type {
-    fn len_bytes(&self) -> usize {
-        self.to_bytes().len_bytes()
-    }
-}
-
 impl Base64Type {
     // all valid base64 characters
     const VALID_CHARACTERS: &str =
@@ -162,35 +203,6 @@ impl Base64Type {
 
     // plain-text hexadecimal string which yields the base64-encoded string above
     pub const COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
-
-    // ----------------
-
-    // number of characters (base64 alphabet)
-    pub fn len(&self) -> usize {
-        self.data().chars().count()
-    }
-
-    // ----------------
-
-    pub fn get_representation(&self) -> String {
-        let block_size = 8;
-
-        let base64_blocks: String =
-            self.data()
-                .chars()
-                .enumerate()
-                .fold(String::new(), |mut acc, (index, char)| {
-                    acc.push(char);
-
-                    if index % block_size == block_size - 1 {
-                        acc.push(' ');
-                    }
-
-                    acc
-                });
-
-        String::from(base64_blocks.trim_end())
-    }
 }
 
 // ----------------

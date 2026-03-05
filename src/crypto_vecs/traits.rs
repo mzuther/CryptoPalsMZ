@@ -41,6 +41,12 @@ pub trait LenBytes {
 
 // ----------------
 
+pub trait FromBytes {
+    fn from_bytes(bytes: &BytesType) -> Self;
+}
+
+// ----------------
+
 pub trait ToBytes {
     fn to_bytes(&self) -> self::BytesType;
 

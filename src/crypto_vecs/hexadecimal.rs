@@ -1,7 +1,6 @@
 use hex;
-use std::convert;
 
-use crate::crypto_vecs::traits::{InternalData, LenBytes, Representation, ToBytes};
+use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, Representation, ToBytes};
 use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
@@ -101,6 +100,14 @@ impl LenBytes for Hexadecimal {
 
 // ----------------
 
+impl FromBytes for Hexadecimal {
+    fn from_bytes(bytes: &BytesType) -> Self {
+        Self::new_from(hex::encode(bytes.as_ref()))
+    }
+}
+
+// ----------------
+
 impl ToBytes for Hexadecimal {
     fn to_bytes(&self) -> BytesType {
         let hex_bytes = hex::decode(&self.hexadecimal).expect("broken conversion");
@@ -114,15 +121,6 @@ impl ToBytes for Hexadecimal {
 impl Hexadecimal {
     // all valid hexadecimal characters
     pub const VALID_CHARACTERS: &str = "0123456789abcdef";
-}
-
-
-// ----------------
-
-impl convert::From<&BytesType> for HexadecimalType {
-    fn from(bytes: &BytesType) -> Self {
-        Self::from(hex::encode(bytes.as_ref()))
-    }
 }
 
 // ----------------

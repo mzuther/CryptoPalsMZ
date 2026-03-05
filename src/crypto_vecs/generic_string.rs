@@ -1,6 +1,6 @@
 use std::{convert, fmt};
 
-use crate::crypto_vecs::traits::{InternalData, LenBytes, Representation, ToBytes};
+use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, Representation, ToBytes};
 use crate::crypto_vecs::{self, BytesType};
 
 // ----------------
@@ -128,6 +128,15 @@ where
     }
 }
 
+impl<T> convert::From<&BytesType> for CryptoString<T>
+where
+    T: InternalData + FromBytes,
+{
+    fn from(bytes: &BytesType) -> Self {
+        Self::from_bytes(bytes)
+    }
+}
+
 // ----------------
 
 impl<T> LenBytes for CryptoString<T>
@@ -136,6 +145,19 @@ where
 {
     fn len_bytes(&self) -> usize {
         self.data.len_bytes()
+    }
+}
+
+// ----------------
+
+impl<T> FromBytes for CryptoString<T>
+where
+    T: InternalData + FromBytes,
+{
+    fn from_bytes(bytes: &BytesType) -> Self {
+        Self {
+            data: T::from_bytes(bytes),
+        }
     }
 }
 

@@ -1,6 +1,4 @@
-use std::convert;
-
-use crate::crypto_vecs::traits::{InternalData, LenBytes, Representation, ToBytes};
+use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, Representation, ToBytes};
 use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
@@ -66,21 +64,21 @@ impl LenBytes for Unicode {
 
 // ----------------
 
-impl ToBytes for Unicode {
-    fn to_bytes(&self) -> BytesType {
-        let unicode_bytes = Vec::from(self.unicode.clone());
+impl FromBytes for Unicode {
+    fn from_bytes(bytes: &BytesType) -> Self {
+        let unicode_string = String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string");
 
-        BytesType::from(unicode_bytes)
+        Self::new_from(unicode_string)
     }
 }
 
 // ----------------
 
-impl convert::From<&BytesType> for UnicodeType {
-    fn from(bytes: &BytesType) -> Self {
-        let unicode_string = String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string");
+impl ToBytes for Unicode {
+    fn to_bytes(&self) -> BytesType {
+        let unicode_bytes = Vec::from(self.unicode.clone());
 
-        Self::from(unicode_string)
+        BytesType::from(unicode_bytes)
     }
 }
 

@@ -1,6 +1,4 @@
-use std::convert;
-
-use crate::crypto_vecs::traits::{InternalData, LenBytes, Representation, ToBytes};
+use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, Representation, ToBytes};
 use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
@@ -99,75 +97,9 @@ impl LenBytes for Base64 {
 
 // ----------------
 
-impl ToBytes for Base64 {
-    fn to_bytes(&self) -> BytesType {
-        let decoded_bytes = self.base64.bytes().fold(Vec::new(), |mut acc, char_int| {
-            let char_option;
-
-            // plus
-            if char_int == 43 {
-                char_option = Some(62);
-            // slash
-            } else if char_int == 47 {
-                char_option = Some(63);
-            // padding character (=)
-            } else if char_int == 61 {
-                char_option = None;
-            // digit
-            } else if char_int <= 57 {
-                char_option = Some(char_int + 4);
-            // upper case letter
-            } else if char_int <= 90 {
-                char_option = Some(char_int - 65);
-            // lower case letter
-            } else {
-                char_option = Some(char_int - 71);
-            }
-
-            assert!(
-                char_option.is_none_or(|x| x < 64),
-                "{:?} is not valid base64",
-                char_option
-            );
-
-            acc.push(char_option);
-            acc
-        });
-
-        let base64_bytes = self::assemble_bytes_from_segments(&decoded_bytes, 6);
-
-        BytesType::from(base64_bytes)
-    }
-}
-
-// ----------------
-
-impl Base64 {
-    // all valid base64 characters
-    const VALID_CHARACTERS: &str =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
-    // base64-encoded string containing complete base64 alphabet
-    pub const COMPLETE_ALPHABET: &str =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    // plain-text bytes which yield the base64-encoded string above
-    pub const COMPLETE_ALPHABET_BYTES: [u8; 48] = [
-        0x00, 0x10, 0x83, 0x10, 0x51, 0x87, 0x20, 0x92, 0x8b, 0x30, 0xd3, 0x8f, 0x41, 0x14, 0x93,
-        0x51, 0x55, 0x97, 0x61, 0x96, 0x9b, 0x71, 0xd7, 0x9f, 0x82, 0x18, 0xa3, 0x92, 0x59, 0xa7,
-        0xa2, 0x9a, 0xab, 0xb2, 0xdb, 0xaf, 0xc3, 0x1c, 0xb3, 0xd3, 0x5d, 0xb7, 0xe3, 0x9e, 0xbb,
-        0xf3, 0xdf, 0xbf,
-    ];
-
-    // plain-text hexadecimal string which yields the base64-encoded string above
-    pub const COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
-}
-
-// ----------------
-
-impl convert::From<&BytesType> for Base64Type {
-    fn from(bytes: &BytesType) -> Self {
-        let base64_segments = self::split_bytes_into_segments(bytes, 6);
+impl FromBytes for Base64 {
+    fn from_bytes(bytes: &BytesType) -> Self {
+        let base64_segments = Self::split_bytes_into_segments(bytes, 6);
 
         let base64_string = base64_segments
             .iter()
@@ -203,88 +135,154 @@ impl convert::From<&BytesType> for Base64Type {
                 acc
             });
 
-        Self::from(base64_string)
+        Self::new_from(base64_string)
     }
 }
 
 // ----------------
 
-fn split_bytes_into_segments(bytes: &BytesType, bits_per_segment: u8) -> Vec<Option<u8>> {
-    let bits_per_byte = 8;
-    let mut bits_with_value = 0;
-    let mut remainder = 0;
+impl ToBytes for Base64 {
+    fn to_bytes(&self) -> BytesType {
+        let decoded_bytes = self.base64.bytes().fold(Vec::new(), |mut acc, char_int| {
+            let char_option;
 
-    let mut segments_to_encode = bytes.iter().fold(Vec::new(), |mut acc, &byte| {
-        bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
-        let bits_with_remainder = bits_per_byte - bits_with_value;
-
-        let mask_remainder = (1 << bits_with_remainder) - 1;
-        let mask_value = 0xff - mask_remainder;
-
-        let value = ((byte & mask_value) >> bits_with_remainder) + remainder;
-        remainder = (byte & mask_remainder) << (bits_per_segment - bits_with_remainder);
-
-        acc.push(Some(value));
-
-        if bits_with_value == (bits_per_byte - bits_per_segment) {
-            bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
-
-            acc.push(Some(remainder));
-            remainder = 0;
-        }
-
-        acc
-    });
-
-    // add padding characters
-    if bits_with_value > 0 {
-        segments_to_encode.push(Some(remainder));
-        segments_to_encode.push(None);
-
-        if bits_with_value == 6 {
-            segments_to_encode.push(None);
-        }
-    }
-
-    segments_to_encode
-}
-
-fn assemble_bytes_from_segments(bytes: &[Option<u8>], bits_per_segment: u8) -> BytesType {
-    let bits_per_byte = 8;
-    let mut inverted_bit_output = 0;
-    let mut byte_in_progress = 0;
-
-    bytes
-        .iter()
-        .fold(BytesType::new(), |mut acc, byte_input_option| {
-            // padding
-            if byte_input_option.is_none() {
-                return acc;
+            // plus
+            if char_int == 43 {
+                char_option = Some(62);
+            // slash
+            } else if char_int == 47 {
+                char_option = Some(63);
+            // padding character (=)
+            } else if char_int == 61 {
+                char_option = None;
+            // digit
+            } else if char_int <= 57 {
+                char_option = Some(char_int + 4);
+            // upper case letter
+            } else if char_int <= 90 {
+                char_option = Some(char_int - 65);
+            // lower case letter
+            } else {
+                char_option = Some(char_int - 71);
             }
 
-            let byte_input = byte_input_option.unwrap();
+            assert!(
+                char_option.is_none_or(|x| x < 64),
+                "{:?} is not valid base64",
+                char_option
+            );
 
-            for inverted_bit_input in 0..bits_per_segment {
-                let current_bit_input = bits_per_segment - inverted_bit_input - 1;
-                let current_bit_output: u8 = bits_per_byte - inverted_bit_output - 1;
+            acc.push(char_option);
+            acc
+        });
 
-                let current_mask_input = 1 << current_bit_input;
-                let current_mask_output = 1 << current_bit_output;
+        let base64_bytes = Self::assemble_bytes_from_segments(&decoded_bytes, 6);
 
-                if (byte_input & current_mask_input) > 0 {
-                    byte_in_progress += current_mask_output;
-                }
+        BytesType::from(base64_bytes)
+    }
+}
 
-                inverted_bit_output = (inverted_bit_output + 1) % bits_per_byte;
+// ----------------
 
-                if inverted_bit_output == 0 {
-                    acc.push(byte_in_progress);
-                    byte_in_progress = 0;
-                }
+impl Base64 {
+    // all valid base64 characters
+    const VALID_CHARACTERS: &str =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+    // base64-encoded string containing complete base64 alphabet
+    pub const COMPLETE_ALPHABET: &str =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    // plain-text bytes which yield the base64-encoded string above
+    pub const COMPLETE_ALPHABET_BYTES: [u8; 48] = [
+        0x00, 0x10, 0x83, 0x10, 0x51, 0x87, 0x20, 0x92, 0x8b, 0x30, 0xd3, 0x8f, 0x41, 0x14, 0x93,
+        0x51, 0x55, 0x97, 0x61, 0x96, 0x9b, 0x71, 0xd7, 0x9f, 0x82, 0x18, 0xa3, 0x92, 0x59, 0xa7,
+        0xa2, 0x9a, 0xab, 0xb2, 0xdb, 0xaf, 0xc3, 0x1c, 0xb3, 0xd3, 0x5d, 0xb7, 0xe3, 0x9e, 0xbb,
+        0xf3, 0xdf, 0xbf,
+    ];
+
+    // plain-text hexadecimal string which yields the base64-encoded string above
+    pub const COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
+
+    // ----------------
+
+    fn split_bytes_into_segments(bytes: &BytesType, bits_per_segment: u8) -> Vec<Option<u8>> {
+        let bits_per_byte = 8;
+        let mut bits_with_value = 0;
+        let mut remainder = 0;
+
+        let mut segments_to_encode = bytes.iter().fold(Vec::new(), |mut acc, &byte| {
+            bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
+            let bits_with_remainder = bits_per_byte - bits_with_value;
+
+            let mask_remainder = (1 << bits_with_remainder) - 1;
+            let mask_value = 0xff - mask_remainder;
+
+            let value = ((byte & mask_value) >> bits_with_remainder) + remainder;
+            remainder = (byte & mask_remainder) << (bits_per_segment - bits_with_remainder);
+
+            acc.push(Some(value));
+
+            if bits_with_value == (bits_per_byte - bits_per_segment) {
+                bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
+
+                acc.push(Some(remainder));
+                remainder = 0;
             }
 
             acc
-        })
+        });
+
+        // add padding characters
+        if bits_with_value > 0 {
+            segments_to_encode.push(Some(remainder));
+            segments_to_encode.push(None);
+
+            if bits_with_value == 6 {
+                segments_to_encode.push(None);
+            }
+        }
+
+        segments_to_encode
+    }
+
+    fn assemble_bytes_from_segments(bytes: &[Option<u8>], bits_per_segment: u8) -> BytesType {
+        let bits_per_byte = 8;
+        let mut inverted_bit_output = 0;
+        let mut byte_in_progress = 0;
+
+        bytes
+            .iter()
+            .fold(BytesType::new(), |mut acc, byte_input_option| {
+                // padding
+                if byte_input_option.is_none() {
+                    return acc;
+                }
+
+                let byte_input = byte_input_option.unwrap();
+
+                for inverted_bit_input in 0..bits_per_segment {
+                    let current_bit_input = bits_per_segment - inverted_bit_input - 1;
+                    let current_bit_output: u8 = bits_per_byte - inverted_bit_output - 1;
+
+                    let current_mask_input = 1 << current_bit_input;
+                    let current_mask_output = 1 << current_bit_output;
+
+                    if (byte_input & current_mask_input) > 0 {
+                        byte_in_progress += current_mask_output;
+                    }
+
+                    inverted_bit_output = (inverted_bit_output + 1) % bits_per_byte;
+
+                    if inverted_bit_output == 0 {
+                        acc.push(byte_in_progress);
+                        byte_in_progress = 0;
+                    }
+                }
+
+                acc
+            })
+    }
 }
 
 // ----------------

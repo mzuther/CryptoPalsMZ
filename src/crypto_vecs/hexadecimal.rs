@@ -40,7 +40,12 @@ impl InternalData for Hexadecimal {
             .collect();
 
         if invalid_characters.is_empty() {
-            Ok(string_without_whitespace)
+            if string_without_whitespace.len().is_multiple_of(2) {
+                Ok(string_without_whitespace)
+            } else {
+                // prepend zero as hexadecimals are bounded on the right
+                Ok(format!("0{}", string_without_whitespace))
+            }
         } else {
             Err(format!(
                 "found invalid hexadecimal characters: {}",
@@ -185,8 +190,18 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_to_string_two_blocks() {
-        let hexadecimal = HexadecimalType::from("21a3dcf4dba1");
+        let hexadecimal = HexadecimalType::from("21a3dcf4 dba1");
         let expected_result = String::from("Hexadecimal[6] { 21a3dcf4 dba1 }");
+
+        let result = hexadecimal.to_string();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_hexadecimal_to_string_odd_length() {
+        let hexadecimal = HexadecimalType::from(" 1a3dcf4 dba1");
+        let expected_result = String::from("Hexadecimal[6] { 01a3dcf4 dba1 }");
 
         let result = hexadecimal.to_string();
 

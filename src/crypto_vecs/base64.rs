@@ -19,12 +19,12 @@ impl DataAccess for Base64 {
         Self { base64: data }
     }
 
-    fn get_data(&self) -> &str {
-        &self.base64
-    }
-
     fn capacity(&self) -> usize {
         self.base64.capacity()
+    }
+
+    fn get_data(&self) -> &str {
+        &self.base64
     }
 
     // number of characters (base64 alphabet)

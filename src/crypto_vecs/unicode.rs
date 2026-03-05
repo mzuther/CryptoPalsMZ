@@ -19,12 +19,12 @@ impl DataAccess for Unicode {
         Self { unicode: data }
     }
 
-    fn get_data(&self) -> &str {
-        &self.unicode
-    }
-
     fn capacity(&self) -> usize {
         self.unicode.capacity()
+    }
+
+    fn get_data(&self) -> &str {
+        &self.unicode
     }
 
     // number of characters (graphemes)

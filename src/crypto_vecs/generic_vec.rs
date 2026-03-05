@@ -113,6 +113,14 @@ where
 
     // ----------------
 
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn data(&self) -> &Vec<u8> {
         &self.data
     }

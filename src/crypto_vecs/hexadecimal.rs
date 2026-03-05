@@ -20,12 +20,12 @@ impl DataAccess for Hexadecimal {
         Self { hexadecimal: data }
     }
 
-    fn get_data(&self) -> &str {
-        &self.hexadecimal
-    }
-
     fn capacity(&self) -> usize {
         self.hexadecimal.capacity()
+    }
+
+    fn get_data(&self) -> &str {
+        &self.hexadecimal
     }
 
     // number of characters (hexadecimal alphabet)

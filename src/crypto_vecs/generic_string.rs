@@ -46,12 +46,12 @@ where
         }
     }
 
-    fn get_data(&self) -> &str {
-        self.data.get_data()
-    }
-
     fn capacity(&self) -> usize {
         self.data.capacity()
+    }
+
+    fn get_data(&self) -> &str {
+        self.data.get_data()
     }
 
     fn len(&self) -> usize {

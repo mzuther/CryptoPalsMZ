@@ -1,6 +1,7 @@
-use crate::crypto_vecs::{self, BytesType, LenBytes, ToBytes};
-
 use std::{convert, fmt, iter, slice, vec};
+
+use crate::crypto_vecs::traits::{LenBytes, ToBytes};
+use crate::crypto_vecs::{self, BytesType};
 
 // ----------------
 

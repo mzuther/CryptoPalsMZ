@@ -1,8 +1,12 @@
-use crate::crypto_vecs::{BytesType, LenBytes};
-use std::{cmp, collections::HashMap, ops::Range};
-
 pub mod constants;
 pub mod crypto_vecs;
+
+// ----------------
+
+use std::{cmp, collections::HashMap, ops::Range};
+
+use crate::crypto_vecs::BytesType;
+use crate::crypto_vecs::traits::LenBytes;
 
 // ----------------
 

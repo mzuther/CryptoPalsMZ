@@ -1,9 +1,11 @@
 #![allow(unused)]
 
-use cryptopals::constants;
+// ----------------
 
-use cryptopals::crypto_vecs::{Base64Type, BytesType, ToBytes};
 use std::fs;
+
+use cryptopals::crypto_vecs::BytesType;
+use cryptopals::crypto_vecs::traits::ToBytes;
 
 // ----------------
 

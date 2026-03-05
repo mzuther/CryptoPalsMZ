@@ -1,6 +1,6 @@
-use crate::crypto_vecs;
-
 use std::{convert, fmt, slice, vec};
+
+use crate::crypto_vecs;
 
 // ----------------
 

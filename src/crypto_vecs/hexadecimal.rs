@@ -1,7 +1,8 @@
-use crate::crypto_vecs::{BytesType, HexadecimalType, LenBytes, ToBytes};
-
 use hex;
 use std::{convert, fmt, marker};
+
+use crate::crypto_vecs::traits::{LenBytes, ToBytes};
+use crate::crypto_vecs::{BytesType, HexadecimalType};
 
 // ----------------
 

@@ -1,9 +1,8 @@
-use crate::crypto_vecs::{
-    self, Base64Type, BlockBytes, BytesType, HexadecimalType, LenBytes, ToBytes, UnicodeType,
-};
-
 use openssl::{cipher, cipher_ctx};
 use std::{convert, fmt, marker, slice, vec};
+
+use crate::crypto_vecs::traits::{LenBytes, ToBytes};
+use crate::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType};
 
 // ----------------
 

@@ -1,6 +1,7 @@
-use cryptopals::crypto_vecs::{BytesType, ToBytes};
-
 use std::fs;
+
+use cryptopals::crypto_vecs::BytesType;
+use cryptopals::crypto_vecs::traits::ToBytes;
 
 // ----------------
 

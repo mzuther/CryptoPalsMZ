@@ -30,10 +30,6 @@ impl InternalData for Unicode {
         Ok(data)
     }
 
-    fn get_data(&self) -> &str {
-        &self.unicode
-    }
-
     // number of characters (graphemes)
     fn len(&self) -> usize {
         self.unicode.chars().count()

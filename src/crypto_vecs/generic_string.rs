@@ -56,10 +56,6 @@ where
         T::clean_and_validate(data)
     }
 
-    fn get_data(&self) -> &str {
-        self.data.get_data()
-    }
-
     fn len(&self) -> usize {
         self.data.len()
     }

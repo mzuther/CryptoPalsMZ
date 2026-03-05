@@ -49,10 +49,6 @@ impl InternalData for Hexadecimal {
         }
     }
 
-    fn get_data(&self) -> &str {
-        &self.hexadecimal
-    }
-
     // number of characters (hexadecimal alphabet)
     fn len(&self) -> usize {
         self.hexadecimal.chars().count()

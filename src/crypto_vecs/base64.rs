@@ -46,10 +46,6 @@ impl InternalData for Base64 {
         }
     }
 
-    fn get_data(&self) -> &str {
-        &self.base64
-    }
-
     // number of characters (base64 alphabet)
     fn len(&self) -> usize {
         self.base64.chars().count()

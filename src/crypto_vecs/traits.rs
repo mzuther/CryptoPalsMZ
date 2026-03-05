@@ -9,7 +9,6 @@ pub trait InternalData {
     fn capacity(&self) -> usize;
     fn clean_and_validate(data: Self::Data) -> Result<Self::Data, String>;
 
-    fn get_data(&self) -> &str;
     fn len(&self) -> usize;
 
     // ----------------

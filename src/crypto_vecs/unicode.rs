@@ -1,13 +1,13 @@
-use std::{convert, fmt, marker};
+use std::{convert, fmt};
 
 use crate::crypto_vecs::traits::{LenBytes, ToBytes};
-use crate::crypto_vecs::{BytesType, UnicodeType};
+use crate::crypto_vecs::{BytesType, CryptoString, UnicodeType};
 
 // ----------------
 
 impl fmt::Display for UnicodeType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Unicode[{}] {{ {} }}", self.len(), self.data)
+        write!(f, "Unicode[{}] {{ {} }}", self.len(), self.data())
     }
 }
 
@@ -19,16 +19,13 @@ impl fmt::Debug for UnicodeType {
 
 impl convert::From<String> for UnicodeType {
     fn from(unicode_string: String) -> Self {
-        Self {
-            data: unicode_string,
-            struct_type: marker::PhantomData,
-        }
+        CryptoString::new_from(unicode_string)
     }
 }
 
 impl convert::From<&str> for UnicodeType {
     fn from(unicode_string: &str) -> Self {
-        Self::from(String::from(unicode_string))
+        CryptoString::new_from(String::from(unicode_string))
     }
 }
 
@@ -42,7 +39,7 @@ impl convert::From<&BytesType> for UnicodeType {
 
 impl ToBytes for UnicodeType {
     fn to_bytes(&self) -> BytesType {
-        let unicode_bytes = Vec::from(self.data.clone());
+        let unicode_bytes = Vec::from(self.data());
 
         BytesType::from(unicode_bytes)
     }
@@ -55,14 +52,14 @@ impl ToBytes for UnicodeType {
 
 impl LenBytes for UnicodeType {
     fn len_bytes(&self) -> usize {
-        self.data.len()
+        self.data().len()
     }
 }
 
 impl UnicodeType {
     // number of characters
     pub fn len(&self) -> usize {
-        self.data.chars().count()
+        self.data().chars().count()
     }
 }
 

@@ -1,7 +1,7 @@
-use std::{convert, fmt, marker};
+use std::{convert, fmt};
 
 use crate::crypto_vecs::traits::{LenBytes, ToBytes};
-use crate::crypto_vecs::{Base64Type, BytesType};
+use crate::crypto_vecs::{Base64Type, BytesType, CryptoString};
 
 // ----------------
 
@@ -39,10 +39,7 @@ impl convert::From<String> for Base64Type {
             invalid_characters
         );
 
-        Self {
-            data: string_without_whitespace,
-            struct_type: marker::PhantomData,
-        }
+        CryptoString::new_from(string_without_whitespace)
     }
 }
 
@@ -96,7 +93,7 @@ impl convert::From<&BytesType> for Base64Type {
 
 impl ToBytes for Base64Type {
     fn to_bytes(&self) -> BytesType {
-        let decoded_bytes = self.data.bytes().fold(Vec::new(), |mut acc, char_int| {
+        let decoded_bytes = self.data().bytes().fold(Vec::new(), |mut acc, char_int| {
             let char_option;
 
             // plus
@@ -170,7 +167,7 @@ impl Base64Type {
 
     // number of characters (base64 alphabet)
     pub fn len(&self) -> usize {
-        self.data.chars().count()
+        self.data().chars().count()
     }
 
     // ----------------
@@ -179,7 +176,7 @@ impl Base64Type {
         let block_size = 8;
 
         let base64_blocks: String =
-            self.data
+            self.data()
                 .chars()
                 .enumerate()
                 .fold(String::new(), |mut acc, (index, char)| {

@@ -1,8 +1,8 @@
 use hex;
-use std::{convert, fmt, marker};
+use std::{convert, fmt};
 
 use crate::crypto_vecs::traits::{LenBytes, ToBytes};
-use crate::crypto_vecs::{BytesType, HexadecimalType};
+use crate::crypto_vecs::{BytesType, CryptoString, HexadecimalType};
 
 // ----------------
 
@@ -41,10 +41,7 @@ impl convert::From<String> for HexadecimalType {
             invalid_characters
         );
 
-        Self {
-            data: string_without_whitespace,
-            struct_type: marker::PhantomData,
-        }
+        CryptoString::new_from(string_without_whitespace)
     }
 }
 
@@ -62,7 +59,7 @@ impl convert::From<&BytesType> for HexadecimalType {
 
 impl ToBytes for HexadecimalType {
     fn to_bytes(&self) -> BytesType {
-        let hex_bytes = hex::decode(&self.data).expect("broken conversion");
+        let hex_bytes = hex::decode(&self.data()).expect("broken conversion");
 
         BytesType::from(hex_bytes)
     }
@@ -75,7 +72,7 @@ impl ToBytes for HexadecimalType {
 
 impl LenBytes for HexadecimalType {
     fn len_bytes(&self) -> usize {
-        self.data.len() / 2
+        self.data().len() / 2
     }
 }
 
@@ -89,7 +86,7 @@ impl HexadecimalType {
         let block_size = 8;
 
         let hex_blocks: String =
-            self.data
+            self.data()
                 .chars()
                 .enumerate()
                 .fold(String::new(), |mut acc, (index, char)| {

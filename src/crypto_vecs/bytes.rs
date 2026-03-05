@@ -1,5 +1,5 @@
 use openssl::{cipher, cipher_ctx};
-use std::{convert, fmt, marker, slice, vec};
+use std::{fmt, vec};
 
 use crate::crypto_vecs::traits::{LenBytes, ToBytes};
 use crate::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType};
@@ -23,27 +23,6 @@ impl fmt::Debug for BytesType {
     }
 }
 
-impl convert::From<Vec<u8>> for BytesType {
-    fn from(bytes: Vec<u8>) -> Self {
-        Self {
-            data: bytes,
-            struct_type: marker::PhantomData,
-        }
-    }
-}
-
-impl convert::From<&[u8]> for BytesType {
-    fn from(bytes: &[u8]) -> Self {
-        Self::from(bytes.to_vec())
-    }
-}
-
-impl convert::From<u8> for BytesType {
-    fn from(byte: u8) -> Self {
-        Self::from(vec![byte])
-    }
-}
-
 impl ToBytes for BytesType {
     // performance: prevent superfluous conversion to Bytes
     fn to_bytes(&self) -> Self {
@@ -63,44 +42,6 @@ impl ToBytes for BytesType {
     // performance: prevent intermediate conversion to Bytes
     fn to_unicode(&self) -> UnicodeType {
         UnicodeType::from(self)
-    }
-}
-
-impl LenBytes for BytesType {
-    fn len_bytes(&self) -> usize {
-        self.data.len()
-    }
-}
-
-impl AsMut<Vec<u8>> for BytesType {
-    // reference to mutable vec
-    fn as_mut(&mut self) -> &mut Vec<u8> {
-        self.data.as_mut()
-    }
-}
-
-impl AsRef<Vec<u8>> for BytesType {
-    // reference to vec
-    fn as_ref(&self) -> &Vec<u8> {
-        self.data.as_ref()
-    }
-}
-
-impl Extend<u8> for BytesType {
-    fn extend<T>(&mut self, iter: T)
-    where
-        T: IntoIterator<Item = u8>,
-    {
-        self.data.extend(iter);
-    }
-}
-
-impl<'a> Extend<&'a u8> for BytesType {
-    fn extend<T>(&mut self, iter: T)
-    where
-        T: IntoIterator<Item = &'a u8>,
-    {
-        self.data.extend(iter);
     }
 }
 
@@ -132,7 +73,7 @@ impl BytesType {
     pub fn to_blocks(&self, block_size: usize) -> BlockBytes {
         assert!(block_size > 0, "block size must be non-zero");
 
-        self.data
+        self.data()
             .chunks(block_size)
             .fold(BlockBytes::new(block_size), |mut acc, block| {
                 acc.push(Self::from(block));
@@ -146,74 +87,9 @@ impl BytesType {
         self.to_blocks(bytes)
     }
 
-    pub fn chunks(&self, chunk_size: usize) -> Vec<Self> {
-        assert!(chunk_size > 0, "chunk size must be non-zero");
-
-        self.data
-            .chunks(chunk_size)
-            .fold(Vec::new(), |mut acc, chunk| {
-                acc.push(Self::from(chunk));
-                acc
-            })
-    }
-
-    pub fn rchunks(&self, chunk_size: usize) -> Vec<Self> {
-        assert!(chunk_size > 0, "chunk size must be non-zero");
-
-        self.data
-            .rchunks(chunk_size)
-            .fold(Vec::new(), |mut acc, chunk| {
-                acc.push(Self::from(chunk));
-                acc
-            })
-    }
-
-    // reference to array
-    pub const fn as_slice(&self) -> &[u8] {
-        self.data.as_slice()
-    }
-
-    // reference to mutable array
-    pub const fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.data.as_mut_slice()
-    }
-
-    // clone of underlying vec
-    pub fn to_vec(&self) -> Vec<u8> {
-        self.data.to_vec()
-    }
-
     pub fn to_iso_8859_1(&self) -> String {
         self.iter()
             .fold(String::new(), |acc, &byte| format!("{acc}{}", byte as char))
-    }
-
-    // ----------------
-
-    // TODO: add tests
-    pub fn get<I>(&self, index: I) -> Option<&I::Output>
-    where
-        I: slice::SliceIndex<[u8]>,
-    {
-        self.data.get(index)
-    }
-
-    pub fn first_n(&self, length: usize) -> Option<Self> {
-        assert!(length > 0);
-
-        self.chunks(length).first().cloned()
-    }
-
-    pub fn last_n(&self, length: usize) -> Option<Self> {
-        assert!(length > 0);
-
-        self.rchunks(length).first().cloned()
-    }
-
-    // ----------------
-
-    pub fn push(&mut self, byte: u8) {
-        self.data.push(byte);
     }
 
     // ----------------

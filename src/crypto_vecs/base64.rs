@@ -17,12 +17,35 @@ pub type Base64Type = CryptoString<Base64>;
 impl InternalData for Base64 {
     type Data = String;
 
-    fn new_from(data: String) -> Self {
-        Self { base64: data }
+    fn new_from(data: Self::Data) -> Self {
+        match Self::clean_and_validate(data) {
+            Ok(data) => Self { base64: data },
+            Err(error) => panic!("{}", error),
+        }
     }
 
     fn capacity(&self) -> usize {
         self.base64.capacity()
+    }
+
+    fn clean_and_validate(data: Self::Data) -> Result<Self::Data, String> {
+        let string_without_whitespace = data
+            .split_ascii_whitespace()
+            .fold(String::new(), |acc, string_slice| acc + string_slice);
+
+        let invalid_characters: String = string_without_whitespace
+            .chars()
+            .filter(|c| !Base64Type::VALID_CHARACTERS.contains(*c))
+            .collect();
+
+        if invalid_characters.is_empty() {
+            Ok(string_without_whitespace)
+        } else {
+            Err(format!(
+                "found invalid base64 characters: {}",
+                invalid_characters
+            ))
+        }
     }
 
     fn get_data(&self) -> &str {
@@ -118,33 +141,6 @@ impl ToBytes for Base64 {
 }
 
 // ----------------
-
-impl convert::From<String> for Base64Type {
-    fn from(base64_string: String) -> Self {
-        let string_without_whitespace = base64_string
-            .split_ascii_whitespace()
-            .fold(String::new(), |acc, string_slice| acc + string_slice);
-
-        let invalid_characters: String = string_without_whitespace
-            .chars()
-            .filter(|c| !Base64Type::VALID_CHARACTERS.contains(*c))
-            .collect();
-
-        assert!(
-            invalid_characters.is_empty(),
-            "found invalid base64 characters: {}",
-            invalid_characters
-        );
-
-        CryptoString::new_from(string_without_whitespace)
-    }
-}
-
-impl convert::From<&str> for Base64Type {
-    fn from(base64_string: &str) -> Self {
-        Self::from(String::from(base64_string))
-    }
-}
 
 impl convert::From<&BytesType> for Base64Type {
     fn from(bytes: &BytesType) -> Self {

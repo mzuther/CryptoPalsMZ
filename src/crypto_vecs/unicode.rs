@@ -17,12 +17,19 @@ pub type UnicodeType = CryptoString<self::Unicode>;
 impl InternalData for Unicode {
     type Data = String;
 
-    fn new_from(data: String) -> Self {
-        Self { unicode: data }
+    fn new_from(data: Self::Data) -> Self {
+        match Self::clean_and_validate(data) {
+            Ok(data) => Self { unicode: data },
+            Err(error) => panic!("{}", error),
+        }
     }
 
     fn capacity(&self) -> usize {
         self.unicode.capacity()
+    }
+
+    fn clean_and_validate(data: Self::Data) -> Result<Self::Data, String> {
+        Ok(data)
     }
 
     fn get_data(&self) -> &str {
@@ -68,18 +75,6 @@ impl ToBytes for Unicode {
 }
 
 // ----------------
-
-impl convert::From<String> for UnicodeType {
-    fn from(unicode_string: String) -> Self {
-        CryptoString::new_from(unicode_string)
-    }
-}
-
-impl convert::From<&str> for UnicodeType {
-    fn from(unicode_string: &str) -> Self {
-        CryptoString::new_from(String::from(unicode_string))
-    }
-}
 
 impl convert::From<&BytesType> for UnicodeType {
     fn from(bytes: &BytesType) -> Self {

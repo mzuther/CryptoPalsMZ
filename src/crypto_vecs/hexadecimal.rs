@@ -18,12 +18,36 @@ pub type HexadecimalType = CryptoString<self::Hexadecimal>;
 impl InternalData for Hexadecimal {
     type Data = String;
 
-    fn new_from(data: String) -> Self {
-        Self { hexadecimal: data }
+    fn new_from(data: Self::Data) -> Self {
+        match Self::clean_and_validate(data) {
+            Ok(data) => Self { hexadecimal: data },
+            Err(error) => panic!("{}", error),
+        }
     }
 
     fn capacity(&self) -> usize {
         self.hexadecimal.capacity()
+    }
+
+    fn clean_and_validate(data: Self::Data) -> Result<Self::Data, String> {
+        let string_without_whitespace = data
+            .split_ascii_whitespace()
+            .fold(String::new(), |acc, string_slice| acc + string_slice)
+            .to_lowercase();
+
+        let invalid_characters: String = string_without_whitespace
+            .chars()
+            .filter(|c| !HexadecimalType::VALID_CHARACTERS.contains(*c))
+            .collect();
+
+        if invalid_characters.is_empty() {
+            Ok(string_without_whitespace)
+        } else {
+            Err(format!(
+                "found invalid hexadecimal characters: {}",
+                invalid_characters
+            ))
+        }
     }
 
     fn get_data(&self) -> &str {
@@ -86,34 +110,6 @@ impl ToBytes for Hexadecimal {
 }
 
 // ----------------
-
-impl convert::From<String> for HexadecimalType {
-    fn from(hex_string: String) -> Self {
-        let string_without_whitespace = hex_string
-            .split_ascii_whitespace()
-            .fold(String::new(), |acc, string_slice| acc + string_slice)
-            .to_lowercase();
-
-        let invalid_characters: String = string_without_whitespace
-            .chars()
-            .filter(|c| !HexadecimalType::VALID_CHARACTERS.contains(*c))
-            .collect();
-
-        assert!(
-            invalid_characters.is_empty(),
-            "found invalid hexadecimal characters: {}",
-            invalid_characters
-        );
-
-        CryptoString::new_from(string_without_whitespace)
-    }
-}
-
-impl convert::From<&str> for HexadecimalType {
-    fn from(hex_string: &str) -> Self {
-        Self::from(String::from(hex_string))
-    }
-}
 
 impl convert::From<&BytesType> for HexadecimalType {
     fn from(bytes: &BytesType) -> Self {

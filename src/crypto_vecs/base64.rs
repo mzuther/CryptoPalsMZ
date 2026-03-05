@@ -36,15 +36,15 @@ impl InternalData for Base64 {
 }
 
 impl Representation for Base64 {
-    fn get_representation_name(&self) -> String {
+    fn representation_name(&self) -> String {
         String::from("Base64")
     }
 
-    fn get_representation_len(&self) -> usize {
+    fn representation_len(&self) -> usize {
         self.len()
     }
 
-    fn get_representation(&self) -> String {
+    fn representation(&self) -> String {
         let block_size = 8;
 
         let base64_blocks: String =

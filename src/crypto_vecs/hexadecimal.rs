@@ -37,15 +37,15 @@ impl InternalData for Hexadecimal {
 }
 
 impl Representation for Hexadecimal {
-    fn get_representation_len(&self) -> usize {
+    fn representation_len(&self) -> usize {
         self.len_bytes()
     }
 
-    fn get_representation_name(&self) -> String {
+    fn representation_name(&self) -> String {
         String::from("Hexadecimal")
     }
 
-    fn get_representation(&self) -> String {
+    fn representation(&self) -> String {
         let block_size = 8;
 
         let hex_blocks: String =

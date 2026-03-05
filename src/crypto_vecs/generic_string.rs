@@ -65,16 +65,16 @@ impl<T> Representation for CryptoString<T>
 where
     T: InternalData + Representation,
 {
-    fn get_representation_name(&self) -> String {
-        self.data.get_representation_name()
+    fn representation_name(&self) -> String {
+        self.data.representation_name()
     }
 
-    fn get_representation_len(&self) -> usize {
-        self.data.get_representation_len()
+    fn representation_len(&self) -> usize {
+        self.data.representation_len()
     }
 
-    fn get_representation(&self) -> String {
-        self.data.get_representation()
+    fn representation(&self) -> String {
+        self.data.representation()
     }
 }
 
@@ -88,9 +88,9 @@ where
         write!(
             f,
             "{}[{}] {{ {} }}",
-            self.get_representation_name(),
-            self.get_representation_len(),
-            self.get_representation()
+            self.representation_name(),
+            self.representation_len(),
+            self.representation()
         )
     }
 }

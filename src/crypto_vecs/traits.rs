@@ -18,10 +18,12 @@ pub trait InternalData {
     }
 }
 
+// ----------------
+
 pub trait Representation {
-    fn get_representation_name(&self) -> String;
-    fn get_representation_len(&self) -> usize;
-    fn get_representation(&self) -> String;
+    fn representation_name(&self) -> String;
+    fn representation_len(&self) -> usize;
+    fn representation(&self) -> String;
 }
 
 // ----------------

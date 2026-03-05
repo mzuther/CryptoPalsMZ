@@ -6,13 +6,28 @@ use crate::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, HexadecimalTyp
 
 // ----------------
 
+impl Representation for BytesType {
+    fn representation_len(&self) -> usize {
+        self.len_bytes()
+    }
+
+    fn representation_name(&self) -> String {
+        String::from("Bytes")
+    }
+
+    fn representation(&self) -> String {
+        self.to_hexadecimal().representation()
+    }
+}
+
 impl fmt::Display for BytesType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Bytes[{}] {{ {} }}",
-            self.len_bytes(),
-            self.to_hexadecimal().get_representation()
+            "{}[{}] {{ {} }}",
+            self.representation_name(),
+            self.representation_len(),
+            self.representation()
         )
     }
 }
@@ -22,6 +37,8 @@ impl fmt::Debug for BytesType {
         write!(f, "{}", self)
     }
 }
+
+// ----------------
 
 impl ToBytes for BytesType {
     // performance: prevent superfluous conversion to Bytes
@@ -44,6 +61,8 @@ impl ToBytes for BytesType {
         UnicodeType::from(self)
     }
 }
+
+// ----------------
 
 impl BytesType {
     const LOOKUP_BITS_IN_NIBBLE: [u32; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];

@@ -36,15 +36,15 @@ impl InternalData for Unicode {
 }
 
 impl Representation for Unicode {
-    fn get_representation_name(&self) -> String {
+    fn representation_name(&self) -> String {
         String::from("Unicode")
     }
 
-    fn get_representation_len(&self) -> usize {
+    fn representation_len(&self) -> usize {
         self.len()
     }
 
-    fn get_representation(&self) -> String {
+    fn representation(&self) -> String {
         self.unicode.clone()
     }
 }

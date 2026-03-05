@@ -1,29 +1,22 @@
-use crate::crypto_vecs;
+use crate::crypto_vecs::{BytesType, LenBytes, ToBytes, UnicodeType};
 
 use std::{convert, fmt, marker};
 
 // ----------------
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
-pub struct UnicodeType;
-
-pub type Unicode = crypto_vecs::CryptoString<self::UnicodeType>;
-
-// ----------------
-
-impl fmt::Display for self::Unicode {
+impl fmt::Display for UnicodeType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Unicode[{}] {{ {} }}", self.len(), self.data)
     }
 }
 
-impl fmt::Debug for self::Unicode {
+impl fmt::Debug for UnicodeType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)
     }
 }
 
-impl convert::From<String> for self::Unicode {
+impl convert::From<String> for UnicodeType {
     fn from(unicode_string: String) -> Self {
         Self {
             data: unicode_string,
@@ -32,25 +25,25 @@ impl convert::From<String> for self::Unicode {
     }
 }
 
-impl convert::From<&str> for self::Unicode {
+impl convert::From<&str> for UnicodeType {
     fn from(unicode_string: &str) -> Self {
         Self::from(String::from(unicode_string))
     }
 }
 
-impl convert::From<&crypto_vecs::Bytes> for self::Unicode {
-    fn from(bytes: &crypto_vecs::Bytes) -> Self {
+impl convert::From<&BytesType> for UnicodeType {
+    fn from(bytes: &BytesType) -> Self {
         let unicode_string = String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string");
 
         Self::from(unicode_string)
     }
 }
 
-impl crypto_vecs::ToBytes for self::Unicode {
-    fn to_bytes(&self) -> crypto_vecs::Bytes {
+impl ToBytes for UnicodeType {
+    fn to_bytes(&self) -> BytesType {
         let unicode_bytes = Vec::from(self.data.clone());
 
-        crypto_vecs::Bytes::from(unicode_bytes)
+        BytesType::from(unicode_bytes)
     }
 
     // performance: prevent intermediate conversion to Bytes
@@ -59,13 +52,13 @@ impl crypto_vecs::ToBytes for self::Unicode {
     }
 }
 
-impl crypto_vecs::LenBytes for self::Unicode {
+impl LenBytes for UnicodeType {
     fn len_bytes(&self) -> usize {
         self.data.len()
     }
 }
 
-impl self::Unicode {
+impl UnicodeType {
     // number of characters
     pub fn len(&self) -> usize {
         self.data.chars().count()
@@ -77,34 +70,33 @@ impl self::Unicode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto_vecs::{LenBytes, ToBytes};
 
     // ----------------
 
     #[test]
     fn unit_unicode_from_bytes_ascii() {
-        let bytes = crypto_vecs::Bytes::from(vec![0x41, 0x62, 0x33]);
-        let expected_result = self::Unicode::from("Ab3");
+        let bytes = BytesType::from(vec![0x41, 0x62, 0x33]);
+        let expected_result = UnicodeType::from("Ab3");
 
-        let result = self::Unicode::from(&bytes);
+        let result = UnicodeType::from(&bytes);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_unicode_from_bytes_unicode() {
-        let bytes = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
-        let expected_result = self::Unicode::from("Aü你");
+        let bytes = BytesType::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let expected_result = UnicodeType::from("Aü你");
 
-        let result = self::Unicode::from(&bytes);
+        let result = UnicodeType::from(&bytes);
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
     fn unit_unicode_to_unicode_ascii() {
-        let bytes = crypto_vecs::Bytes::from(vec![0x41, 0x62, 0x33]);
-        let expected_result = self::Unicode::from("Ab3");
+        let bytes = BytesType::from(vec![0x41, 0x62, 0x33]);
+        let expected_result = UnicodeType::from("Ab3");
 
         let result = bytes.to_unicode();
 
@@ -113,8 +105,8 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_unicode_unicode() {
-        let bytes = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
-        let expected_result = self::Unicode::from("Aü你");
+        let bytes = BytesType::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let expected_result = UnicodeType::from("Aü你");
 
         let result = bytes.to_unicode();
 
@@ -123,8 +115,8 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_bytes_ascii() {
-        let unicode = self::Unicode::from("Ab3");
-        let expected_result = crypto_vecs::Bytes::from(vec![0x41, 0x62, 0x33]);
+        let unicode = UnicodeType::from("Ab3");
+        let expected_result = BytesType::from(vec![0x41, 0x62, 0x33]);
 
         let result = unicode.to_bytes();
 
@@ -133,8 +125,8 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_bytes_unicode() {
-        let unicode = self::Unicode::from("Aü你");
-        let expected_result = crypto_vecs::Bytes::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let unicode = UnicodeType::from("Aü你");
+        let expected_result = BytesType::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
         let result = unicode.to_bytes();
 
@@ -143,7 +135,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_string() {
-        let unicode = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
+        let unicode = UnicodeType::from("Hi. Servus. Grüezi. 你好.");
         let expected_result = String::from("Unicode[23] { Hi. Servus. Grüezi. 你好. }");
 
         let result = unicode.to_string();
@@ -153,7 +145,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_string_keep_whitespace() {
-        let unicode = self::Unicode::from("\n Hi. Servus. Grüezi. 你好.\t");
+        let unicode = UnicodeType::from("\n Hi. Servus. Grüezi. 你好.\t");
         let expected_result = String::from("Unicode[26] { \n Hi. Servus. Grüezi. 你好.\t }");
 
         let result = unicode.to_string();
@@ -165,7 +157,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_len_ascii() {
-        let unicode = self::Unicode::from("Hi. Servus. Moin.");
+        let unicode = UnicodeType::from("Hi. Servus. Moin.");
 
         let expected_result = 17;
 
@@ -176,7 +168,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_len_unicode() {
-        let unicode = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
+        let unicode = UnicodeType::from("Hi. Servus. Grüezi. 你好.");
 
         let expected_result = 23;
 
@@ -187,7 +179,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_len_bytes_ascii() {
-        let unicode = self::Unicode::from("Hi. Servus. Moin.");
+        let unicode = UnicodeType::from("Hi. Servus. Moin.");
 
         let expected_result = 17;
 
@@ -198,7 +190,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_len_bytes_unicode() {
-        let unicode = self::Unicode::from("Hi. Servus. Grüezi. 你好.");
+        let unicode = UnicodeType::from("Hi. Servus. Grüezi. 你好.");
 
         // single-byte characters: ASCII
         let mut expected_result = 20;

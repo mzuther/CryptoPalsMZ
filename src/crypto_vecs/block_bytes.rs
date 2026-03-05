@@ -1,4 +1,4 @@
-use crate::crypto_vecs::{self, LenBytes};
+use crate::crypto_vecs::{self, BytesType, LenBytes, ToBytes};
 
 use std::{convert, fmt, iter, slice, vec};
 
@@ -6,7 +6,7 @@ use std::{convert, fmt, iter, slice, vec};
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct BlockBytes {
-    blocks: Vec<crypto_vecs::Bytes>,
+    blocks: Vec<BytesType>,
     block_size: usize,
     strict_filling: bool,
 }
@@ -36,8 +36,8 @@ impl fmt::Debug for self::BlockBytes {
 }
 
 // uses lax filling to maximize usefulness
-impl convert::From<Vec<crypto_vecs::Bytes>> for self::BlockBytes {
-    fn from(blocks: Vec<crypto_vecs::Bytes>) -> Self {
+impl convert::From<Vec<BytesType>> for self::BlockBytes {
+    fn from(blocks: Vec<BytesType>) -> Self {
         assert!(!blocks.is_empty());
 
         let block_sizes = blocks.iter().map(|block| block.len_bytes());
@@ -51,17 +51,16 @@ impl convert::From<Vec<crypto_vecs::Bytes>> for self::BlockBytes {
     }
 }
 
-impl crypto_vecs::ToBytes for self::BlockBytes {
-    fn to_bytes(&self) -> crypto_vecs::Bytes {
-        self.iter()
-            .fold(crypto_vecs::Bytes::new(), |mut acc, block| {
-                acc.extend(block.to_vec());
-                acc
-            })
+impl ToBytes for self::BlockBytes {
+    fn to_bytes(&self) -> BytesType {
+        self.iter().fold(BytesType::new(), |mut acc, block| {
+            acc.extend(block.to_vec());
+            acc
+        })
     }
 }
 
-impl crypto_vecs::LenBytes for self::BlockBytes {
+impl LenBytes for self::BlockBytes {
     // total number of bytes in all blocks
     fn len_bytes(&self) -> usize {
         self.iter().fold(0, |acc, buffer| acc + buffer.len_bytes())
@@ -124,23 +123,23 @@ impl self::BlockBytes {
 
     // ----------------
 
-    pub fn iter(&self) -> slice::Iter<'_, crypto_vecs::Bytes> {
+    pub fn iter(&self) -> slice::Iter<'_, BytesType> {
         self.blocks.iter()
     }
 
-    pub fn iter_mut(&mut self) -> slice::IterMut<'_, crypto_vecs::Bytes> {
+    pub fn iter_mut(&mut self) -> slice::IterMut<'_, BytesType> {
         self.blocks.iter_mut()
     }
 
-    pub fn to_vec(&self) -> Vec<crypto_vecs::Bytes> {
+    pub fn to_vec(&self) -> Vec<BytesType> {
         self.blocks.to_vec()
     }
 
-    fn get_last_block(&self) -> &crypto_vecs::Bytes {
+    fn get_last_block(&self) -> &BytesType {
         self.iter().last().expect("BlockBytes must not be empty")
     }
 
-    fn get_last_block_mut(&mut self) -> &mut crypto_vecs::Bytes {
+    fn get_last_block_mut(&mut self) -> &mut BytesType {
         self.iter_mut()
             .last()
             .expect("BlockBytes must not be empty")
@@ -156,7 +155,7 @@ impl self::BlockBytes {
 
     // ----------------
 
-    pub fn push(&mut self, block: crypto_vecs::Bytes) {
+    pub fn push(&mut self, block: BytesType) {
         let block_size_bytes = self.get_block_size();
 
         assert!(
@@ -179,7 +178,7 @@ impl self::BlockBytes {
         self.blocks.push(block);
     }
 
-    pub fn pop(&mut self) -> Option<crypto_vecs::Bytes> {
+    pub fn pop(&mut self) -> Option<BytesType> {
         self.blocks.pop()
     }
 
@@ -308,7 +307,7 @@ impl self::BlockBytes {
                 let block_padding = vec![number_of_missing_bytes as u8; number_of_missing_bytes];
 
                 if number_of_missing_bytes == self.get_block_size() {
-                    let new_block = crypto_vecs::Bytes::from(block_padding);
+                    let new_block = BytesType::from(block_padding);
                     padded.push(new_block);
                 } else {
                     padded.extend_last_block(block_padding);
@@ -338,7 +337,7 @@ impl self::BlockBytes {
 
     // ----------------
 
-    pub fn aes_ecb_encrypt(&self, key: &crypto_vecs::Bytes) -> Result<Self, String> {
+    pub fn aes_ecb_encrypt(&self, key: &BytesType) -> Result<Self, String> {
         assert!(self.uses_strict_filling());
 
         let block_size_bits = self.get_block_size_bits();
@@ -355,7 +354,7 @@ impl self::BlockBytes {
         Ok(cypher)
     }
 
-    pub fn aes_ecb_decrypt(&self, key: &crypto_vecs::Bytes) -> Result<Self, String> {
+    pub fn aes_ecb_decrypt(&self, key: &BytesType) -> Result<Self, String> {
         assert!(self.uses_strict_filling());
 
         let block_size_bits = self.get_block_size_bits();
@@ -371,11 +370,7 @@ impl self::BlockBytes {
         padded_cypher.unpad_pkcs7()
     }
 
-    pub fn aes_cbc_encrypt(
-        &self,
-        key: &crypto_vecs::Bytes,
-        iv: &crypto_vecs::Bytes,
-    ) -> Result<Self, String> {
+    pub fn aes_cbc_encrypt(&self, key: &BytesType, iv: &BytesType) -> Result<Self, String> {
         assert!(self.uses_strict_filling());
 
         let block_size_bits = self.get_block_size_bits();
@@ -405,11 +400,7 @@ impl self::BlockBytes {
         Ok(cypher)
     }
 
-    pub fn aes_cbc_decrypt(
-        &self,
-        key: &crypto_vecs::Bytes,
-        iv: &crypto_vecs::Bytes,
-    ) -> Result<Self, String> {
+    pub fn aes_cbc_decrypt(&self, key: &BytesType, iv: &BytesType) -> Result<Self, String> {
         assert!(self.uses_strict_filling());
 
         let block_size_bits = self.get_block_size_bits();
@@ -443,7 +434,6 @@ impl self::BlockBytes {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto_vecs::ToBytes;
 
     // ----------------
 
@@ -500,7 +490,7 @@ mod tests {
     #[test]
     fn unit_blockbytes_len_single_block() {
         let block_size = 7;
-        let result = crypto_vecs::Bytes::from_hex_literal("4162f3d3 426f12").to_blocks(block_size);
+        let result = BytesType::from_hex_literal("4162f3d3 426f12").to_blocks(block_size);
 
         assert_eq!(result.len(), 1);
         assert_eq!(result.len_bytes(), 7);
@@ -509,8 +499,7 @@ mod tests {
     #[test]
     fn unit_blockbytes_len_two_blocks() {
         let block_size = 6;
-        let result =
-            crypto_vecs::Bytes::from_hex_literal("4162f3d3 426f120d ff").to_blocks(block_size);
+        let result = BytesType::from_hex_literal("4162f3d3 426f120d ff").to_blocks(block_size);
 
         assert_eq!(result.len(), 2);
         assert_eq!(result.len_bytes(), 9);
@@ -522,15 +511,14 @@ mod tests {
     fn unit_blockbytes_find_duplicate_blocks_blocksize_1() {
         let block_size = 1;
 
-        let bytes = crypto_vecs::Bytes::from_hex_literal(
-            "3a 1b d4 cb d0 aa 25 f2 66 db b8 fe 16 6e d4 cb 25 f3",
-        );
+        let bytes =
+            BytesType::from_hex_literal("3a 1b d4 cb d0 aa 25 f2 66 db b8 fe 16 6e d4 cb 25 f3");
         let block_bytes = bytes.to_blocks(block_size);
 
         let mut expected_result = self::BlockBytes::new(block_size);
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("25"));
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("cb"));
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4"));
+        expected_result.push(BytesType::from_hex_literal("25"));
+        expected_result.push(BytesType::from_hex_literal("cb"));
+        expected_result.push(BytesType::from_hex_literal("d4"));
 
         let result = block_bytes.find_duplicate_blocks();
 
@@ -541,15 +529,15 @@ mod tests {
     fn unit_blockbytes_find_duplicate_blocks_blocksize_2() {
         let block_size = 2;
 
-        let bytes = crypto_vecs::Bytes::from_hex_literal(
+        let bytes = BytesType::from_hex_literal(
             "3a1b 7e49 d4cb d0aa 25f2 66db b8fe 166e d4cb 7e49 db25 d4cb",
         );
         let block_bytes = bytes.to_blocks(block_size);
 
         let mut expected_result = self::BlockBytes::new(block_size);
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("7e49"));
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cb"));
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cb"));
+        expected_result.push(BytesType::from_hex_literal("7e49"));
+        expected_result.push(BytesType::from_hex_literal("d4cb"));
+        expected_result.push(BytesType::from_hex_literal("d4cb"));
 
         let result = block_bytes.find_duplicate_blocks();
 
@@ -560,9 +548,8 @@ mod tests {
     fn unit_blockbytes_find_duplicate_blocks_blocksize_3() {
         let block_size = 3;
 
-        let bytes = crypto_vecs::Bytes::from_hex_literal(
-            "3a1b7e 49d4cb d0aa25 f266db b8fe16 6ed4cb d0aadb 25f266",
-        );
+        let bytes =
+            BytesType::from_hex_literal("3a1b7e 49d4cb d0aa25 f266db b8fe16 6ed4cb d0aadb 25f266");
         let block_bytes = bytes.to_blocks(block_size);
 
         let expected_result = self::BlockBytes::new(block_size);
@@ -576,14 +563,13 @@ mod tests {
     fn unit_blockbytes_find_duplicate_blocks_blocksize_4() {
         let block_size = 4;
 
-        let bytes = crypto_vecs::Bytes::from_hex_literal(
-            "3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266",
-        );
+        let bytes =
+            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266");
         let block_bytes = bytes.to_blocks(block_size);
 
         let mut expected_result = self::BlockBytes::new(block_size);
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("3a1b7e49"));
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cbd0aa"));
+        expected_result.push(BytesType::from_hex_literal("3a1b7e49"));
+        expected_result.push(BytesType::from_hex_literal("d4cbd0aa"));
 
         let result = block_bytes.find_duplicate_blocks();
 
@@ -594,13 +580,12 @@ mod tests {
     fn unit_blockbytes_find_duplicate_blocks_blocksize_4_dangling_end() {
         let block_size = 4;
 
-        let bytes =
-            crypto_vecs::Bytes::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db");
+        let bytes = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db");
         let block_bytes = bytes.to_blocks(block_size);
 
         let mut expected_result = self::BlockBytes::new(block_size);
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("3a1b7e49"));
-        expected_result.push(crypto_vecs::Bytes::from_hex_literal("d4cbd0aa"));
+        expected_result.push(BytesType::from_hex_literal("3a1b7e49"));
+        expected_result.push(BytesType::from_hex_literal("d4cbd0aa"));
 
         let result = block_bytes.find_duplicate_blocks();
 
@@ -611,9 +596,8 @@ mod tests {
     fn unit_blockbytes_find_duplicate_blocks_blocksize_8() {
         let block_size = 8;
 
-        let bytes = crypto_vecs::Bytes::from_hex_literal(
-            "3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266",
-        );
+        let bytes =
+            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266");
         let block_bytes = bytes.to_blocks(block_size);
 
         let expected_result = self::BlockBytes::new(block_size);
@@ -628,7 +612,7 @@ mod tests {
     #[test]
     fn unit_blockbytes_is_padded_pkcs7_single_block_incomplete() {
         let block_size = 4;
-        let blocks = crypto_vecs::Bytes::from_hex_literal("db25f2").to_blocks(block_size);
+        let blocks = BytesType::from_hex_literal("db25f2").to_blocks(block_size);
 
         let expected_result = Err(1);
 
@@ -640,7 +624,7 @@ mod tests {
     #[test]
     fn unit_blockbytes_is_padded_pkcs7_single_block_unpadded() {
         let block_size = 4;
-        let bytes = crypto_vecs::Bytes::from_hex_literal("db25f266").to_blocks(block_size);
+        let bytes = BytesType::from_hex_literal("db25f266").to_blocks(block_size);
 
         let expected_result = Err(4);
 
@@ -652,7 +636,7 @@ mod tests {
     #[test]
     fn unit_blockbytes_is_padded_pkcs7_single_block_correctly_padded() {
         let block_size = 4;
-        let bytes = crypto_vecs::Bytes::from_hex_literal("db250202").to_blocks(block_size);
+        let bytes = BytesType::from_hex_literal("db250202").to_blocks(block_size);
 
         let expected_result = Ok(2);
 
@@ -664,7 +648,7 @@ mod tests {
     #[test]
     fn unit_blockbytes_is_padded_pkcs7_single_block_incorrectly_padded() {
         let block_size = 4;
-        let bytes = crypto_vecs::Bytes::from_hex_literal("db25ff02").to_blocks(block_size);
+        let bytes = BytesType::from_hex_literal("db25ff02").to_blocks(block_size);
 
         let expected_result = Err(4);
 
@@ -676,7 +660,7 @@ mod tests {
     #[test]
     fn unit_blockbytes_is_padded_pkcs7_two_blocks_incomplete() {
         let block_size = 4;
-        let bytes = crypto_vecs::Bytes::from_hex_literal("3a1b7e49 db").to_blocks(block_size);
+        let bytes = BytesType::from_hex_literal("3a1b7e49 db").to_blocks(block_size);
 
         let expected_result = Err(3);
 
@@ -688,11 +672,9 @@ mod tests {
     #[test]
     fn unit_blockbytes_pad_pkcs7_single_block() {
         let block_size = 20;
-        let unpadded =
-            crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
+        let unpadded = BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
 
-        let expected_result =
-            crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04");
+        let expected_result = BytesType::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04");
 
         let result = unpadded.pad_pkcs7().to_bytes();
 
@@ -702,10 +684,9 @@ mod tests {
     #[test]
     fn unit_blockbytes_pad_pkcs7_two_blocks() {
         let block_size = 6;
-        let unpadded =
-            crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
+        let unpadded = BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
 
-        let expected_result = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02");
+        let expected_result = BytesType::from_unicode_literal("YELLOW SUBMARINE\x02\x02");
 
         let result = unpadded.pad_pkcs7().to_bytes();
 
@@ -715,12 +696,10 @@ mod tests {
     #[test]
     fn unit_blockbytes_pad_pkcs7_full_block_unpadded() {
         let block_size = 8;
-        let unpadded =
-            crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
+        let unpadded = BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
 
-        let expected_result = crypto_vecs::Bytes::from_unicode_literal(
-            "YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08",
-        );
+        let expected_result =
+            BytesType::from_unicode_literal("YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08");
 
         let result = unpadded.pad_pkcs7().to_bytes();
 
@@ -730,10 +709,9 @@ mod tests {
     #[test]
     fn unit_blockbytes_pad_pkcs7_full_block_correctly_padded() {
         let block_size = 8;
-        let unpadded =
-            crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01").to_blocks(block_size);
+        let unpadded = BytesType::from_unicode_literal("YELLOW SUBMARIN\x01").to_blocks(block_size);
 
-        let expected_result = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01");
+        let expected_result = BytesType::from_unicode_literal("YELLOW SUBMARIN\x01");
 
         let result = unpadded.pad_pkcs7().to_bytes();
 
@@ -743,10 +721,10 @@ mod tests {
     #[test]
     fn unit_blockbytes_pad_pkcs7_full_block_incorrectly_padded() {
         let block_size = 8;
-        let unpadded = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARI\x01\x02")
-            .to_blocks(block_size);
+        let unpadded =
+            BytesType::from_unicode_literal("YELLOW SUBMARI\x01\x02").to_blocks(block_size);
 
-        let expected_result = crypto_vecs::Bytes::from_unicode_literal(
+        let expected_result = BytesType::from_unicode_literal(
             "YELLOW SUBMARI\x01\x02\x08\x08\x08\x08\x08\x08\x08\x08",
         );
 
@@ -758,11 +736,11 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_single_block_four_bytes() {
         let block_size = 20;
-        let padded = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04")
+        let padded = BytesType::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04")
             .to_blocks(block_size);
 
         let expected_result =
-            Ok(crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size));
+            Ok(BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size));
 
         let result = padded.unpad_pkcs7();
 
@@ -772,11 +750,10 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_two_blocks_single_byte() {
         let block_size = 8;
-        let padded =
-            crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARIN\x01").to_blocks(block_size);
+        let padded = BytesType::from_unicode_literal("YELLOW SUBMARIN\x01").to_blocks(block_size);
 
         let expected_result =
-            Ok(crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARIN").to_blocks(block_size));
+            Ok(BytesType::from_unicode_literal("YELLOW SUBMARIN").to_blocks(block_size));
 
         let result = padded.unpad_pkcs7();
 
@@ -786,11 +763,11 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_two_blocks_padded_two_bytes() {
         let block_size = 6;
-        let padded = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02")
-            .to_blocks(block_size);
+        let padded =
+            BytesType::from_unicode_literal("YELLOW SUBMARINE\x02\x02").to_blocks(block_size);
 
         let expected_result =
-            Ok(crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size));
+            Ok(BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size));
 
         let result = padded.unpad_pkcs7();
 
@@ -800,13 +777,12 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_full_block_padding() {
         let block_size = 8;
-        let padded = crypto_vecs::Bytes::from_unicode_literal(
-            "YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08",
-        )
-        .to_blocks(block_size);
+        let padded =
+            BytesType::from_unicode_literal("YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08")
+                .to_blocks(block_size);
 
         let expected_result =
-            Ok(crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size));
+            Ok(BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size));
 
         let result = padded.unpad_pkcs7();
 
@@ -816,8 +792,7 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_no_padding() {
         let block_size = 8;
-        let padded =
-            crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
+        let padded = BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
 
         let expected_result = Err(String::from("invalid PKCS#7 padding"));
 
@@ -829,8 +804,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_incorrect_padding_wrong_byte() {
         let block_size = 8;
-        let padded = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARI\x01\x02")
-            .to_blocks(block_size);
+        let padded =
+            BytesType::from_unicode_literal("YELLOW SUBMARI\x01\x02").to_blocks(block_size);
 
         let expected_result = Err(String::from("invalid PKCS#7 padding"));
 
@@ -842,8 +817,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_incorrect_padding_overhanging_bytes() {
         let block_size = 8;
-        let padded = crypto_vecs::Bytes::from_unicode_literal("YELLOW SUBMARINE\x02\x02")
-            .to_blocks(block_size);
+        let padded =
+            BytesType::from_unicode_literal("YELLOW SUBMARINE\x02\x02").to_blocks(block_size);
 
         let expected_result = Err(String::from("invalid PKCS#7 padding"));
 
@@ -858,11 +833,11 @@ mod tests {
     fn unit_blockbytes_aes_128_ecb_encrypt_unpadded() {
         let block_size_bits = 128;
 
-        let plain = crypto_vecs::Bytes::from_unicode_literal(
+        let plain = BytesType::from_unicode_literal(
             "Mary had a little lamb whose fleece was white as snow.",
         )
         .to_blocks_bits(block_size_bits);
-        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
+        let key = BytesType::from_unicode_literal("Little Test 1234");
 
         // echo -n "Mary had a little lamb whose fleece was white as snow." | \
         // openssl enc \
@@ -870,7 +845,7 @@ mod tests {
         //     -nosalt \
         //     -K "4c6974746c6520546573742031323334" \
         //     -out cypher.hex
-        let expected_result = crypto_vecs::Bytes::from_hex_literal(
+        let expected_result = BytesType::from_hex_literal(
             "3a1b7e49 d4cbd0aa 25f266db b8fe166e
                  06556a04 f1ba7f64 991d619d e146b609
                  6298d2f8 ef0fceb7 969e88b0 569eb873
@@ -893,12 +868,12 @@ mod tests {
     fn unit_blockbytes_aes_128_ecb_encrypt_padded() {
         let block_size_bits = 128;
 
-        let plain = crypto_vecs::Bytes::from_unicode_literal(
+        let plain = BytesType::from_unicode_literal(
             "Mary had a little lamb whose fleece was white as snow.\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a",
         ).to_blocks_bits(block_size_bits);
-        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
+        let key = BytesType::from_unicode_literal("Little Test 1234");
 
-        let expected_result = crypto_vecs::Bytes::from_hex_literal(
+        let expected_result = BytesType::from_hex_literal(
             "3a1b7e49 d4cbd0aa 25f266db b8fe166e
                  06556a04 f1ba7f64 991d619d e146b609
                  6298d2f8 ef0fceb7 969e88b0 569eb873
@@ -921,16 +896,16 @@ mod tests {
     fn unit_blockbytes_aes_128_ecb_decrypt() {
         let block_size_bits = 128;
 
-        let cypher = crypto_vecs::Bytes::from_hex_literal(
+        let cypher = BytesType::from_hex_literal(
             "3a1b7e49 d4cbd0aa 25f266db b8fe166e
                  06556a04 f1ba7f64 991d619d e146b609
                  6298d2f8 ef0fceb7 969e88b0 569eb873
                  adc5da56 80f7ecb3 ebbb2030 6b4af841",
         )
         .to_blocks_bits(block_size_bits);
-        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
+        let key = BytesType::from_unicode_literal("Little Test 1234");
 
-        let expected_result = crypto_vecs::Bytes::from_unicode_literal(
+        let expected_result = BytesType::from_unicode_literal(
             "Mary had a little lamb whose fleece was white as snow.",
         );
 
@@ -943,12 +918,12 @@ mod tests {
     fn unit_blockbytes_aes_128_cbc_encrypt_unpadded() {
         let block_size_bits = 128;
 
-        let plain = crypto_vecs::Bytes::from_unicode_literal(
+        let plain = BytesType::from_unicode_literal(
             "Mary had a little lamb whose fleece was white as snow.",
         )
         .to_blocks_bits(block_size_bits);
-        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
-        let iv = crypto_vecs::Bytes::from_hex_literal("0fcd542b efac4a80 0a1cbf2e 87ccabfe");
+        let key = BytesType::from_unicode_literal("Little Test 1234");
+        let iv = BytesType::from_hex_literal("0fcd542b efac4a80 0a1cbf2e 87ccabfe");
 
         // echo -n "Mary had a little lamb whose fleece was white as snow." | \
         // openssl enc \
@@ -957,7 +932,7 @@ mod tests {
         //     -K "4c6974746c6520546573742031323334" \
         //     -iv "0fcd542befac4a800a1cbf2e87ccabfe" \
         //     -out cypher.hex
-        let expected_result = crypto_vecs::Bytes::from_hex_literal(
+        let expected_result = BytesType::from_hex_literal(
             "0a893579 c5a2475b bbb0df78 fb26026c
                  e787e9bd 050f3af2 f43df9cf 3b864a23
                  100ed7dc 1d39c623 5ae5aba4 0a515932
@@ -980,13 +955,13 @@ mod tests {
     fn unit_blockbytes_aes_128_cbc_encrypt_padded() {
         let block_size_bits = 128;
 
-        let plain = crypto_vecs::Bytes::from_unicode_literal(
+        let plain = BytesType::from_unicode_literal(
             "Mary had a little lamb whose fleece was white as snow.\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a",
         ).to_blocks_bits(block_size_bits);
-        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
-        let iv = crypto_vecs::Bytes::from_hex_literal("0fcd542b efac4a80 0a1cbf2e 87ccabfe");
+        let key = BytesType::from_unicode_literal("Little Test 1234");
+        let iv = BytesType::from_hex_literal("0fcd542b efac4a80 0a1cbf2e 87ccabfe");
 
-        let expected_result = crypto_vecs::Bytes::from_hex_literal(
+        let expected_result = BytesType::from_hex_literal(
             "0a893579 c5a2475b bbb0df78 fb26026c
                  e787e9bd 050f3af2 f43df9cf 3b864a23
                  100ed7dc 1d39c623 5ae5aba4 0a515932
@@ -1009,17 +984,17 @@ mod tests {
     fn unit_blockbytes_aes_128_cbc_decrypt() {
         let block_size_bits = 128;
 
-        let cypher = crypto_vecs::Bytes::from_hex_literal(
+        let cypher = BytesType::from_hex_literal(
             "0a893579 c5a2475b bbb0df78 fb26026c
                  e787e9bd 050f3af2 f43df9cf 3b864a23
                  100ed7dc 1d39c623 5ae5aba4 0a515932
                  128e050c 80c74856 e0aa6510 3f7811d2",
         )
         .to_blocks_bits(block_size_bits);
-        let key = crypto_vecs::Bytes::from_unicode_literal("Little Test 1234");
-        let iv = crypto_vecs::Bytes::from_hex_literal("0fcd542b efac4a80 0a1cbf2e 87ccabfe");
+        let key = BytesType::from_unicode_literal("Little Test 1234");
+        let iv = BytesType::from_hex_literal("0fcd542b efac4a80 0a1cbf2e 87ccabfe");
 
-        let expected_result = crypto_vecs::Bytes::from_unicode_literal(
+        let expected_result = BytesType::from_unicode_literal(
             "Mary had a little lamb whose fleece was white as snow.",
         );
 

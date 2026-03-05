@@ -2,7 +2,7 @@
 
 use cryptopals::constants;
 
-use cryptopals::crypto_vecs::{self, ToBytes};
+use cryptopals::crypto_vecs::{Base64Type, BytesType, ToBytes};
 use std::fs;
 
 // ----------------
@@ -13,7 +13,7 @@ fn main() {
 
 fn challenge_06() {
     let cypher_string: String = fs::read_to_string("original/6.txt").expect("could not read file");
-    let cypher = crypto_vecs::Bytes::from_base64_literal(&cypher_string);
+    let cypher = BytesType::from_base64_literal(&cypher_string);
 
     let keysize_range = 2..41;
     let mut scores = cryptopals::guess_keysize_from_hamming_distance(&cypher, &keysize_range, 10);
@@ -34,7 +34,7 @@ fn challenge_06() {
 
     let keysize = score.keysize;
     let transposed_blocks = cypher.transpose(keysize);
-    let mut proposed_key = crypto_vecs::Bytes::new();
+    let mut proposed_key = BytesType::new();
 
     for (index, block) in transposed_blocks.iter().enumerate() {
         let mut scores = cryptopals::find_lowest_score_xor(block);
@@ -53,9 +53,8 @@ fn challenge_06() {
         proposed_key.extend(score.key.as_slice());
     }
 
-    let manual_key = crypto_vecs::Bytes::from_hex_literal(
-        "5465726d696e61746f7220583a204272696e6720746865206e6f697365",
-    );
+    let manual_key =
+        BytesType::from_hex_literal("5465726d696e61746f7220583a204272696e6720746865206e6f697365");
 
     assert_eq!(manual_key, proposed_key);
 
@@ -69,9 +68,8 @@ fn challenge_06() {
 }
 
 fn play_with_xor() {
-    let plain =
-        crypto_vecs::Bytes::from_unicode_literal("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");
-    let key = crypto_vecs::Bytes::from_unicode_literal("ESWAREINMAL");
+    let plain = BytesType::from_unicode_literal("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");
+    let key = BytesType::from_unicode_literal("ESWAREINMAL");
 
     let cypher = plain.fixed_xor(&key);
 

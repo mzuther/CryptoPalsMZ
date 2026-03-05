@@ -1,5 +1,4 @@
-use crate::crypto_vecs::LenBytes;
-
+use crate::crypto_vecs::{BytesType, LenBytes};
 use std::{cmp, collections::HashMap, ops::Range};
 
 pub mod constants;
@@ -10,8 +9,8 @@ pub mod crypto_vecs;
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct ScoreXOR {
     pub score: f64,
-    pub key: crypto_vecs::Bytes,
-    pub plain_text: crypto_vecs::Bytes,
+    pub key: BytesType,
+    pub plain_text: BytesType,
 }
 
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -22,11 +21,11 @@ pub struct ScoreKeysize {
 
 // ----------------
 
-pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<ScoreXOR> {
+pub fn find_lowest_score_xor(bytes: &BytesType) -> Vec<ScoreXOR> {
     let key_range = 0x00..0xff;
 
     let all_keys = key_range.fold(Vec::new(), |mut acc, key_byte| {
-        acc.push(crypto_vecs::Bytes::from(key_byte));
+        acc.push(BytesType::from(key_byte));
         acc
     });
 
@@ -45,7 +44,7 @@ pub fn find_lowest_score_xor(bytes: &crypto_vecs::Bytes) -> Vec<ScoreXOR> {
     })
 }
 
-fn get_letter_frequencies(bytes: &crypto_vecs::Bytes) -> HashMap<u8, f64> {
+fn get_letter_frequencies(bytes: &BytesType) -> HashMap<u8, f64> {
     let percent_per_byte = 1.0 / (bytes.len_bytes() as f64);
 
     bytes.iter().fold(HashMap::new(), |mut acc, &byte| {
@@ -74,8 +73,8 @@ fn get_letter_frequencies(bytes: &crypto_vecs::Bytes) -> HashMap<u8, f64> {
 }
 
 pub fn print_histogram(
-    key: &crypto_vecs::Bytes,
-    bytes: &crypto_vecs::Bytes,
+    key: &BytesType,
+    bytes: &BytesType,
     y_max: f64,
     magnification_factor: f64,
     rotate_histogram: bool,
@@ -170,7 +169,7 @@ pub fn print_histogram(
     println!();
 }
 
-fn score_letter_frequencies(bytes: &crypto_vecs::Bytes) -> f64 {
+fn score_letter_frequencies(bytes: &BytesType) -> f64 {
     let letter_frequencies = get_letter_frequencies(bytes);
     let english_letter_frequencies = &constants::ENGLISH_LETTER_FREQUENCIES;
 
@@ -205,7 +204,7 @@ fn score_letter_frequencies(bytes: &crypto_vecs::Bytes) -> f64 {
 }
 
 pub fn guess_keysize_from_hamming_distance(
-    bytes: &crypto_vecs::Bytes,
+    bytes: &BytesType,
     keysize_range: &Range<usize>,
     number_of_samples: usize,
 ) -> Vec<ScoreKeysize> {
@@ -320,10 +319,10 @@ mod tests {
 
     #[test]
     fn unit_library_fixed_xor_unicode() {
-        let plain = crypto_vecs::Bytes::from_unicode_literal("Cooking MCs");
-        let key = crypto_vecs::Bytes::from_unicode_literal("X");
+        let plain = BytesType::from_unicode_literal("Cooking MCs");
+        let key = BytesType::from_unicode_literal("X");
 
-        let expected_result = crypto_vecs::Bytes::from(vec![
+        let expected_result = BytesType::from(vec![
             0x1b, 0x37, 0x37, 0x33, 0x31, 0x36, 0x3f, 0x78, 0x15, 0x1b, 0x2b,
         ]);
 
@@ -336,8 +335,8 @@ mod tests {
 
     #[test]
     fn unit_library_hamming_distance_unicode() {
-        let bytes = crypto_vecs::Bytes::from_unicode_literal("this is a test");
-        let other = crypto_vecs::Bytes::from_unicode_literal("wokka wokka!!!");
+        let bytes = BytesType::from_unicode_literal("this is a test");
+        let other = BytesType::from_unicode_literal("wokka wokka!!!");
 
         let expected_result = 37;
 

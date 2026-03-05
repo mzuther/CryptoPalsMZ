@@ -11,12 +11,8 @@ use std::{marker, vec};
 
 use crate::crypto_vecs;
 
-pub use crate::crypto_vecs::base64::{Base64, Base64Type};
 pub use crate::crypto_vecs::block_bytes::BlockBytes;
 pub use crate::crypto_vecs::blocks::Blocks;
-pub use crate::crypto_vecs::bytes::{Bytes, BytesType};
-pub use crate::crypto_vecs::hexadecimal::{Hexadecimal, HexadecimalType};
-pub use crate::crypto_vecs::unicode::{Unicode, UnicodeType};
 
 // ----------------
 
@@ -29,6 +25,27 @@ fn bits_to_bytes(bits: usize) -> usize {
 
     bits / 8
 }
+
+// ----------------
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Base64;
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Bytes;
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Hexadecimal;
+
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Unicode;
+
+// ----------------
+
+pub type Base64Type = crypto_vecs::CryptoString<Base64>;
+pub type BytesType = crypto_vecs::CryptoVec<Bytes>;
+pub type HexadecimalType = crypto_vecs::CryptoString<self::Hexadecimal>;
+pub type UnicodeType = crypto_vecs::CryptoString<self::Unicode>;
 
 // ----------------
 
@@ -161,17 +178,17 @@ pub trait LenBytes {
 // ----------------
 
 pub trait ToBytes {
-    fn to_bytes(&self) -> self::Bytes;
+    fn to_bytes(&self) -> self::BytesType;
 
-    fn to_hexadecimal(&self) -> self::Hexadecimal {
-        self::Hexadecimal::from(&self.to_bytes())
+    fn to_hexadecimal(&self) -> self::HexadecimalType {
+        self::HexadecimalType::from(&self.to_bytes())
     }
 
-    fn to_base64(&self) -> self::Base64 {
-        self::Base64::from(&self.to_bytes())
+    fn to_base64(&self) -> self::Base64Type {
+        self::Base64Type::from(&self.to_bytes())
     }
 
-    fn to_unicode(&self) -> self::Unicode {
-        self::Unicode::from(&self.to_bytes())
+    fn to_unicode(&self) -> self::UnicodeType {
+        self::UnicodeType::from(&self.to_bytes())
     }
 }

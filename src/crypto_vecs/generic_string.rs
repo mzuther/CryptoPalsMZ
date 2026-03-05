@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::crypto_vecs::traits::{DataAccess, LenBytes, ToBytes};
+use crate::crypto_vecs::traits::{InternalData, LenBytes, Representation, ToBytes};
 use crate::crypto_vecs::{self, BytesType};
 
 // ----------------
@@ -8,7 +8,7 @@ use crate::crypto_vecs::{self, BytesType};
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct CryptoString<T>
 where
-    T: DataAccess,
+    T: InternalData,
 {
     data: T,
 }
@@ -17,7 +17,7 @@ where
 
 impl<T> CryptoString<T>
 where
-    T: DataAccess,
+    T: InternalData,
 {
     pub fn new() -> Self {
         Self::new_from(String::new())
@@ -36,9 +36,9 @@ where
 
 // ----------------
 
-impl<T> DataAccess for CryptoString<T>
+impl<T> InternalData for CryptoString<T>
 where
-    T: DataAccess,
+    T: InternalData,
 {
     fn new_from(data: String) -> Self {
         Self {
@@ -57,7 +57,12 @@ where
     fn len(&self) -> usize {
         self.data.len()
     }
+}
 
+impl<T> Representation for CryptoString<T>
+where
+    T: InternalData + Representation,
+{
     fn get_representation_name(&self) -> String {
         self.data.get_representation_name()
     }
@@ -75,7 +80,7 @@ where
 
 impl<T> fmt::Display for CryptoString<T>
 where
-    T: DataAccess + LenBytes,
+    T: InternalData + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -90,7 +95,7 @@ where
 
 impl<T> fmt::Debug for CryptoString<T>
 where
-    T: DataAccess + LenBytes,
+    T: InternalData + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)
@@ -101,7 +106,7 @@ where
 
 impl<T> LenBytes for CryptoString<T>
 where
-    T: DataAccess + LenBytes,
+    T: InternalData + LenBytes,
 {
     fn len_bytes(&self) -> usize {
         self.data.len_bytes()
@@ -112,7 +117,7 @@ where
 
 impl<T> ToBytes for CryptoString<T>
 where
-    T: DataAccess + ToBytes,
+    T: InternalData + ToBytes,
 {
     fn to_bytes(&self) -> BytesType {
         self.data.to_bytes()

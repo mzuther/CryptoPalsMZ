@@ -2,16 +2,12 @@ use crate::crypto_vecs::{Base64Type, BytesType, HexadecimalType, UnicodeType};
 
 // ----------------
 
-pub trait DataAccess {
+pub trait InternalData {
     fn new_from(data: String) -> Self;
     fn capacity(&self) -> usize;
 
     fn get_data(&self) -> &str;
     fn len(&self) -> usize;
-
-    fn get_representation_name(&self) -> String;
-    fn get_representation_len(&self) -> usize;
-    fn get_representation(&self) -> String;
 
     // ----------------
 
@@ -19,6 +15,13 @@ pub trait DataAccess {
         self.len() == 0
     }
 }
+
+pub trait Representation {
+    fn get_representation_name(&self) -> String;
+    fn get_representation_len(&self) -> usize;
+    fn get_representation(&self) -> String;
+}
+
 
 // ----------------
 

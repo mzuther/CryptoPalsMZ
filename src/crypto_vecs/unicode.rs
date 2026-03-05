@@ -1,6 +1,6 @@
 use std::convert;
 
-use crate::crypto_vecs::traits::{DataAccess, LenBytes, ToBytes};
+use crate::crypto_vecs::traits::{InternalData, LenBytes, Representation, ToBytes};
 use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
@@ -14,7 +14,7 @@ pub type UnicodeType = CryptoString<self::Unicode>;
 
 // ----------------
 
-impl DataAccess for Unicode {
+impl InternalData for Unicode {
     fn new_from(data: String) -> Self {
         Self { unicode: data }
     }
@@ -31,7 +31,9 @@ impl DataAccess for Unicode {
     fn len(&self) -> usize {
         self.unicode.chars().count()
     }
+}
 
+impl Representation for Unicode {
     fn get_representation_name(&self) -> String {
         String::from("Unicode")
     }

@@ -1,6 +1,6 @@
 use std::convert;
 
-use crate::crypto_vecs::traits::{DataAccess, LenBytes, ToBytes};
+use crate::crypto_vecs::traits::{InternalData, LenBytes, Representation, ToBytes};
 use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
@@ -14,7 +14,7 @@ pub type Base64Type = CryptoString<Base64>;
 
 // ----------------
 
-impl DataAccess for Base64 {
+impl InternalData for Base64 {
     fn new_from(data: String) -> Self {
         Self { base64: data }
     }
@@ -31,7 +31,9 @@ impl DataAccess for Base64 {
     fn len(&self) -> usize {
         self.base64.chars().count()
     }
+}
 
+impl Representation for Base64 {
     fn get_representation_name(&self) -> String {
         String::from("Base64")
     }

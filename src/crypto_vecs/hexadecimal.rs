@@ -1,7 +1,7 @@
 use hex;
 use std::convert;
 
-use crate::crypto_vecs::traits::{DataAccess, LenBytes, ToBytes};
+use crate::crypto_vecs::traits::{InternalData, LenBytes, Representation, ToBytes};
 use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
@@ -15,7 +15,7 @@ pub type HexadecimalType = CryptoString<self::Hexadecimal>;
 
 // ----------------
 
-impl DataAccess for Hexadecimal {
+impl InternalData for Hexadecimal {
     fn new_from(data: String) -> Self {
         Self { hexadecimal: data }
     }
@@ -32,7 +32,9 @@ impl DataAccess for Hexadecimal {
     fn len(&self) -> usize {
         self.hexadecimal.chars().count()
     }
+}
 
+impl Representation for Hexadecimal {
     fn get_representation_len(&self) -> usize {
         self.len_bytes()
     }

@@ -3,7 +3,9 @@ use crate::crypto_vecs::{Base64Type, BytesType, HexadecimalType, UnicodeType};
 // ----------------
 
 pub trait InternalData {
-    fn new_from(data: String) -> Self;
+    type Data;
+
+    fn new_from(data: Self::Data) -> Self;
     fn capacity(&self) -> usize;
 
     fn get_data(&self) -> &str;
@@ -21,7 +23,6 @@ pub trait Representation {
     fn get_representation_len(&self) -> usize;
     fn get_representation(&self) -> String;
 }
-
 
 // ----------------
 

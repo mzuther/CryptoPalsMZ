@@ -15,6 +15,8 @@ pub type Base64Type = CryptoString<Base64>;
 // ----------------
 
 impl InternalData for Base64 {
+    type Data = String;
+
     fn new_from(data: String) -> Self {
         Self { base64: data }
     }

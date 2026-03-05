@@ -16,6 +16,8 @@ pub type HexadecimalType = CryptoString<self::Hexadecimal>;
 // ----------------
 
 impl InternalData for Hexadecimal {
+    type Data = String;
+
     fn new_from(data: String) -> Self {
         Self { hexadecimal: data }
     }

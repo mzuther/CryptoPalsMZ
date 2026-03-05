@@ -15,6 +15,8 @@ pub type UnicodeType = CryptoString<self::Unicode>;
 // ----------------
 
 impl InternalData for Unicode {
+    type Data = String;
+
     fn new_from(data: String) -> Self {
         Self { unicode: data }
     }

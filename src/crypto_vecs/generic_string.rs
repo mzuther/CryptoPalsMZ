@@ -17,7 +17,7 @@ where
 
 impl<T> CryptoString<T>
 where
-    T: InternalData,
+    T: InternalData<Data = String>,
 {
     pub fn new() -> Self {
         Self::new_from(String::new())
@@ -38,9 +38,11 @@ where
 
 impl<T> InternalData for CryptoString<T>
 where
-    T: InternalData,
+    T: InternalData<Data = String>,
 {
-    fn new_from(data: String) -> Self {
+    type Data = String;
+
+    fn new_from(data: Self::Data) -> Self {
         Self {
             data: T::new_from(data),
         }

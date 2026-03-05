@@ -1,4 +1,6 @@
-use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, Representation, ToBytes};
+use crate::crypto_vecs::traits::{
+    ElementIter, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+};
 use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
@@ -35,6 +37,19 @@ impl InternalData for Unicode {
         self.unicode.chars().count()
     }
 }
+
+// ----------------
+
+// iterate over single characters (graphemes)
+impl ElementIter for Unicode {
+    type Element = char;
+
+    fn to_elements(&self) -> Vec<Self::Element> {
+        self.unicode.chars().collect::<Vec<char>>()
+    }
+}
+
+// ----------------
 
 impl Representation for Unicode {
     fn representation_name(&self) -> String {
@@ -213,6 +228,19 @@ mod tests {
         expected_result += 6;
 
         let result = unicode.len_bytes();
+
+        assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_unicode_to_elements() {
+        let unicode = UnicodeType::from("Grüezi. 你好.".to_string());
+
+        let expected_result = vec!['G', 'r', 'ü', 'e', 'z', 'i', '.', ' ', '你', '好', '.'];
+
+        let result = unicode.to_elements();
 
         assert_eq!(result, expected_result);
     }

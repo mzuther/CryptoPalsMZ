@@ -18,6 +18,13 @@ pub trait InternalData {
     }
 }
 
+// iterate over logical elements (String or char)
+pub trait ElementIter {
+    type Element;
+
+    fn to_elements(&self) -> Vec<Self::Element>;
+}
+
 // ----------------
 
 pub trait Representation {

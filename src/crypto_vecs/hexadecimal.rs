@@ -1,6 +1,8 @@
 use hex;
 
-use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, Representation, ToBytes};
+use crate::crypto_vecs::traits::{
+    ElementIter, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+};
 use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
@@ -59,6 +61,26 @@ impl InternalData for Hexadecimal {
         self.hexadecimal.chars().count()
     }
 }
+
+// ----------------
+
+// iterate over bytes (Strings of two characters)
+impl ElementIter for Hexadecimal {
+    type Element = String;
+
+    fn to_elements(&self) -> Vec<Self::Element> {
+        let chunk_vec = self.hexadecimal.chars().collect::<Vec<char>>();
+
+        chunk_vec.chunks(2).fold(Vec::new(), |mut acc, chunk| {
+            let two_chars = chunk.iter().collect::<String>();
+
+            acc.push(two_chars);
+            acc
+        })
+    }
+}
+
+// ----------------
 
 impl Representation for Hexadecimal {
     fn representation_len(&self) -> usize {
@@ -246,6 +268,30 @@ mod tests {
         let expected_result = 6;
 
         let result = hexadecimal.len_bytes();
+
+        assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_hexadecimal_to_elements() {
+        let hexadecimal = HexadecimalType::from("41c3bce4 bda0".to_string());
+
+        let expected_result = vec!["41", "c3", "bc", "e4", "bd", "a0"];
+
+        let result = hexadecimal.to_elements();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_hexadecimal_to_elements_odd_length() {
+        let hexadecimal = HexadecimalType::from(" 1c3bce4 bda0".to_string());
+
+        let expected_result = vec!["01", "c3", "bc", "e4", "bd", "a0"];
+
+        let result = hexadecimal.to_elements();
 
         assert_eq!(result, expected_result);
     }

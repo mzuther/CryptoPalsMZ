@@ -1,7 +1,9 @@
 use std::{convert, fmt};
 
-use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, Representation, ToBytes};
-use crate::crypto_vecs::{self, BytesType};
+use crate::crypto_vecs::traits::{
+    ElementIter, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+};
+use crate::crypto_vecs::{self, Base64Type, BytesType, HexadecimalType, UnicodeType};
 
 // ----------------
 
@@ -60,6 +62,34 @@ where
         self.data.len()
     }
 }
+
+// ----------------
+
+impl ElementIter for Base64Type {
+    type Element = char;
+
+    fn to_elements(&self) -> Vec<Self::Element> {
+        self.data.to_elements()
+    }
+}
+
+impl ElementIter for HexadecimalType {
+    type Element = String;
+
+    fn to_elements(&self) -> Vec<Self::Element> {
+        self.data.to_elements()
+    }
+}
+
+impl ElementIter for UnicodeType {
+    type Element = char;
+
+    fn to_elements(&self) -> Vec<Self::Element> {
+        self.data.to_elements()
+    }
+}
+
+// ----------------
 
 impl<T> Representation for CryptoString<T>
 where

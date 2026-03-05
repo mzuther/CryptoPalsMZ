@@ -1,4 +1,6 @@
-use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, Representation, ToBytes};
+use crate::crypto_vecs::traits::{
+    ElementIter, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+};
 use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
@@ -51,6 +53,19 @@ impl InternalData for Base64 {
         self.base64.chars().count()
     }
 }
+
+// ----------------
+
+// iterate over single characters (6 bits each)
+impl ElementIter for Base64 {
+    type Element = char;
+
+    fn to_elements(&self) -> Vec<Self::Element> {
+        self.base64.chars().collect::<Vec<char>>()
+    }
+}
+
+// ----------------
 
 impl Representation for Base64 {
     fn representation_name(&self) -> String {
@@ -479,6 +494,19 @@ mod tests {
         let expected_result = 224;
 
         let result = base64.len_bits();
+
+        assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_base64_to_elements() {
+        let base64 = Base64Type::from("SGku".to_string());
+
+        let expected_result = vec!['S', 'G', 'k', 'u'];
+
+        let result = base64.to_elements();
 
         assert_eq!(result, expected_result);
     }

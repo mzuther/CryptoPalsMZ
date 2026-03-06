@@ -33,6 +33,13 @@ impl InternalData for Base64 {
             .split_ascii_whitespace()
             .fold(String::default(), |acc, string_slice| acc + string_slice);
 
+        if !string_without_whitespace.len().is_multiple_of(4) {
+            return Err(format!(
+                "base64 encodings are multiples of 4 characters, found {} characters",
+                string_without_whitespace.len()
+            ));
+        }
+
         let invalid_characters: String = string_without_whitespace
             .chars()
             .filter(|c| !Base64::VALID_CHARACTERS.contains(*c))
@@ -343,8 +350,14 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "found invalid base64 characters: ._.")]
-    fn unit_base64_from_invalid_string() {
-        let _ = Base64Type::from("HUIfTQ.sP_A.h9");
+    fn unit_base64_from_invalid_characters() {
+        let _ = Base64Type::from("HUIfTQ.sP_A.hxT9");
+    }
+
+    #[test]
+    #[should_panic(expected = "base64 encodings are multiples of 4 characters")]
+    fn unit_base64_from_invalid_length() {
+        let _ = Base64Type::from("HUIfTQsP Ah9");
     }
 
     #[test]

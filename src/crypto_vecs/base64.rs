@@ -42,18 +42,40 @@ impl InternalData for Base64 {
             ));
         }
 
-        let regex_padding = Regex::new(r"([=]+)$").unwrap();
+        let regex_padding = Regex::new(r"(.?)([=]+)$").unwrap();
 
         if let Some(captures) = regex_padding.captures(&string_without_whitespace) {
-            let padding = captures
+            let last_letter = captures
                 .get(1)
-                .expect("there is a single capture group")
+                .expect("there are two capture groups")
+                .as_str()
+                .chars()
+                .nth(0)
+                .unwrap_or(' ');
+
+            let padding = captures
+                .get(2)
+                .expect("there are two capture groups")
                 .as_str();
 
             let padding_length = padding.len();
 
             if padding_length > 2 {
                 panic!("invalid base64 padding: {}", padding);
+            } else if padding_length == 1
+                && !Self::VALID_LAST_CHARACTERS_SINGLE_PADDING.contains(last_letter)
+            {
+                panic!(
+                    "invalid base64 single-byte padding: {}{}",
+                    last_letter, padding
+                );
+            } else if padding_length == 2
+                && !Self::VALID_LAST_CHARACTERS_DOUBLE_PADDING.contains(last_letter)
+            {
+                panic!(
+                    "invalid base64 double-byte padding: {}{}",
+                    last_letter, padding
+                );
             }
         }
 
@@ -209,15 +231,21 @@ impl ToBytes for Base64 {
 // ----------------
 
 impl Base64 {
-    // all valid base64 characters
+    // valid base64 characters (including padding)
     const VALID_CHARACTERS: &str =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+    // valid base64 characters for single-byte padding (=)
+    const VALID_LAST_CHARACTERS_SINGLE_PADDING: &str = "AQgw";
+
+    // valid base64 characters for double-byte padding (==)
+    const VALID_LAST_CHARACTERS_DOUBLE_PADDING: &str = "AEIMQUYcgkosw048";
 
     // base64-encoded string containing complete base64 alphabet
     pub const COMPLETE_ALPHABET: &str =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-    // plain-text bytes which yield the base64-encoded string above
+    // plain-text bytes which yield "COMPLETE_ALPHABET"
     pub const COMPLETE_ALPHABET_BYTES: [u8; 48] = [
         0x00, 0x10, 0x83, 0x10, 0x51, 0x87, 0x20, 0x92, 0x8b, 0x30, 0xd3, 0x8f, 0x41, 0x14, 0x93,
         0x51, 0x55, 0x97, 0x61, 0x96, 0x9b, 0x71, 0xd7, 0x9f, 0x82, 0x18, 0xa3, 0x92, 0x59, 0xa7,
@@ -225,7 +253,7 @@ impl Base64 {
         0xf3, 0xdf, 0xbf,
     ];
 
-    // plain-text hexadecimal string which yields the base64-encoded string above
+    // plain-text hexadecimal string which yields "COMPLETE_ALPHABET"
     pub const COMPLETE_ALPHABET_HEX: &str = "00108310518720928b30d38f41149351559761969b71d79f8218a39259a7a29aabb2dbafc31cb3d35db7e39ebbf3dfbf";
 
     // ----------------
@@ -341,11 +369,11 @@ mod tests {
     #[test]
     fn unit_base64_to_base64_padding_one_byte() {
         let mut bytes_raw = Base64::COMPLETE_ALPHABET_BYTES.to_vec();
-        bytes_raw.push(0x00);
-        bytes_raw.push(0x11);
+        bytes_raw.push(0x10);
+        bytes_raw.push(0x10);
 
         let bytes = BytesType::from(bytes_raw);
-        let expected_result = Base64Type::from(format!("{}ABE=", Base64::COMPLETE_ALPHABET));
+        let expected_result = Base64Type::from(format!("{}EBA=", Base64::COMPLETE_ALPHABET));
 
         let result = bytes.to_base64();
 
@@ -379,8 +407,20 @@ mod tests {
 
     #[test]
     #[should_panic(expected = "invalid base64 padding: ===")]
-    fn unit_base64_from_padding_too_much() {
+    fn unit_base64_from_too_much_padding() {
         let _ = Base64Type::from("HUIfTQsP Ahxh9===");
+    }
+
+    #[test]
+    #[should_panic(expected = "invalid base64 single-byte padding: 9=")]
+    fn unit_base64_from_incorrect_padding_single() {
+        let _ = Base64Type::from("HUIfTQsP Ah9=");
+    }
+
+    #[test]
+    #[should_panic(expected = "invalid base64 double-byte padding: h==")]
+    fn unit_base64_from_incorrect_padding_double() {
+        let _ = Base64Type::from("HUIfTQsP Ah==");
     }
 
     #[test]
@@ -396,10 +436,10 @@ mod tests {
     #[test]
     fn unit_base64_to_bytes_padding_one_byte() {
         let mut expected_result_raw = Base64::COMPLETE_ALPHABET_BYTES.to_vec();
-        expected_result_raw.push(0x00);
-        expected_result_raw.push(0x11);
+        expected_result_raw.push(0x10);
+        expected_result_raw.push(0x10);
 
-        let base64 = Base64Type::from(format!("{}ABE=", Base64::COMPLETE_ALPHABET));
+        let base64 = Base64Type::from(format!("{}EBA=", Base64::COMPLETE_ALPHABET));
         let expected_result = BytesType::from(expected_result_raw);
 
         let result = base64.to_bytes();

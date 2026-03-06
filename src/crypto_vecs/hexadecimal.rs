@@ -143,7 +143,7 @@ impl ToBytes for Hexadecimal {
 // ----------------
 
 impl Hexadecimal {
-    // all valid hexadecimal characters
+    // valid hexadecimal characters
     pub const VALID_CHARACTERS: &str = "0123456789abcdef";
 }
 

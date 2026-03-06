@@ -2,9 +2,16 @@ use openssl::{cipher, cipher_ctx};
 use std::{fmt, vec};
 
 use crate::crypto_vecs::traits::{LenBytes, Representation, ToBytes};
-use crate::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType};
+use crate::crypto_vecs::{self, Base64Type, BlockBytes, HexadecimalType, UnicodeType};
 
-// ----------------
+// ================
+
+#[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
+pub struct Bytes;
+
+pub type BytesType = crypto_vecs::CryptoVec<Bytes>;
+
+// ================
 
 impl Representation for BytesType {
     fn representation_name(&self) -> String {
@@ -261,7 +268,7 @@ impl BytesType {
     }
 }
 
-// ----------------
+// ================
 
 #[cfg(test)]
 mod tests {

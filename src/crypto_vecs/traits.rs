@@ -1,6 +1,6 @@
 use crate::crypto_vecs::{Base64Type, BytesType, HexadecimalType, UnicodeType};
 
-// ----------------
+// ================
 
 pub trait InternalData {
     type Collection;

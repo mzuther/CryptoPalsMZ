@@ -3,7 +3,7 @@ use std::{convert, fmt, iter, slice, vec};
 use crate::crypto_vecs::traits::{LenBytes, ToBytes};
 use crate::crypto_vecs::{self, BytesType};
 
-// ----------------
+// ================
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct BlockBytes {
@@ -11,6 +11,8 @@ pub struct BlockBytes {
     block_size: usize,
     strict_filling: bool,
 }
+
+// ================
 
 impl fmt::Display for self::BlockBytes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -35,6 +37,8 @@ impl fmt::Debug for self::BlockBytes {
         write!(f, "{}", self)
     }
 }
+
+// ----------------
 
 // uses lax filling to maximize usefulness
 impl convert::From<Vec<BytesType>> for self::BlockBytes {
@@ -67,6 +71,8 @@ impl LenBytes for self::BlockBytes {
         self.iter().fold(0, |acc, buffer| acc + buffer.len_bytes())
     }
 }
+
+// ----------------
 
 impl self::BlockBytes {
     pub fn new(block_size: usize) -> Self {
@@ -434,7 +440,7 @@ impl self::BlockBytes {
     }
 }
 
-// ----------------
+// ================
 
 #[cfg(test)]
 mod tests {

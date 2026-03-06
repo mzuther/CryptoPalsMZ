@@ -2,7 +2,7 @@ use std::{convert, fmt, slice, vec};
 
 use crate::crypto_vecs;
 
-// ----------------
+// ================
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Blocks<T> {
@@ -11,7 +11,7 @@ pub struct Blocks<T> {
     strict_filling: bool,
 }
 
-// ----------------
+// ================
 
 impl<T> fmt::Display for self::Blocks<T>
 where
@@ -43,6 +43,8 @@ where
     }
 }
 
+// ----------------
+
 // uses lax filling to maximize usefulness
 impl<T> convert::From<Vec<T>> for crypto_vecs::Blocks<T>
 where
@@ -62,6 +64,8 @@ where
     }
 }
 
+// ----------------
+
 impl<T> IntoIterator for crypto_vecs::Blocks<T>
 where
     T: Clone + ExactSizeIterator + Extend<T> + Ord + PartialEq + PartialOrd + ToString,
@@ -73,6 +77,8 @@ where
         self.blocks.into_iter()
     }
 }
+
+// ----------------
 
 impl<T> self::Blocks<T>
 where

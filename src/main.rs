@@ -7,11 +7,13 @@ use std::fs;
 use cryptopals::crypto_vecs::traits::ToBytes;
 use cryptopals::crypto_vecs::{BytesType, UnicodeType};
 
-// ----------------
+// ================
 
 fn main() {
     challenge_06();
 }
+
+// ----------------
 
 fn challenge_06() {
     let mut base64_string: String =
@@ -73,6 +75,8 @@ fn challenge_06() {
 
     // assert_eq!(result, expected_result);
 }
+
+// ----------------
 
 fn play_with_xor() {
     let plain = BytesType::from_unicode_literal("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");

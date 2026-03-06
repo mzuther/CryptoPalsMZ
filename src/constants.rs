@@ -1,7 +1,7 @@
 use indexmap;
 use std::sync;
 
-// ----------------
+// ================
 
 #[inline]
 pub fn letter_frequencies_from_array(

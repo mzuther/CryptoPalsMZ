@@ -5,7 +5,7 @@ use crate::crypto_vecs::traits::{
 };
 use crate::crypto_vecs::{self, BytesType};
 
-// ----------------
+// ================
 
 #[derive(Clone, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct CryptoString<T>
@@ -15,7 +15,7 @@ where
     data: T,
 }
 
-// ----------------
+// ================
 
 impl<T> CryptoString<T>
 where
@@ -170,8 +170,6 @@ where
         }
     }
 }
-
-// ----------------
 
 impl<T> ToBytes for CryptoString<T>
 where

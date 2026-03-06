@@ -3,7 +3,7 @@ use crate::crypto_vecs::traits::{
 };
 use crate::crypto_vecs::{BytesType, CryptoString};
 
-// ----------------
+// ================
 
 #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Unicode {
@@ -12,7 +12,7 @@ pub struct Unicode {
 
 pub type UnicodeType = CryptoString<self::Unicode>;
 
-// ----------------
+// ================
 
 impl InternalData for Unicode {
     type Collection = String;
@@ -84,7 +84,7 @@ impl ToBytes for Unicode {
     }
 }
 
-// ----------------
+// ================
 
 impl UnicodeType {
     // TODO: add tests
@@ -111,7 +111,7 @@ impl UnicodeType {
     }
 }
 
-// ----------------
+// ================
 
 #[cfg(test)]
 mod tests {

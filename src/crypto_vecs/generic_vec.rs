@@ -3,7 +3,7 @@ use std::{convert, marker, slice, vec};
 use crate::crypto_vecs;
 use crate::crypto_vecs::traits::LenBytes;
 
-// ----------------
+// ================
 
 #[derive(Clone, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct CryptoVec<P> {
@@ -17,14 +17,7 @@ pub struct CryptoVecIter<'a> {
     current_index: usize,
 }
 
-// ----------------
-
-#[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
-pub struct Bytes;
-
-pub type BytesType = crypto_vecs::CryptoVec<Bytes>;
-
-// ----------------
+// ================
 
 impl<P> convert::From<Vec<u8>> for self::CryptoVec<P>
 where
@@ -53,6 +46,8 @@ where
     }
 }
 
+// ----------------
+
 impl<P> IntoIterator for self::CryptoVec<P> {
     type Item = u8;
     type IntoIter = vec::IntoIter<Self::Item>;
@@ -79,6 +74,51 @@ impl<'a> ExactSizeIterator for self::CryptoVecIter<'a> {
         let bounded_index = self.current_index.min(number_of_elements);
 
         number_of_elements - bounded_index
+    }
+}
+
+// ----------------
+
+impl<P> LenBytes for CryptoVec<P> {
+    fn len_bytes(&self) -> usize {
+        self.data.len()
+    }
+}
+// ----------------
+
+impl<P> AsMut<Vec<u8>> for CryptoVec<P> {
+    // reference to mutable vec
+    fn as_mut(&mut self) -> &mut Vec<u8> {
+        self.data.as_mut()
+    }
+}
+
+impl<P> AsRef<Vec<u8>> for CryptoVec<P> {
+    // reference to vec
+    fn as_ref(&self) -> &Vec<u8> {
+        self.data.as_ref()
+    }
+}
+
+// ----------------
+
+impl<P> Extend<u8> for CryptoVec<P> {
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = u8>,
+    {
+        self.data.extend(iter);
+    }
+}
+
+// ----------------
+
+impl<'a, P> Extend<&'a u8> for CryptoVec<P> {
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = &'a u8>,
+    {
+        self.data.extend(iter);
     }
 }
 
@@ -196,43 +236,5 @@ where
 
     pub fn push(&mut self, byte: u8) {
         self.data.push(byte);
-    }
-}
-
-impl<P> LenBytes for CryptoVec<P> {
-    fn len_bytes(&self) -> usize {
-        self.data.len()
-    }
-}
-
-impl<P> AsMut<Vec<u8>> for CryptoVec<P> {
-    // reference to mutable vec
-    fn as_mut(&mut self) -> &mut Vec<u8> {
-        self.data.as_mut()
-    }
-}
-
-impl<P> AsRef<Vec<u8>> for CryptoVec<P> {
-    // reference to vec
-    fn as_ref(&self) -> &Vec<u8> {
-        self.data.as_ref()
-    }
-}
-
-impl<P> Extend<u8> for CryptoVec<P> {
-    fn extend<T>(&mut self, iter: T)
-    where
-        T: IntoIterator<Item = u8>,
-    {
-        self.data.extend(iter);
-    }
-}
-
-impl<'a, P> Extend<&'a u8> for CryptoVec<P> {
-    fn extend<T>(&mut self, iter: T)
-    where
-        T: IntoIterator<Item = &'a u8>,
-    {
-        self.data.extend(iter);
     }
 }

@@ -8,7 +8,7 @@ use std::{cmp, collections::HashMap, ops::Range};
 use crate::crypto_vecs::BytesType;
 use crate::crypto_vecs::traits::LenBytes;
 
-// ----------------
+// ================
 
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct ScoreXOR {
@@ -23,7 +23,7 @@ pub struct ScoreKeysize {
     pub keysize: usize,
 }
 
-// ----------------
+// ================
 
 pub fn find_lowest_score_xor(bytes: &BytesType) -> Vec<ScoreXOR> {
     let key_range = 0x00..0xff;
@@ -314,6 +314,8 @@ fn transpose_strings_internal(strings: &[String], reverse_transposition: bool) -
         acc
     })
 }
+
+// ================
 
 #[cfg(test)]
 mod tests {

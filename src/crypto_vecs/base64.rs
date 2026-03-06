@@ -5,7 +5,7 @@ use crate::crypto_vecs::{BytesType, CryptoString};
 
 use regex::Regex;
 
-// ----------------
+// ================
 
 #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Base64 {
@@ -14,7 +14,7 @@ pub struct Base64 {
 
 pub type Base64Type = CryptoString<Base64>;
 
-// ----------------
+// ================
 
 impl InternalData for Base64 {
     type Collection = String;
@@ -337,7 +337,7 @@ impl Base64 {
     }
 }
 
-// ----------------
+// ================
 
 #[cfg(test)]
 mod tests {

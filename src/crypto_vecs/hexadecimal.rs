@@ -5,7 +5,7 @@ use crate::crypto_vecs::traits::{
 };
 use crate::crypto_vecs::{BytesType, CryptoString};
 
-// ----------------
+// ================
 
 #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Hexadecimal {
@@ -14,7 +14,7 @@ pub struct Hexadecimal {
 
 pub type HexadecimalType = CryptoString<self::Hexadecimal>;
 
-// ----------------
+// ================
 
 impl InternalData for Hexadecimal {
     type Collection = String;
@@ -147,7 +147,7 @@ impl Hexadecimal {
     pub const VALID_CHARACTERS: &str = "0123456789abcdef";
 }
 
-// ----------------
+// ================
 
 #[cfg(test)]
 mod tests {

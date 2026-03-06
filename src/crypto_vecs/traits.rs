@@ -8,28 +8,33 @@ pub trait InternalData {
     fn new_from(data: Self::Collection) -> Self;
     fn capacity(&self) -> usize;
     fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String>;
+}
 
-    fn len(&self) -> usize;
+// iterate over / count logical elements (String or char)
+pub trait ElementIter {
+    type Element;
+
+    fn elements(&self) -> impl Iterator<Item = Self::Element>;
 
     // ----------------
+
+    fn to_elements(&self) -> Vec<Self::Element> {
+        self.elements().collect::<Vec<Self::Element>>()
+    }
+
+    fn len(&self) -> usize {
+        self.elements().count()
+    }
 
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
 }
 
-// iterate over logical elements (String or char)
-pub trait ElementIter {
-    type Element;
-
-    fn to_elements(&self) -> Vec<Self::Element>;
-}
-
 // ----------------
 
 pub trait Representation {
     fn representation_name(&self) -> String;
-    fn representation_len(&self) -> usize;
     fn representation(&self) -> String;
 }
 

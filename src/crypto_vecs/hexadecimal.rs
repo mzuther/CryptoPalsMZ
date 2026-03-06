@@ -55,11 +55,6 @@ impl InternalData for Hexadecimal {
             ))
         }
     }
-
-    // number of characters (hexadecimal alphabet)
-    fn len(&self) -> usize {
-        self.hexadecimal.chars().count()
-    }
 }
 
 // ----------------
@@ -68,25 +63,32 @@ impl InternalData for Hexadecimal {
 impl ElementIter for Hexadecimal {
     type Element = String;
 
-    fn to_elements(&self) -> Vec<Self::Element> {
-        let chunk_vec = self.hexadecimal.chars().collect::<Vec<char>>();
+    fn elements(&self) -> impl Iterator<Item = Self::Element> {
+        let mut chars_iter = self.hexadecimal.chars();
 
-        chunk_vec.chunks(2).fold(Vec::new(), |mut acc, chunk| {
-            let two_chars = chunk.iter().collect::<String>();
+        std::iter::from_fn(move || {
+            let mut current = String::from(chars_iter.next()?);
 
-            acc.push(two_chars);
-            acc
+            match chars_iter.next() {
+                Some(ch) => {
+                    current.push(ch);
+
+                    Some(current)
+                }
+                None => None,
+            }
         })
+    }
+
+    // performance
+    fn len(&self) -> usize {
+        self.hexadecimal.chars().count() / 2
     }
 }
 
 // ----------------
 
 impl Representation for Hexadecimal {
-    fn representation_len(&self) -> usize {
-        self.len_bytes()
-    }
-
     fn representation_name(&self) -> String {
         String::from("Hexadecimal")
     }

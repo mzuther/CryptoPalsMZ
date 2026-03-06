@@ -7,10 +7,6 @@ use crate::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, HexadecimalTyp
 // ----------------
 
 impl Representation for BytesType {
-    fn representation_len(&self) -> usize {
-        self.len_bytes()
-    }
-
     fn representation_name(&self) -> String {
         String::from("Bytes")
     }
@@ -26,7 +22,7 @@ impl fmt::Display for BytesType {
             f,
             "{}[{}] {{ {} }}",
             self.representation_name(),
-            self.representation_len(),
+            self.len(),
             self.representation()
         )
     }

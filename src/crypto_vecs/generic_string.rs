@@ -3,7 +3,7 @@ use std::{convert, fmt};
 use crate::crypto_vecs::traits::{
     ElementIter, FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
-use crate::crypto_vecs::{self, Base64Type, BytesType, HexadecimalType, UnicodeType};
+use crate::crypto_vecs::{self, BytesType};
 
 // ----------------
 
@@ -57,35 +57,23 @@ where
     fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
         T::clean_and_validate(data)
     }
-
-    fn len(&self) -> usize {
-        self.data.len()
-    }
 }
 
 // ----------------
 
-impl ElementIter for Base64Type {
-    type Element = char;
+impl<T, U> ElementIter for CryptoString<T>
+where
+    T: InternalData + ElementIter<Element = U>,
+{
+    type Element = U;
 
-    fn to_elements(&self) -> Vec<Self::Element> {
-        self.data.to_elements()
+    fn elements(&self) -> impl Iterator<Item = Self::Element> {
+        self.data.elements()
     }
-}
 
-impl ElementIter for HexadecimalType {
-    type Element = String;
-
-    fn to_elements(&self) -> Vec<Self::Element> {
-        self.data.to_elements()
-    }
-}
-
-impl ElementIter for UnicodeType {
-    type Element = char;
-
-    fn to_elements(&self) -> Vec<Self::Element> {
-        self.data.to_elements()
+    // implemented for "Hexadecimal"
+    fn len(&self) -> usize {
+        self.data.len()
     }
 }
 
@@ -99,10 +87,6 @@ where
         self.data.representation_name()
     }
 
-    fn representation_len(&self) -> usize {
-        self.data.representation_len()
-    }
-
     fn representation(&self) -> String {
         self.data.representation()
     }
@@ -112,14 +96,14 @@ where
 
 impl<T> fmt::Display for CryptoString<T>
 where
-    T: InternalData + Representation,
+    T: InternalData + ElementIter + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}[{}] {{ {} }}",
             self.representation_name(),
-            self.representation_len(),
+            self.data.len(),
             self.representation()
         )
     }
@@ -127,7 +111,7 @@ where
 
 impl<T> fmt::Debug for CryptoString<T>
 where
-    T: InternalData + Representation,
+    T: InternalData + ElementIter + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)

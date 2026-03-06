@@ -31,11 +31,6 @@ impl InternalData for Unicode {
     fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
         Ok(data)
     }
-
-    // number of characters (graphemes)
-    fn len(&self) -> usize {
-        self.unicode.chars().count()
-    }
 }
 
 // ----------------
@@ -44,8 +39,8 @@ impl InternalData for Unicode {
 impl ElementIter for Unicode {
     type Element = char;
 
-    fn to_elements(&self) -> Vec<Self::Element> {
-        self.unicode.chars().collect::<Vec<char>>()
+    fn elements(&self) -> impl Iterator<Item = Self::Element> {
+        self.unicode.chars()
     }
 }
 
@@ -54,10 +49,6 @@ impl ElementIter for Unicode {
 impl Representation for Unicode {
     fn representation_name(&self) -> String {
         String::from("Unicode")
-    }
-
-    fn representation_len(&self) -> usize {
-        self.len()
     }
 
     fn representation(&self) -> String {

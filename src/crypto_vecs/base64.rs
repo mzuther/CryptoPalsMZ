@@ -47,11 +47,6 @@ impl InternalData for Base64 {
             ))
         }
     }
-
-    // number of characters (base64 alphabet)
-    fn len(&self) -> usize {
-        self.base64.chars().count()
-    }
 }
 
 // ----------------
@@ -60,8 +55,8 @@ impl InternalData for Base64 {
 impl ElementIter for Base64 {
     type Element = char;
 
-    fn to_elements(&self) -> Vec<Self::Element> {
-        self.base64.chars().collect::<Vec<char>>()
+    fn elements(&self) -> impl Iterator<Item = Self::Element> {
+        self.base64.chars()
     }
 }
 
@@ -70,10 +65,6 @@ impl ElementIter for Base64 {
 impl Representation for Base64 {
     fn representation_name(&self) -> String {
         String::from("Base64")
-    }
-
-    fn representation_len(&self) -> usize {
-        self.len()
     }
 
     fn representation(&self) -> String {

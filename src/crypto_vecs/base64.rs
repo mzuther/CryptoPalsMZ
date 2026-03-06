@@ -106,34 +106,30 @@ impl FromBytes for Base64 {
         let base64_string = base64_segments
             .iter()
             .fold(String::new(), |mut acc, &segment| {
-                let mut char_int: u8;
+                acc.push(match segment {
+                    // padding character (=)
+                    None => 61,
+                    Some(byte) => {
+                        assert!(byte < 64, "{} is not a valid base64 segment", byte);
 
-                // padding character (=)
-                if segment.is_none() {
-                    char_int = 61;
-                } else {
-                    char_int = segment.unwrap();
-                    assert!(char_int < 64, "{} is not a valid base64 segment", char_int);
-
-                    // upper case letter
-                    if char_int < 26 {
-                        char_int += 65
-                    // lower case letter
-                    } else if char_int < 52 {
-                        char_int += 71
-                    // plus
-                    } else if char_int == 62 {
-                        char_int = 43
-                    // slash
-                    } else if char_int == 63 {
-                        char_int = 47
-                    // digit
-                    } else {
-                        char_int -= 4
+                        // upper case letter
+                        if byte < 26 {
+                            byte + 65
+                        // lower case letter
+                        } else if byte < 52 {
+                            byte + 71
+                        // plus
+                        } else if byte == 62 {
+                            43
+                        // slash
+                        } else if byte == 63 {
+                            47
+                        // digit
+                        } else {
+                            byte - 4
+                        }
                     }
-                }
-
-                acc.push(char_int as char);
+                } as char);
                 acc
             });
 

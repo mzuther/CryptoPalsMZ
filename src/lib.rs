@@ -58,11 +58,11 @@ fn get_letter_frequencies(bytes: &BytesType) -> HashMap<u8, f64> {
         if key == 0x20 {
         }
         // upper-case letters (convert to lower-case)
-        else if key >= 0x41 && key <= 0x5a {
+        else if (0x41..=0x5a).contains(&key) {
             key += 0x20;
         }
         // lower-case letters
-        else if key >= 0x61 && key <= 0x7a {
+        else if (0x61..=0x7a).contains(&key) {
         }
         // remaining characters (convert to "*")
         else {
@@ -196,7 +196,7 @@ fn score_letter_frequencies(bytes: &BytesType) -> f64 {
         .iter()
         .fold(total_score, |mut acc, (&letter, percentage_found)| {
             // any character except lower-case letters
-            if letter < 0x61 || letter > 0x7a {
+            if !(0x61..=0x7a).contains(&letter) {
                 // with the exception of space, comma, and dot
                 if letter != 0x20 && letter != 0x2c && letter != 0x2e {
                     acc += 2.0 * percentage_found;

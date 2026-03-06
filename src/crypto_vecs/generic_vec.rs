@@ -5,7 +5,7 @@ use crate::crypto_vecs::traits::LenBytes;
 
 // ----------------
 
-#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct CryptoVec<P> {
     data: Vec<u8>,
     struct_type: marker::PhantomData<P>,
@@ -19,7 +19,7 @@ pub struct CryptoVecIter<'a> {
 
 // ----------------
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Bytes;
 
 pub type BytesType = crypto_vecs::CryptoVec<Bytes>;
@@ -94,7 +94,7 @@ where
     }
 
     pub fn new() -> Self {
-        Self::new_from(Vec::new())
+        Self::new_from(Default::default())
     }
 
     pub fn with_capacity(bytes: usize) -> Self {
@@ -139,7 +139,7 @@ where
 
         self.data
             .chunks(chunk_size)
-            .fold(Vec::new(), |mut acc, chunk| {
+            .fold(Default::default(), |mut acc, chunk| {
                 acc.push(Self::from(chunk));
                 acc
             })
@@ -150,7 +150,7 @@ where
 
         self.data
             .rchunks(chunk_size)
-            .fold(Vec::new(), |mut acc, chunk| {
+            .fold(Default::default(), |mut acc, chunk| {
                 acc.push(Self::from(chunk));
                 acc
             })

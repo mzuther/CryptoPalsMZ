@@ -36,7 +36,7 @@ fn challenge_06() {
 
     let keysize = score.keysize;
     let transposed_blocks = cypher.transpose(keysize);
-    let mut proposed_key = BytesType::new();
+    let mut proposed_key = BytesType::default();
 
     for (index, block) in transposed_blocks.iter().enumerate() {
         let mut scores = cryptopals::find_lowest_score_xor(block);

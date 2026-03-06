@@ -103,8 +103,9 @@ impl BytesType {
     }
 
     pub fn to_iso_8859_1(&self) -> String {
-        self.iter()
-            .fold(String::new(), |acc, &byte| format!("{acc}{}", byte as char))
+        self.iter().fold(Default::default(), |acc, &byte| {
+            format!("{acc}{}", byte as char)
+        })
     }
 
     // ----------------
@@ -114,14 +115,15 @@ impl BytesType {
 
         let mut bytes_key_endless = key.iter().cycle();
 
-        self.iter().fold(Self::new(), |mut acc, &byte_plain| {
-            let byte_key = bytes_key_endless
-                .next()
-                .expect("infinite key was finite after all");
+        self.iter()
+            .fold(Default::default(), |mut acc, &byte_plain| {
+                let byte_key = bytes_key_endless
+                    .next()
+                    .expect("infinite key was finite after all");
 
-            acc.push((byte_plain | byte_key) & !(byte_plain & byte_key));
-            acc
-        })
+                acc.push((byte_plain | byte_key) & !(byte_plain & byte_key));
+                acc
+            })
     }
 
     pub fn hamming_distance(&self, other: &Self) -> u32 {
@@ -222,7 +224,7 @@ impl BytesType {
             block_size_bits,
         );
 
-        let mut buffer = Self::new();
+        let mut buffer = Self::default();
         let processing_state = cipher_context.cipher_update_vec(self.as_slice(), buffer.as_mut());
 
         if let Err(error_stack) = processing_state {
@@ -270,9 +272,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_new() {
-        let expected_result = BytesType::from(Vec::new());
+        let expected_result = BytesType::from(Vec::default());
 
-        let result = BytesType::new();
+        let result = BytesType::default();
 
         assert_eq!(result, expected_result);
     }
@@ -307,7 +309,7 @@ mod tests {
     #[test]
     fn unit_bytes_from_single_byte_vector() {
         // avoid "vec!" macro as this is used by the implementation
-        let mut expected_result_vec = Vec::new();
+        let mut expected_result_vec = Vec::default();
         expected_result_vec.push(0xd3);
 
         let expected_result = BytesType::from(expected_result_vec);
@@ -320,7 +322,7 @@ mod tests {
     #[test]
     fn unit_bytes_from_byte_vector() {
         // avoid "vec!" macro as this is used by the implementation
-        let mut expected_result_vec = Vec::new();
+        let mut expected_result_vec = Vec::default();
         expected_result_vec.push(0x41);
         expected_result_vec.push(0x62);
         expected_result_vec.push(0x33);
@@ -411,7 +413,7 @@ mod tests {
     fn unit_bytes_chunks() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
 
-        let mut expected_result = Vec::new();
+        let mut expected_result = Vec::default();
         expected_result.push(BytesType::from(vec![0x41, 0x62, 0xf3]));
         expected_result.push(BytesType::from(vec![0xd3, 0x42, 0x6f]));
         expected_result.push(BytesType::from(vec![0x12, 0x0d, 0xff]));
@@ -427,7 +429,7 @@ mod tests {
     fn unit_bytes_chunks_remainder() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
-        let mut expected_result = Vec::new();
+        let mut expected_result = Vec::default();
         expected_result.push(BytesType::from(vec![0x41, 0x62, 0xf3]));
         expected_result.push(BytesType::from(vec![0xd3, 0x42, 0x6f]));
         expected_result.push(BytesType::from(vec![0x12, 0x0d]));
@@ -503,7 +505,7 @@ mod tests {
     fn unit_bytes_rchunks() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
 
-        let mut expected_result = Vec::new();
+        let mut expected_result = Vec::default();
         expected_result.push(BytesType::from(vec![0x12, 0x0d, 0xff]));
         expected_result.push(BytesType::from(vec![0xd3, 0x42, 0x6f]));
         expected_result.push(BytesType::from(vec![0x41, 0x62, 0xf3]));
@@ -519,7 +521,7 @@ mod tests {
     fn unit_bytes_rchunks_remainder() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
-        let mut expected_result = Vec::new();
+        let mut expected_result = Vec::default();
         expected_result.push(BytesType::from(vec![0x6f, 0x12, 0x0d]));
         expected_result.push(BytesType::from(vec![0xf3, 0xd3, 0x42]));
         expected_result.push(BytesType::from(vec![0x41, 0x62]));
@@ -579,7 +581,7 @@ mod tests {
     fn unit_bytes_push_to_new() {
         let expected_result = BytesType::from(vec![0xd3, 0x42, 0x6f]);
 
-        let mut result = BytesType::new();
+        let mut result = BytesType::default();
         result.push(0xd3);
         result.push(0x42);
         result.push(0x6f);
@@ -602,7 +604,7 @@ mod tests {
     fn unit_bytes_extend_to_new() {
         let expected_result = BytesType::from(vec![0xd3, 0x42, 0x6f]);
 
-        let mut result = BytesType::new();
+        let mut result = BytesType::default();
         result.extend(vec![0xd3, 0x42, 0x6f]);
 
         assert_eq!(result, expected_result);
@@ -888,7 +890,7 @@ mod tests {
         expected_result.push(BytesType::from(1));
         expected_result.push(BytesType::from(2));
         expected_result.push(BytesType::from(3));
-        expected_result.push(BytesType::new());
+        expected_result.push(BytesType::default());
 
         let result = bytes.transpose(keysize);
 

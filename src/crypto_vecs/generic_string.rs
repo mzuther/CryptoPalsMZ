@@ -7,7 +7,7 @@ use crate::crypto_vecs::{self, BytesType};
 
 // ----------------
 
-#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct CryptoString<T>
 where
     T: InternalData,
@@ -22,7 +22,7 @@ where
     T: InternalData<Collection = String>,
 {
     pub fn new() -> Self {
-        Self::new_from(&String::new())
+        Self::new_from(&Default::default())
     }
 
     pub fn with_capacity(bytes: usize) -> Self {

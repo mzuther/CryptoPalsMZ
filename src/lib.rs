@@ -28,12 +28,12 @@ pub struct ScoreKeysize {
 pub fn find_lowest_score_xor(bytes: &BytesType) -> Vec<ScoreXOR> {
     let key_range = 0x00..0xff;
 
-    let all_keys = key_range.fold(Vec::new(), |mut acc, key_byte| {
+    let all_keys = key_range.fold(Vec::default(), |mut acc, key_byte| {
         acc.push(BytesType::from(key_byte));
         acc
     });
 
-    all_keys.into_iter().fold(Vec::new(), |mut acc, key| {
+    all_keys.into_iter().fold(Vec::default(), |mut acc, key| {
         let bytes_xor = bytes.fixed_xor(&key);
         let score = self::score_letter_frequencies(&bytes_xor);
 
@@ -51,7 +51,7 @@ pub fn find_lowest_score_xor(bytes: &BytesType) -> Vec<ScoreXOR> {
 fn get_letter_frequencies(bytes: &BytesType) -> HashMap<u8, f64> {
     let percent_per_byte = 1.0 / (bytes.len_bytes() as f64);
 
-    bytes.iter().fold(HashMap::new(), |mut acc, &byte| {
+    bytes.iter().fold(Default::default(), |mut acc, &byte| {
         let mut key = byte;
 
         // space

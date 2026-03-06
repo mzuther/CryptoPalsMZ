@@ -5,7 +5,7 @@ use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Unicode {
     unicode: String,
 }

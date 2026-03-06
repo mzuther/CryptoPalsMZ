@@ -5,7 +5,7 @@ use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Base64 {
     base64: String,
 }
@@ -31,7 +31,7 @@ impl InternalData for Base64 {
     fn clean_and_validate(data: &Self::Collection) -> Result<Self::Collection, String> {
         let string_without_whitespace = data
             .split_ascii_whitespace()
-            .fold(String::new(), |acc, string_slice| acc + string_slice);
+            .fold(String::default(), |acc, string_slice| acc + string_slice);
 
         let invalid_characters: String = string_without_whitespace
             .chars()
@@ -71,10 +71,9 @@ impl Representation for Base64 {
         let block_size = 8;
 
         let base64_blocks: String =
-            self.base64
-                .chars()
+            self.elements()
                 .enumerate()
-                .fold(String::new(), |mut acc, (index, char)| {
+                .fold(Default::default(), |mut acc, (index, char)| {
                     acc.push(char);
 
                     // separate blocks
@@ -105,7 +104,7 @@ impl FromBytes for Base64 {
 
         let base64_string = base64_segments
             .iter()
-            .fold(String::new(), |mut acc, &segment| {
+            .fold(String::default(), |mut acc, &segment| {
                 acc.push(match segment {
                     // padding character (=)
                     None => 61,
@@ -141,38 +140,41 @@ impl FromBytes for Base64 {
 
 impl ToBytes for Base64 {
     fn to_bytes(&self) -> BytesType {
-        let decoded_bytes = self.base64.bytes().fold(Vec::new(), |mut acc, char_int| {
-            let char_option;
+        let decoded_bytes = self
+            .base64
+            .bytes()
+            .fold(Vec::default(), |mut acc, char_int| {
+                let char_option;
 
-            // plus
-            if char_int == 43 {
-                char_option = Some(62);
-            // slash
-            } else if char_int == 47 {
-                char_option = Some(63);
-            // padding character (=)
-            } else if char_int == 61 {
-                char_option = None;
-            // digit
-            } else if char_int <= 57 {
-                char_option = Some(char_int + 4);
-            // upper case letter
-            } else if char_int <= 90 {
-                char_option = Some(char_int - 65);
-            // lower case letter
-            } else {
-                char_option = Some(char_int - 71);
-            }
+                // plus
+                if char_int == 43 {
+                    char_option = Some(62);
+                // slash
+                } else if char_int == 47 {
+                    char_option = Some(63);
+                // padding character (=)
+                } else if char_int == 61 {
+                    char_option = None;
+                // digit
+                } else if char_int <= 57 {
+                    char_option = Some(char_int + 4);
+                // upper case letter
+                } else if char_int <= 90 {
+                    char_option = Some(char_int - 65);
+                // lower case letter
+                } else {
+                    char_option = Some(char_int - 71);
+                }
 
-            assert!(
-                char_option.is_none_or(|x| x < 64),
-                "{:?} is not valid base64",
-                char_option
-            );
+                assert!(
+                    char_option.is_none_or(|x| x < 64),
+                    "{:?} is not valid base64",
+                    char_option
+                );
 
-            acc.push(char_option);
-            acc
-        });
+                acc.push(char_option);
+                acc
+            });
 
         let base64_bytes = Self::assemble_bytes_from_segments(&decoded_bytes, 6);
 
@@ -209,7 +211,7 @@ impl Base64 {
         let mut bits_with_value = 0;
         let mut remainder = 0;
 
-        let mut segments_to_encode = bytes.iter().fold(Vec::new(), |mut acc, &byte| {
+        let mut segments_to_encode = bytes.iter().fold(Vec::default(), |mut acc, &byte| {
             bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
             let bits_with_remainder = bits_per_byte - bits_with_value;
 
@@ -251,7 +253,7 @@ impl Base64 {
 
         bytes
             .iter()
-            .fold(BytesType::new(), |mut acc, byte_input_option| {
+            .fold(Default::default(), |mut acc, byte_input_option| {
                 // padding
                 if byte_input_option.is_none() {
                     return acc;

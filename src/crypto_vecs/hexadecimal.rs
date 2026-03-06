@@ -7,7 +7,7 @@ use crate::crypto_vecs::{BytesType, CryptoString};
 
 // ----------------
 
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Hexadecimal {
     hexadecimal: String,
 }
@@ -33,7 +33,7 @@ impl InternalData for Hexadecimal {
     fn clean_and_validate(data: &Self::Collection) -> Result<Self::Collection, String> {
         let string_without_whitespace = data
             .split_ascii_whitespace()
-            .fold(String::new(), |acc, string_slice| acc + string_slice)
+            .fold(String::default(), |acc, string_slice| acc + string_slice)
             .to_lowercase();
 
         let invalid_characters: String = string_without_whitespace
@@ -94,14 +94,13 @@ impl Representation for Hexadecimal {
     }
 
     fn representation(&self) -> String {
-        let block_size = 8;
+        let block_size = 4;
 
-        let hex_blocks: String =
-            self.hexadecimal
-                .chars()
+        let hex_blocks =
+            self.elements()
                 .enumerate()
-                .fold(String::new(), |mut acc, (index, char)| {
-                    acc.push(char);
+                .fold(String::default(), |mut acc, (index, element)| {
+                    acc.extend(element.chars());
 
                     // separate blocks
                     if index % block_size == block_size - 1 {

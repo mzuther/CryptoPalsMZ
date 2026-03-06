@@ -54,7 +54,7 @@ impl convert::From<Vec<BytesType>> for self::BlockBytes {
 
 impl ToBytes for self::BlockBytes {
     fn to_bytes(&self) -> BytesType {
-        self.iter().fold(BytesType::new(), |mut acc, block| {
+        self.iter().fold(Default::default(), |mut acc, block| {
             acc.extend(block.to_vec());
             acc
         })
@@ -73,7 +73,7 @@ impl self::BlockBytes {
         assert!(block_size > 0);
 
         Self {
-            blocks: Vec::new(),
+            blocks: Default::default(),
             block_size,
             strict_filling: true,
         }
@@ -89,7 +89,7 @@ impl self::BlockBytes {
         assert!(block_size > 0);
 
         Self {
-            blocks: Vec::new(),
+            blocks: Default::default(),
             block_size,
             strict_filling: false,
         }

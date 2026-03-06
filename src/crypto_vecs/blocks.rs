@@ -82,7 +82,7 @@ where
         assert!(block_size > 0);
 
         Self {
-            blocks: Vec::new(),
+            blocks: Default::default(),
             block_size,
             strict_filling: true,
         }
@@ -99,7 +99,7 @@ where
         assert!(block_size > 0);
 
         Self {
-            blocks: Vec::new(),
+            blocks: Default::default(),
             block_size,
             strict_filling: false,
         }

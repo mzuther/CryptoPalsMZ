@@ -1,5 +1,5 @@
 use crate::crypto_vecs::traits::{
-    ElementIter, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+    Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
 use crate::crypto_vecs::{BytesType, CryptoString};
 
@@ -52,7 +52,7 @@ impl InternalData for Base64 {
 // ----------------
 
 // iterate over single characters (6 bits each)
-impl ElementIter for Base64 {
+impl Elements for Base64 {
     type Element = char;
 
     fn elements(&self) -> impl Iterator<Item = Self::Element> {

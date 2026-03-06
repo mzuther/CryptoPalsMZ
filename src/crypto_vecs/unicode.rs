@@ -1,5 +1,5 @@
 use crate::crypto_vecs::traits::{
-    ElementIter, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+    Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
 use crate::crypto_vecs::{BytesType, CryptoString};
 
@@ -36,7 +36,7 @@ impl InternalData for Unicode {
 // ----------------
 
 // iterate over single characters (graphemes)
-impl ElementIter for Unicode {
+impl Elements for Unicode {
     type Element = char;
 
     fn elements(&self) -> impl Iterator<Item = Self::Element> {

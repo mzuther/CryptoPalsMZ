@@ -11,7 +11,7 @@ pub trait InternalData {
 }
 
 // iterate over / count logical elements (String or char)
-pub trait ElementIter {
+pub trait Elements {
     type Element;
 
     fn elements(&self) -> impl Iterator<Item = Self::Element>;

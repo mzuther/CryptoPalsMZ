@@ -1,7 +1,7 @@
 use std::{convert, fmt};
 
 use crate::crypto_vecs::traits::{
-    ElementIter, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+    Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
 use crate::crypto_vecs::{self, BytesType};
 
@@ -61,9 +61,9 @@ where
 
 // ----------------
 
-impl<T, U> ElementIter for CryptoString<T>
+impl<T, U> Elements for CryptoString<T>
 where
-    T: InternalData + ElementIter<Element = U>,
+    T: InternalData + Elements<Element = U>,
 {
     type Element = U;
 
@@ -96,7 +96,7 @@ where
 
 impl<T> fmt::Display for CryptoString<T>
 where
-    T: InternalData + ElementIter + Representation,
+    T: InternalData + Elements + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -111,7 +111,7 @@ where
 
 impl<T> fmt::Debug for CryptoString<T>
 where
-    T: InternalData + ElementIter + Representation,
+    T: InternalData + Elements + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)

@@ -1,7 +1,7 @@
 use hex;
 
 use crate::crypto_vecs::traits::{
-    ElementIter, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+    Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
 use crate::crypto_vecs::{BytesType, CryptoString};
 
@@ -60,7 +60,7 @@ impl InternalData for Hexadecimal {
 // ----------------
 
 // iterate over bytes (Strings of two characters)
-impl ElementIter for Hexadecimal {
+impl Elements for Hexadecimal {
     type Element = String;
 
     fn elements(&self) -> impl Iterator<Item = Self::Element> {

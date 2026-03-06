@@ -17,7 +17,7 @@ pub type UnicodeType = CryptoString<self::Unicode>;
 impl InternalData for Unicode {
     type Collection = String;
 
-    fn new_from(data: Self::Collection) -> Self {
+    fn new_from(data: &Self::Collection) -> Self {
         match Self::clean_and_validate(data) {
             Ok(data) => Self { unicode: data },
             Err(error) => panic!("{}", error),
@@ -28,8 +28,8 @@ impl InternalData for Unicode {
         self.unicode.capacity()
     }
 
-    fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
-        Ok(data)
+    fn clean_and_validate(data: &Self::Collection) -> Result<Self::Collection, String> {
+        Ok(data.clone())
     }
 }
 
@@ -70,7 +70,7 @@ impl FromBytes for Unicode {
     fn from_bytes(bytes: &BytesType) -> Self {
         let unicode_string = String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string");
 
-        Self::new_from(unicode_string)
+        Self::new_from(&unicode_string)
     }
 }
 

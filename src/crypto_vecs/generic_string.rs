@@ -22,17 +22,17 @@ where
     T: InternalData<Collection = String>,
 {
     pub fn new() -> Self {
-        Self::new_from(String::new())
+        Self::new_from(&String::new())
     }
 
     pub fn with_capacity(bytes: usize) -> Self {
-        Self::new_from(String::with_capacity(bytes))
+        Self::new_from(&String::with_capacity(bytes))
     }
 
     pub fn with_capacity_bits(bits: usize) -> Self {
         let bytes = crypto_vecs::bits_to_bytes(bits);
 
-        Self::new_from(String::with_capacity(bytes))
+        Self::new_from(&String::with_capacity(bytes))
     }
 }
 
@@ -44,7 +44,7 @@ where
 {
     type Collection = String;
 
-    fn new_from(data: Self::Collection) -> Self {
+    fn new_from(data: &Self::Collection) -> Self {
         Self {
             data: T::new_from(data),
         }
@@ -54,7 +54,7 @@ where
         self.data.capacity()
     }
 
-    fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
+    fn clean_and_validate(data: &Self::Collection) -> Result<Self::Collection, String> {
         T::clean_and_validate(data)
     }
 }
@@ -125,7 +125,7 @@ where
     T: InternalData<Collection = String>,
 {
     fn from(data: String) -> Self {
-        Self::new_from(data)
+        Self::new_from(&data)
     }
 }
 
@@ -134,7 +134,7 @@ where
     T: InternalData<Collection = String>,
 {
     fn from(data: &str) -> Self {
-        Self::new_from(String::from(data))
+        Self::new_from(&String::from(data))
     }
 }
 

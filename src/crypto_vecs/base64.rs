@@ -17,7 +17,7 @@ pub type Base64Type = CryptoString<Base64>;
 impl InternalData for Base64 {
     type Collection = String;
 
-    fn new_from(data: Self::Collection) -> Self {
+    fn new_from(data: &Self::Collection) -> Self {
         match Self::clean_and_validate(data) {
             Ok(data) => Self { base64: data },
             Err(error) => panic!("{}", error),
@@ -28,7 +28,7 @@ impl InternalData for Base64 {
         self.base64.capacity()
     }
 
-    fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
+    fn clean_and_validate(data: &Self::Collection) -> Result<Self::Collection, String> {
         let string_without_whitespace = data
             .split_ascii_whitespace()
             .fold(String::new(), |acc, string_slice| acc + string_slice);
@@ -137,7 +137,7 @@ impl FromBytes for Base64 {
                 acc
             });
 
-        Self::new_from(base64_string)
+        Self::new_from(&base64_string)
     }
 }
 

@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fs};
 
 use cryptopals::crypto_vecs::traits::ToBytes;
-use cryptopals::crypto_vecs::{Base64Type, BlockBytes, BytesType, HexadecimalType};
+use cryptopals::crypto_vecs::{Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType};
 
 // ----------------
 
@@ -121,8 +121,13 @@ fn integration_challenge_05() {
 
 #[test]
 fn integration_challenge_06() {
-    let cypher_string: String = fs::read_to_string("original/6.txt").expect("could not read file");
-    let cypher = BytesType::from_base64_literal(&cypher_string);
+    let mut base64_string: String =
+        fs::read_to_string("original/6.txt").expect("could not read file");
+
+    // fix incorrect last character before padding
+    base64_string = UnicodeType::replace_suffix(&base64_string, "M=\n", "A=");
+
+    let cypher = BytesType::from_base64_literal(&base64_string);
 
     let expected_result = BytesType::from_unicode_literal("Terminator X: Bring the noise");
 

@@ -3,6 +3,8 @@ use crate::crypto_vecs::traits::{
 };
 use crate::crypto_vecs::{BytesType, CryptoString};
 
+use regex::Regex;
+
 // ----------------
 
 #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
@@ -38,6 +40,21 @@ impl InternalData for Base64 {
                 "base64 encodings are multiples of 4 characters, found {} characters",
                 string_without_whitespace.len()
             ));
+        }
+
+        let regex_padding = Regex::new(r"([=]+)$").unwrap();
+
+        if let Some(captures) = regex_padding.captures(&string_without_whitespace) {
+            let padding = captures
+                .get(1)
+                .expect("there is a single capture group")
+                .as_str();
+
+            let padding_length = padding.len();
+
+            if padding_length > 2 {
+                panic!("invalid base64 padding: {}", padding);
+            }
         }
 
         let invalid_characters: String = string_without_whitespace
@@ -358,6 +375,12 @@ mod tests {
     #[should_panic(expected = "base64 encodings are multiples of 4 characters")]
     fn unit_base64_from_invalid_length() {
         let _ = Base64Type::from("HUIfTQsP Ah9");
+    }
+
+    #[test]
+    #[should_panic(expected = "invalid base64 padding: ===")]
+    fn unit_base64_from_padding_too_much() {
+        let _ = Base64Type::from("HUIfTQsP Ahxh9===");
     }
 
     #[test]

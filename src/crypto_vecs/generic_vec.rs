@@ -1,55 +1,218 @@
-use std::{convert, marker, slice, vec};
+use std::{convert, fmt, slice, vec};
 
-use crate::crypto_vecs;
-use crate::crypto_vecs::traits::LenBytes;
+use crate::crypto_vecs::BytesType;
+use crate::crypto_vecs::traits::{
+    Elements, FromBytes, InternalDataVec, InternalDataVecMut, LenBytes, Representation, ToBytes,
+};
 
 // ================
 
 #[derive(Clone, Default, Eq, Ord, PartialEq, PartialOrd)]
-pub struct CryptoVec<P> {
-    data: Vec<u8>,
-    struct_type: marker::PhantomData<P>,
+pub struct CryptoVec<C, E>
+where
+    C: Elements<Element = E>,
+{
+    data: C,
 }
 
 #[derive(Clone)]
-pub struct CryptoVecIter<'a> {
-    vec_ref: &'a Vec<u8>,
+pub struct CryptoVecIter<'a, E> {
+    vec_ref: &'a Vec<E>,
     current_index: usize,
 }
 
 // ================
 
-impl<P> convert::From<Vec<u8>> for self::CryptoVec<P>
+impl<C, E> InternalDataVec for CryptoVec<C, E>
 where
-    P: Clone,
+    C: InternalDataVec<Element = E> + Elements<Element = E>,
 {
-    fn from(data: Vec<u8>) -> Self {
-        Self::new_from(data)
-    }
-}
+    type Element = E;
 
-impl<P> convert::From<&[u8]> for self::CryptoVec<P>
-where
-    P: Clone,
-{
-    fn from(data: &[u8]) -> Self {
-        Self::new_from(data.to_vec())
+    fn new_from(data: Vec<E>) -> Self {
+        Self {
+            data: C::new_from(data),
+        }
     }
-}
 
-impl<P> convert::From<u8> for self::CryptoVec<P>
-where
-    P: Clone,
-{
-    fn from(element: u8) -> Self {
-        Self::new_from(vec![element])
+    fn capacity(&self) -> usize {
+        self.data.capacity()
+    }
+
+    fn clean_and_validate(data: Vec<E>) -> Result<Vec<E>, String> {
+        C::clean_and_validate(data)
+    }
+
+    // ----------------
+
+    fn data(&self) -> &Vec<E> {
+        &self.data.data()
+    }
+
+    fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, E> {
+        assert!(chunk_size > 0, "chunk size must be non-zero");
+
+        self.data.chunks(chunk_size)
+    }
+
+    fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, E> {
+        assert!(chunk_size > 0, "chunk size must be non-zero");
+
+        self.data.rchunks(chunk_size)
+    }
+
+    // ----------------
+
+    fn get(&self, index: usize) -> Option<&E> {
+        self.data.get(index)
     }
 }
 
 // ----------------
 
-impl<P> IntoIterator for self::CryptoVec<P> {
-    type Item = u8;
+impl<C, E> InternalDataVecMut for CryptoVec<C, E>
+where
+    C: Elements<Element = E> + InternalDataVec<Element = E> + InternalDataVecMut<Element = E>,
+{
+    type Element = E;
+
+    fn data_mut(&mut self) -> &mut Vec<Self::Element> {
+        let temp = self.data.data_mut();
+
+        temp
+    }
+
+    fn push(&mut self, value: Self::Element) {
+        self.data.push(value)
+    }
+}
+
+// ----------------
+
+impl<C, E> Elements for CryptoVec<C, E>
+where
+    C: InternalDataVec + Elements<Element = E>,
+{
+    type Element = E;
+
+    fn elements(&self) -> impl Iterator<Item = Self::Element> {
+        self.data.elements()
+    }
+}
+
+// ----------------
+
+impl<C, E> Representation for CryptoVec<C, E>
+where
+    C: Representation + Elements<Element = E>,
+{
+    fn representation_name(&self) -> &str {
+        self.data.representation_name()
+    }
+
+    fn representation(&self) -> String {
+        self.data.representation()
+    }
+}
+
+// ----------------
+
+impl<C, E> fmt::Display for CryptoVec<C, E>
+where
+    C: Representation + Elements<Element = E>,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}[{}] {{ {} }}",
+            self.representation_name(),
+            self.data.len(),
+            self.representation()
+        )
+    }
+}
+
+impl<C, E> fmt::Debug for CryptoVec<C, E>
+where
+    C: Elements<Element = E> + Representation,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+// ----------------
+
+impl<C, E> convert::From<Vec<E>> for self::CryptoVec<C, E>
+where
+    C: InternalDataVec<Element = E> + Elements<Element = E>,
+{
+    fn from(data: Vec<E>) -> Self {
+        Self::new_from(data)
+    }
+}
+
+impl<C, E> convert::From<&[E]> for self::CryptoVec<C, E>
+where
+    C: InternalDataVec<Element = E> + Elements<Element = E>,
+    E: Clone,
+{
+    fn from(data: &[E]) -> Self {
+        Self::new_from(data.to_vec())
+    }
+}
+
+impl<C, E> convert::From<E> for self::CryptoVec<C, E>
+where
+    C: InternalDataVec<Element = E> + Elements<Element = E>,
+    E: Clone,
+{
+    fn from(element: E) -> Self {
+        Self::new_from(vec![element])
+    }
+}
+
+// impl<C, E> convert::From<&BytesType> for CryptoVec<C, E>
+// where
+//     C: Elements<Element = E> + FromBytes,
+// {
+//     fn from(bytes: &BytesType) -> Self {
+//         Self::from_bytes(bytes)
+//     }
+// }
+
+// ----------------
+
+impl<C, E> FromBytes for CryptoVec<C, E>
+where
+    C: Elements<Element = E> + FromBytes,
+{
+    fn from_bytes(bytes: &BytesType) -> Self {
+        Self {
+            data: C::from_bytes(bytes),
+        }
+    }
+}
+
+impl<C, E> ToBytes for CryptoVec<C, E>
+where
+    C: Elements<Element = E> + ToBytes,
+{
+    fn to_bytes(&self) -> BytesType {
+        self.data.to_bytes()
+    }
+}
+
+// ----------------
+
+impl<C, E> IntoIterator for self::CryptoVec<C, E>
+where
+    C: IntoIterator<IntoIter = std::vec::IntoIter<E>>
+        + Elements<Element = E>
+        + InternalDataVec<Element = E>
+        + InternalDataVecMut<Element = E>,
+{
+    type Item = E;
     type IntoIter = vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -57,8 +220,8 @@ impl<P> IntoIterator for self::CryptoVec<P> {
     }
 }
 
-impl<'a> Iterator for self::CryptoVecIter<'a> {
-    type Item = &'a u8;
+impl<'a, E> Iterator for self::CryptoVecIter<'a, E> {
+    type Item = &'a E;
 
     fn next(&mut self) -> Option<Self::Item> {
         let element = self.vec_ref.get(self.current_index);
@@ -68,7 +231,7 @@ impl<'a> Iterator for self::CryptoVecIter<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for self::CryptoVecIter<'a> {
+impl<'a, E> ExactSizeIterator for self::CryptoVecIter<'a, E> {
     fn len(&self) -> usize {
         let number_of_elements = self.vec_ref.len();
         let bounded_index = self.current_index.min(number_of_elements);
@@ -79,162 +242,114 @@ impl<'a> ExactSizeIterator for self::CryptoVecIter<'a> {
 
 // ----------------
 
-impl<P> LenBytes for CryptoVec<P> {
+impl<C, E> LenBytes for CryptoVec<C, E>
+where
+    C: Elements<Element = E>,
+{
     fn len_bytes(&self) -> usize {
         self.data.len()
     }
 }
+
 // ----------------
 
-impl<P> AsMut<Vec<u8>> for CryptoVec<P> {
+impl<C, E> convert::AsMut<Vec<E>> for CryptoVec<C, E>
+where
+    C: AsMut<Vec<E>>
+        + Elements<Element = E>
+        + InternalDataVec<Element = E>
+        + InternalDataVecMut<Element = E>,
+{
     // reference to mutable vec
-    fn as_mut(&mut self) -> &mut Vec<u8> {
+    fn as_mut(&mut self) -> &mut Vec<E> {
         self.data.as_mut()
     }
 }
 
-impl<P> AsRef<Vec<u8>> for CryptoVec<P> {
-    // reference to vec
-    fn as_ref(&self) -> &Vec<u8> {
-        self.data.as_ref()
-    }
-}
-
-// ----------------
-
-impl<P> Extend<u8> for CryptoVec<P> {
-    fn extend<T>(&mut self, iter: T)
-    where
-        T: IntoIterator<Item = u8>,
-    {
-        self.data.extend(iter);
-    }
-}
-
-// ----------------
-
-impl<'a, P> Extend<&'a u8> for CryptoVec<P> {
-    fn extend<T>(&mut self, iter: T)
-    where
-        T: IntoIterator<Item = &'a u8>,
-    {
-        self.data.extend(iter);
-    }
-}
-
-impl<P> self::CryptoVec<P>
+impl<C, E> convert::AsRef<Vec<E>> for CryptoVec<C, E>
 where
-    P: Clone,
+    C: Clone
+        + Elements<Element = E>
+        + InternalDataVec<Element = E>
+        + InternalDataVecMut<Element = E>,
+    E: Clone,
 {
-    pub fn new_from(data: Vec<u8>) -> Self {
-        Self {
-            data,
-            struct_type: marker::PhantomData,
-        }
+    // reference to vec
+    fn as_ref(&self) -> &Vec<E> {
+        self.data().as_ref()
     }
+}
 
-    pub fn new() -> Self {
-        Self::new_from(Default::default())
+// ----------------
+
+impl<C, E> Extend<E> for CryptoVec<C, E>
+where
+    C: Extend<E> + Elements<Element = E>,
+{
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = E>,
+    {
+        self.data.extend(iter);
     }
+}
 
-    pub fn with_capacity(bytes: usize) -> Self {
-        Self::new_from(Vec::with_capacity(bytes))
+impl<'a, C, E> Extend<&'a E> for CryptoVec<C, E>
+where
+    C: Extend<E> + Elements<Element = E>,
+    E: Copy,
+{
+    fn extend<T>(&mut self, iter: T)
+    where
+        T: IntoIterator<Item = &'a E>,
+    {
+        self.data.extend(iter.into_iter().copied());
     }
+}
 
-    pub fn with_capacity_bits(bits: usize) -> Self {
-        let capacity = crypto_vecs::bits_to_bytes(bits);
+// ----------------
 
-        Self::new_from(Vec::with_capacity(capacity))
-    }
-
-    pub const fn capacity(&self) -> usize {
-        self.data.capacity()
-    }
-
-    // ----------------
-
-    pub fn len(&self) -> usize {
-        self.data.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
-    pub fn data(&self) -> &Vec<u8> {
-        &self.data
-    }
-
-    pub fn iter(&self) -> self::CryptoVecIter<'_> {
+impl<C, E> self::CryptoVec<C, E>
+where
+    C: Clone
+        + Elements<Element = E>
+        + InternalDataVec<Element = E>
+        + InternalDataVecMut<Element = E>,
+    E: Clone,
+{
+    pub fn iter(&self) -> self::CryptoVecIter<'_, E> {
         self::CryptoVecIter {
-            vec_ref: &self.data,
+            vec_ref: &self.data.data(),
             current_index: 0,
         }
     }
 
     // ----------------
 
-    pub fn chunks(&self, chunk_size: usize) -> Vec<Self> {
-        assert!(chunk_size > 0, "chunk size must be non-zero");
-
+    pub fn chunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
         self.data
             .chunks(chunk_size)
-            .fold(Default::default(), |mut acc, chunk| {
-                acc.push(Self::from(chunk));
-                acc
-            })
+            .map(|chunk| Self::new_from(chunk.to_vec()))
+            .collect()
     }
 
-    pub fn rchunks(&self, chunk_size: usize) -> Vec<Self> {
-        assert!(chunk_size > 0, "chunk size must be non-zero");
-
+    pub fn rchunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
         self.data
             .rchunks(chunk_size)
-            .fold(Default::default(), |mut acc, chunk| {
-                acc.push(Self::from(chunk));
-                acc
-            })
+            .map(|chunk| Self::new_from(chunk.to_vec()))
+            .collect()
     }
 
-    // reference to array
-    pub const fn as_slice(&self) -> &[u8] {
-        self.data.as_slice()
+    pub fn first_n_as_collection(&self, length: usize) -> Option<Self> {
+        self.first_n(length).map(|x| Self::new_from(x.to_vec()))
     }
 
-    // reference to mutable array
-    pub const fn as_mut_slice(&mut self) -> &mut [u8] {
-        self.data.as_mut_slice()
+    pub fn last_n_as_collection(&self, length: usize) -> Option<Self> {
+        self.last_n(length).map(|x| Self::new_from(x.to_vec()))
     }
 
     // clone of underlying vec
-    pub fn to_vec(&self) -> Vec<u8> {
-        self.data.to_vec()
-    }
-
-    // ----------------
-    // TODO: add tests
-    pub fn get<I>(&self, index: I) -> Option<&I::Output>
-    where
-        I: slice::SliceIndex<[u8]>,
-    {
-        self.data.get(index)
-    }
-
-    pub fn first_n(&self, length: usize) -> Option<Self> {
-        assert!(length > 0);
-
-        self.chunks(length).first().cloned()
-    }
-
-    pub fn last_n(&self, length: usize) -> Option<Self> {
-        assert!(length > 0);
-
-        self.rchunks(length).first().cloned()
-    }
-
-    // ----------------
-
-    pub fn push(&mut self, byte: u8) {
-        self.data.push(byte);
+    pub fn to_vec(&self) -> Vec<E> {
+        self.data().to_vec()
     }
 }

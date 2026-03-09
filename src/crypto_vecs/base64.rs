@@ -1,5 +1,5 @@
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+    Elements, FromBytes, InternalDataString, InternalDataVecMut, LenBytes, Representation, ToBytes,
 };
 use crate::crypto_vecs::{BytesType, CryptoString};
 
@@ -16,10 +16,8 @@ pub type Base64Type = CryptoString<Base64>;
 
 // ================
 
-impl InternalData for Base64 {
-    type Collection = String;
-
-    fn new_from(data: &Self::Collection) -> Self {
+impl InternalDataString for Base64 {
+    fn new_from(data: String) -> Self {
         match Self::clean_and_validate(data) {
             Ok(data) => Self { base64: data },
             Err(error) => panic!("{}", error),
@@ -30,7 +28,7 @@ impl InternalData for Base64 {
         self.base64.capacity()
     }
 
-    fn clean_and_validate(data: &Self::Collection) -> Result<Self::Collection, String> {
+    fn clean_and_validate(data: String) -> Result<String, String> {
         let string_without_whitespace = data
             .split_ascii_whitespace()
             .fold(String::default(), |acc, string_slice| acc + string_slice);
@@ -109,8 +107,8 @@ impl Elements for Base64 {
 // ----------------
 
 impl Representation for Base64 {
-    fn representation_name(&self) -> String {
-        String::from("Base64")
+    fn representation_name(&self) -> &str {
+        "Base64"
     }
 
     fn representation(&self) -> String {
@@ -178,7 +176,7 @@ impl FromBytes for Base64 {
                 acc
             });
 
-        Self::new_from(&base64_string)
+        Self::new_from(base64_string)
     }
 }
 

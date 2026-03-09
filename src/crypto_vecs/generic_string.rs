@@ -1,52 +1,29 @@
 use std::{convert, fmt};
 
+use crate::crypto_vecs::BytesType;
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+    Elements, FromBytes, InternalDataString, LenBytes, Representation, ToBytes,
 };
-use crate::crypto_vecs::{self, BytesType};
 
 // ================
 
 #[derive(Clone, Default, Eq, Ord, PartialEq, PartialOrd)]
-pub struct CryptoString<T>
+pub struct CryptoString<C>
 where
-    T: InternalData,
+    C: InternalDataString,
 {
-    data: T,
+    data: C,
 }
 
 // ================
 
-impl<T> CryptoString<T>
+impl<C> InternalDataString for CryptoString<C>
 where
-    T: InternalData<Collection = String>,
+    C: InternalDataString,
 {
-    pub fn new() -> Self {
-        Self::new_from(&Default::default())
-    }
-
-    pub fn with_capacity(bytes: usize) -> Self {
-        Self::new_from(&String::with_capacity(bytes))
-    }
-
-    pub fn with_capacity_bits(bits: usize) -> Self {
-        let bytes = crypto_vecs::bits_to_bytes(bits);
-
-        Self::new_from(&String::with_capacity(bytes))
-    }
-}
-
-// ----------------
-
-impl<T> InternalData for CryptoString<T>
-where
-    T: InternalData<Collection = String>,
-{
-    type Collection = String;
-
-    fn new_from(data: &Self::Collection) -> Self {
+    fn new_from(data: String) -> Self {
         Self {
-            data: T::new_from(data),
+            data: C::new_from(data),
         }
     }
 
@@ -54,18 +31,18 @@ where
         self.data.capacity()
     }
 
-    fn clean_and_validate(data: &Self::Collection) -> Result<Self::Collection, String> {
-        T::clean_and_validate(data)
+    fn clean_and_validate(data: String) -> Result<String, String> {
+        C::clean_and_validate(data)
     }
 }
 
 // ----------------
 
-impl<T, U> Elements for CryptoString<T>
+impl<C, E> Elements for CryptoString<C>
 where
-    T: InternalData + Elements<Element = U>,
+    C: InternalDataString + Elements<Element = E>,
 {
-    type Element = U;
+    type Element = E;
 
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
         self.data.elements()
@@ -79,11 +56,11 @@ where
 
 // ----------------
 
-impl<T> Representation for CryptoString<T>
+impl<C> Representation for CryptoString<C>
 where
-    T: InternalData + Representation,
+    C: InternalDataString + Representation,
 {
-    fn representation_name(&self) -> String {
+    fn representation_name(&self) -> &str {
         self.data.representation_name()
     }
 
@@ -94,9 +71,9 @@ where
 
 // ----------------
 
-impl<T> fmt::Display for CryptoString<T>
+impl<C> fmt::Display for CryptoString<C>
 where
-    T: InternalData + Elements + Representation,
+    C: InternalDataString + Elements + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -109,9 +86,9 @@ where
     }
 }
 
-impl<T> fmt::Debug for CryptoString<T>
+impl<C> fmt::Debug for CryptoString<C>
 where
-    T: InternalData + Elements + Representation,
+    C: InternalDataString + Elements + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)
@@ -120,27 +97,27 @@ where
 
 // ----------------
 
-impl<T> convert::From<String> for CryptoString<T>
+impl<C> convert::From<String> for CryptoString<C>
 where
-    T: InternalData<Collection = String>,
+    C: InternalDataString,
 {
     fn from(data: String) -> Self {
-        Self::new_from(&data)
+        Self::new_from(data)
     }
 }
 
-impl<T> convert::From<&str> for CryptoString<T>
+impl<C> convert::From<&str> for CryptoString<C>
 where
-    T: InternalData<Collection = String>,
+    C: InternalDataString,
 {
     fn from(data: &str) -> Self {
-        Self::new_from(&String::from(data))
+        Self::new_from(data.to_string())
     }
 }
 
-impl<T> convert::From<&BytesType> for CryptoString<T>
+impl<C> convert::From<&BytesType> for CryptoString<C>
 where
-    T: InternalData + FromBytes,
+    C: InternalDataString + FromBytes,
 {
     fn from(bytes: &BytesType) -> Self {
         Self::from_bytes(bytes)
@@ -149,9 +126,9 @@ where
 
 // ----------------
 
-impl<T> LenBytes for CryptoString<T>
+impl<C> LenBytes for CryptoString<C>
 where
-    T: InternalData + LenBytes,
+    C: InternalDataString + LenBytes,
 {
     fn len_bytes(&self) -> usize {
         self.data.len_bytes()
@@ -160,20 +137,20 @@ where
 
 // ----------------
 
-impl<T> FromBytes for CryptoString<T>
+impl<C> FromBytes for CryptoString<C>
 where
-    T: InternalData + FromBytes,
+    C: InternalDataString + FromBytes,
 {
     fn from_bytes(bytes: &BytesType) -> Self {
         Self {
-            data: T::from_bytes(bytes),
+            data: C::from_bytes(bytes),
         }
     }
 }
 
-impl<T> ToBytes for CryptoString<T>
+impl<C> ToBytes for CryptoString<C>
 where
-    T: InternalData + ToBytes,
+    C: InternalDataString + ToBytes,
 {
     fn to_bytes(&self) -> BytesType {
         self.data.to_bytes()

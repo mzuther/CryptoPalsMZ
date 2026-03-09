@@ -59,7 +59,7 @@ fn challenge_06() {
         scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let score = scores.first().expect("there should always be one element");
-        proposed_key.extend(score.key.as_slice());
+        proposed_key.extend(score.key.clone());
     }
 
     let manual_key =

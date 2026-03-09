@@ -1,14 +1,79 @@
-use crate::crypto_vecs::{Base64Type, BytesType, HexadecimalType, UnicodeType};
+use std::slice;
+
+use crate::crypto_vecs::{self, Base64Type, BytesType, HexadecimalType, UnicodeType};
 
 // ================
 
-pub trait InternalData {
-    type Collection;
-
-    fn new_from(data: &Self::Collection) -> Self;
+pub trait InternalDataString {
+    fn new_from(data: String) -> Self;
     fn capacity(&self) -> usize;
-    fn clean_and_validate(data: &Self::Collection) -> Result<Self::Collection, String>;
+    fn clean_and_validate(data: String) -> Result<String, String>;
 }
+
+pub trait InternalDataVec {
+    type Element;
+
+    fn new_from(data: Vec<Self::Element>) -> Self;
+
+    fn capacity(&self) -> usize;
+    fn clean_and_validate(data: Vec<Self::Element>) -> Result<Vec<Self::Element>, String>;
+
+    fn data(&self) -> &Vec<Self::Element>;
+    fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, Self::Element>;
+    fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, Self::Element>;
+
+    fn get(&self, index: usize) -> Option<&Self::Element>;
+
+    // ----------------
+
+    fn with_capacity(bytes: usize) -> Self
+    where
+        Self: Sized,
+    {
+        Self::new_from(Vec::with_capacity(bytes))
+    }
+
+    fn with_capacity_bits(bits: usize) -> Self
+    where
+        Self: Sized,
+    {
+        let bytes = crypto_vecs::bits_to_bytes(bits);
+
+        Self::new_from(Vec::with_capacity(bytes))
+    }
+
+    fn as_slice(&self) -> &[Self::Element] {
+        self.data().as_slice()
+    }
+
+    fn first_n(&self, length: usize) -> Option<&[Self::Element]> {
+        assert!(length > 0);
+
+        self.chunks(length).next()
+    }
+
+    fn last_n(&self, length: usize) -> Option<&[Self::Element]> {
+        assert!(length > 0);
+
+        self.rchunks(length).next()
+    }
+}
+
+pub trait InternalDataVecMut {
+    type Element;
+
+    fn data_mut(&mut self) -> &mut Vec<Self::Element>;
+
+    fn push(&mut self, value: Self::Element);
+
+    // ----------------
+
+    fn as_mut_slice(&mut self) -> &mut [Self::Element] {
+        self.data_mut().as_mut_slice()
+    }
+}
+
+// ----------------
 
 // iterate over / count logical elements (String or char)
 pub trait Elements {
@@ -34,7 +99,7 @@ pub trait Elements {
 // ----------------
 
 pub trait Representation {
-    fn representation_name(&self) -> String;
+    fn representation_name(&self) -> &str;
     fn representation(&self) -> String;
 }
 

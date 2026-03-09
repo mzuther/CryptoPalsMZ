@@ -223,7 +223,7 @@ impl self::BlockBytes {
         let last_block = self.get_last_block_mut();
 
         *last_block = last_block
-            .first_n(last_block_size - number_of_bytes)
+            .first_n_as_collection(last_block_size - number_of_bytes)
             .expect("block length has been asserted above");
     }
 

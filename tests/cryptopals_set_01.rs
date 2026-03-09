@@ -75,8 +75,8 @@ fn integration_challenge_04() {
 
     let initial_score = cryptopals::ScoreXOR {
         score: 1000.0,
-        key: BytesType::new(),
-        plain_text: BytesType::new(),
+        key: Default::default(),
+        plain_text: Default::default(),
     };
 
     let best_score = all_strings_hex
@@ -151,7 +151,7 @@ fn integration_challenge_06() {
 
     let result_key = transposed_blocks
         .iter()
-        .fold(BytesType::new(), |mut acc, block| {
+        .fold(BytesType::default(), |mut acc, block| {
             let mut block_scores = cryptopals::find_lowest_score_xor(block);
 
             // sort by score, resulting in highest score first (to get lowest score with "pop()")
@@ -161,7 +161,7 @@ fn integration_challenge_06() {
                 .pop()
                 .expect("there should always be one element");
 
-            acc.extend(best_block_score.key.as_slice());
+            acc.extend(best_block_score.key);
             acc
         });
 
@@ -182,12 +182,12 @@ fn integration_challenge_07() {
 
     let expected_result_start =
         BytesType::from_unicode_literal("I'm back and I'm ringin' the bell");
-    let result_start = plain.first_n(33).unwrap();
+    let result_start = plain.first_n_as_collection(33).unwrap();
 
     assert_eq!(result_start, expected_result_start);
 
     let expected_result_end = BytesType::from_unicode_literal("Play that funky music \n");
-    let result_end = plain.last_n(23).unwrap();
+    let result_end = plain.last_n_as_collection(23).unwrap();
 
     assert_eq!(result_end, expected_result_end);
 }
@@ -205,11 +205,11 @@ fn integration_challenge_08() {
     expected_duplicates.push(duplicate_block.clone());
     expected_duplicates.push(duplicate_block);
 
-    let mut expected_result = HashMap::new();
+    let mut expected_result = HashMap::default();
     expected_result.insert(132, expected_duplicates);
 
     let result = all_strings_hex.lines().enumerate().fold(
-        HashMap::new(),
+        HashMap::default(),
         |mut cyphers_with_duplicates: HashMap<usize, _>, (index, string_hex)| {
             let cypher = BytesType::from_hex_literal(string_hex);
             let cypher_blocks = cypher.to_blocks_bits(block_size_bits);

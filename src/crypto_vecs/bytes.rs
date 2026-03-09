@@ -1,21 +1,104 @@
 use openssl::{cipher, cipher_ctx};
-use std::{fmt, vec};
+use std::{convert, slice, vec};
 
-use crate::crypto_vecs::traits::{LenBytes, Representation, ToBytes};
+use crate::crypto_vecs::traits::{
+    Elements, FromBytes, InternalDataVec, InternalDataVecMut, LenBytes, Representation, ToBytes,
+};
 use crate::crypto_vecs::{self, Base64Type, BlockBytes, HexadecimalType, UnicodeType};
 
 // ================
 
 #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
-pub struct Bytes;
+pub struct Bytes {
+    bytes: Vec<u8>,
+}
 
-pub type BytesType = crypto_vecs::CryptoVec<Bytes>;
+pub type BytesType = crypto_vecs::CryptoVec<Bytes, u8>;
 
 // ================
 
-impl Representation for BytesType {
-    fn representation_name(&self) -> String {
-        String::from("Bytes")
+impl InternalDataVec for Bytes {
+    type Element = u8;
+
+    fn new_from(data: Vec<Self::Element>) -> Self {
+        match Self::clean_and_validate(data) {
+            Ok(data) => Self { bytes: data },
+            Err(error) => panic!("{}", error),
+        }
+    }
+
+    fn capacity(&self) -> usize {
+        self.bytes.capacity()
+    }
+
+    fn clean_and_validate(data: Vec<Self::Element>) -> Result<Vec<Self::Element>, String> {
+        Ok(data)
+    }
+
+    // ----------------
+
+    fn data(&self) -> &Vec<Self::Element> {
+        &self.bytes
+    }
+
+    fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, Self::Element> {
+        assert!(chunk_size > 0, "chunk size must be non-zero");
+
+        self.bytes.chunks(chunk_size)
+    }
+
+    fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, Self::Element> {
+        assert!(chunk_size > 0, "chunk size must be non-zero");
+
+        self.bytes.rchunks(chunk_size)
+    }
+
+    // ----------------
+
+    fn get(&self, index: usize) -> Option<&Self::Element> {
+        self.bytes.get(index)
+    }
+}
+
+// ----------------
+
+impl InternalDataVecMut for Bytes {
+    type Element = u8;
+
+    fn data_mut(&mut self) -> &mut Vec<Self::Element> {
+        &mut self.bytes
+    }
+
+    fn push(&mut self, value: Self::Element) {
+        self.bytes.push(value)
+    }
+}
+
+// ----------------
+
+// iterate over bytes
+impl Elements for Bytes {
+    type Element = u8;
+
+    fn elements(&self) -> impl Iterator<Item = Self::Element> {
+        self.bytes.iter().copied()
+    }
+}
+
+// iterate over bytes (by reference)
+impl<'a> Elements for &'a Bytes {
+    type Element = &'a u8;
+
+    fn elements(&self) -> impl Iterator<Item = Self::Element> {
+        self.bytes.iter()
+    }
+}
+
+// ----------------
+
+impl Representation for Bytes {
+    fn representation_name(&self) -> &str {
+        "Bytes"
     }
 
     fn representation(&self) -> String {
@@ -23,49 +106,66 @@ impl Representation for BytesType {
     }
 }
 
-impl fmt::Display for BytesType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}[{}] {{ {} }}",
-            self.representation_name(),
-            self.len(),
-            self.representation()
-        )
+// ----------------
+
+impl FromBytes for Bytes {
+    fn from_bytes(bytes: &BytesType) -> Self {
+        Self {
+            bytes: bytes.data().clone(),
+        }
     }
 }
 
-impl fmt::Debug for BytesType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+impl ToBytes for Bytes {
+    fn to_bytes(&self) -> BytesType {
+        BytesType::new_from(self.bytes.clone())
     }
 }
 
 // ----------------
 
-impl ToBytes for BytesType {
-    // performance: prevent superfluous conversion to Bytes
-    fn to_bytes(&self) -> Self {
-        self.clone()
-    }
-
-    // performance: prevent intermediate conversion to Bytes
-    fn to_hexadecimal(&self) -> HexadecimalType {
-        HexadecimalType::from(self)
-    }
-
-    // performance: prevent intermediate conversion to Bytes
-    fn to_base64(&self) -> Base64Type {
-        Base64Type::from(self)
-    }
-
-    // performance: prevent intermediate conversion to Bytes
-    fn to_unicode(&self) -> UnicodeType {
-        UnicodeType::from(self)
+impl LenBytes for Bytes {
+    fn len_bytes(&self) -> usize {
+        self.len()
     }
 }
 
 // ----------------
+
+impl Extend<u8> for Bytes {
+    fn extend<A: IntoIterator<Item = u8>>(&mut self, iter: A) {
+        self.bytes.extend(iter);
+    }
+}
+
+// ----------------
+
+impl convert::AsMut<Vec<u8>> for Bytes {
+    // reference to mutable vec
+    fn as_mut(&mut self) -> &mut Vec<u8> {
+        self.bytes.as_mut()
+    }
+}
+
+impl convert::AsRef<Vec<u8>> for Bytes {
+    // reference to vec
+    fn as_ref(&self) -> &Vec<u8> {
+        self.bytes.as_ref()
+    }
+}
+
+// ----------------
+
+impl IntoIterator for Bytes {
+    type Item = u8;
+    type IntoIter = vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.bytes.into_iter()
+    }
+}
+
+// ================
 
 impl BytesType {
     const LOOKUP_BITS_IN_NIBBLE: [u32; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
@@ -278,7 +378,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_bytes_new() {
+    fn unit_bytes_default() {
         let expected_result = BytesType::from(Vec::default());
 
         let result = BytesType::default();
@@ -291,8 +391,19 @@ mod tests {
         let capacity = 10;
         let bytes = BytesType::with_capacity(capacity);
 
-        assert!(bytes.capacity() >= capacity);
-        assert!(bytes.capacity() < capacity * 10);
+        assert!(
+            bytes.capacity() >= capacity,
+            "capacity {} >= {}",
+            bytes.capacity(),
+            capacity
+        );
+
+        assert!(
+            bytes.capacity() < capacity * 10,
+            "capacity {} < {}",
+            bytes.capacity(),
+            capacity * 10
+        );
     }
 
     #[test]
@@ -300,8 +411,19 @@ mod tests {
         let capacity = 100;
         let bytes = BytesType::with_capacity(capacity);
 
-        assert!(bytes.capacity() >= capacity);
-        assert!(bytes.capacity() < capacity * 10);
+        assert!(
+            bytes.capacity() >= capacity,
+            "capacity {} >= {}",
+            bytes.capacity(),
+            capacity
+        );
+
+        assert!(
+            bytes.capacity() < capacity * 10,
+            "capacity {} < {}",
+            bytes.capacity(),
+            capacity * 10
+        );
     }
 
     #[test]
@@ -309,8 +431,19 @@ mod tests {
         let capacity = 10_000;
         let bytes = BytesType::with_capacity(capacity);
 
-        assert!(bytes.capacity() >= capacity);
-        assert!(bytes.capacity() < capacity * 10);
+        assert!(
+            bytes.capacity() >= capacity,
+            "capacity {} >= {}",
+            bytes.capacity(),
+            capacity
+        );
+
+        assert!(
+            bytes.capacity() < capacity * 10,
+            "capacity {} < {}",
+            bytes.capacity(),
+            capacity * 10
+        );
     }
 
     #[test]
@@ -421,13 +554,13 @@ mod tests {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
 
         let mut expected_result = Vec::default();
-        expected_result.push(BytesType::from(vec![0x41, 0x62, 0xf3]));
-        expected_result.push(BytesType::from(vec![0xd3, 0x42, 0x6f]));
-        expected_result.push(BytesType::from(vec![0x12, 0x0d, 0xff]));
+        expected_result.push(vec![0x41, 0x62, 0xf3]);
+        expected_result.push(vec![0xd3, 0x42, 0x6f]);
+        expected_result.push(vec![0x12, 0x0d, 0xff]);
 
         let result = bytes.chunks(3);
 
-        for (index, result_chunk) in result.iter().enumerate() {
+        for (index, result_chunk) in result.enumerate() {
             assert_eq!(result_chunk, expected_result.get(index).unwrap());
         }
     }
@@ -437,11 +570,43 @@ mod tests {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
         let mut expected_result = Vec::default();
+        expected_result.push(vec![0x41, 0x62, 0xf3]);
+        expected_result.push(vec![0xd3, 0x42, 0x6f]);
+        expected_result.push(vec![0x12, 0x0d]);
+
+        let result = bytes.chunks(3);
+
+        for (index, result_chunk) in result.enumerate() {
+            assert_eq!(result_chunk, expected_result.get(index).unwrap());
+        }
+    }
+
+    #[test]
+    fn unit_bytes_chunks_as_collection() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
+
+        let mut expected_result = Vec::default();
+        expected_result.push(BytesType::from(vec![0x41, 0x62, 0xf3]));
+        expected_result.push(BytesType::from(vec![0xd3, 0x42, 0x6f]));
+        expected_result.push(BytesType::from(vec![0x12, 0x0d, 0xff]));
+
+        let result = bytes.chunks_as_collection(3);
+
+        for (index, result_chunk) in result.iter().enumerate() {
+            assert_eq!(result_chunk, expected_result.get(index).unwrap());
+        }
+    }
+
+    #[test]
+    fn unit_bytes_chunks_remainder_as_collection() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+
+        let mut expected_result = Vec::default();
         expected_result.push(BytesType::from(vec![0x41, 0x62, 0xf3]));
         expected_result.push(BytesType::from(vec![0xd3, 0x42, 0x6f]));
         expected_result.push(BytesType::from(vec![0x12, 0x0d]));
 
-        let result = bytes.chunks(3);
+        let result = bytes.chunks_as_collection(3);
 
         for (index, result_chunk) in result.iter().enumerate() {
             assert_eq!(result_chunk, expected_result.get(index).unwrap());
@@ -513,13 +678,13 @@ mod tests {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
 
         let mut expected_result = Vec::default();
-        expected_result.push(BytesType::from(vec![0x12, 0x0d, 0xff]));
-        expected_result.push(BytesType::from(vec![0xd3, 0x42, 0x6f]));
-        expected_result.push(BytesType::from(vec![0x41, 0x62, 0xf3]));
+        expected_result.push(vec![0x12, 0x0d, 0xff]);
+        expected_result.push(vec![0xd3, 0x42, 0x6f]);
+        expected_result.push(vec![0x41, 0x62, 0xf3]);
 
         let result = bytes.rchunks(3);
 
-        for (index, result_chunk) in result.iter().enumerate() {
+        for (index, result_chunk) in result.enumerate() {
             assert_eq!(result_chunk, expected_result.get(index).unwrap());
         }
     }
@@ -529,11 +694,43 @@ mod tests {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
         let mut expected_result = Vec::default();
+        expected_result.push(vec![0x6f, 0x12, 0x0d]);
+        expected_result.push(vec![0xf3, 0xd3, 0x42]);
+        expected_result.push(vec![0x41, 0x62]);
+
+        let result = bytes.rchunks(3);
+
+        for (index, result_chunk) in result.enumerate() {
+            assert_eq!(result_chunk, expected_result.get(index).unwrap());
+        }
+    }
+
+    #[test]
+    fn unit_bytes_rchunks_as_collection() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
+
+        let mut expected_result = Vec::default();
+        expected_result.push(BytesType::from(vec![0x12, 0x0d, 0xff]));
+        expected_result.push(BytesType::from(vec![0xd3, 0x42, 0x6f]));
+        expected_result.push(BytesType::from(vec![0x41, 0x62, 0xf3]));
+
+        let result = bytes.rchunks_as_collection(3);
+
+        for (index, result_chunk) in result.iter().enumerate() {
+            assert_eq!(result_chunk, expected_result.get(index).unwrap());
+        }
+    }
+
+    #[test]
+    fn unit_bytes_rchunks_remainder_as_collection() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+
+        let mut expected_result = Vec::default();
         expected_result.push(BytesType::from(vec![0x6f, 0x12, 0x0d]));
         expected_result.push(BytesType::from(vec![0xf3, 0xd3, 0x42]));
         expected_result.push(BytesType::from(vec![0x41, 0x62]));
 
-        let result = bytes.rchunks(3);
+        let result = bytes.rchunks_as_collection(3);
 
         for (index, result_chunk) in result.iter().enumerate() {
             assert_eq!(result_chunk, expected_result.get(index).unwrap());
@@ -543,7 +740,7 @@ mod tests {
     #[test]
     fn unit_bytes_first_n() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
-        let expected_result = BytesType::from(vec![0x41, 0x62, 0xf3]);
+        let expected_result = vec![0x41, 0x62, 0xf3];
 
         let result = bytes.first_n(3).unwrap();
 
@@ -553,8 +750,7 @@ mod tests {
     #[test]
     fn unit_bytes_first_n_longer_than_original() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
-        let expected_result =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result = vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e];
 
         let result = bytes.first_n(12).unwrap();
 
@@ -562,9 +758,30 @@ mod tests {
     }
 
     #[test]
+    fn unit_bytes_first_n_as_collection() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result = BytesType::from(vec![0x41, 0x62, 0xf3]);
+
+        let result = bytes.first_n_as_collection(3).unwrap();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_first_n_as_collection_longer_than_original() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result =
+            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+
+        let result = bytes.first_n_as_collection(12).unwrap();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
     fn unit_bytes_last_n() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
-        let expected_result = BytesType::from(vec![0x12, 0x0d, 0x1e]);
+        let expected_result = vec![0x12, 0x0d, 0x1e];
 
         let result = bytes.last_n(3).unwrap();
 
@@ -574,10 +791,30 @@ mod tests {
     #[test]
     fn unit_bytes_last_n_longer_than_original() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result = vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e];
+
+        let result = bytes.last_n(12).unwrap();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_last_n_as_collection() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result = BytesType::from(vec![0x12, 0x0d, 0x1e]);
+
+        let result = bytes.last_n_as_collection(3).unwrap();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_last_n_as_collection_longer_than_original() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result =
             BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
 
-        let result = bytes.last_n(12).unwrap();
+        let result = bytes.last_n_as_collection(12).unwrap();
 
         assert_eq!(result, expected_result);
     }
@@ -585,7 +822,7 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_bytes_push_to_new() {
+    fn unit_bytes_push_to_default() {
         let expected_result = BytesType::from(vec![0xd3, 0x42, 0x6f]);
 
         let mut result = BytesType::default();
@@ -608,7 +845,7 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_extend_to_new() {
+    fn unit_bytes_extend_to_default() {
         let expected_result = BytesType::from(vec![0xd3, 0x42, 0x6f]);
 
         let mut result = BytesType::default();

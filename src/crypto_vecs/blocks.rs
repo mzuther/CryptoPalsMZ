@@ -161,6 +161,7 @@ where
         self.iter().last().expect("BlockBytes must not be empty")
     }
 
+    #[allow(unused)]
     fn get_last_block_mut(&mut self) -> &mut T {
         self.iter_mut()
             .last()

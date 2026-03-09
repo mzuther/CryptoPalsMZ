@@ -38,12 +38,12 @@ fn integration_challenge_10() {
 
     let expected_result_start =
         BytesType::from_unicode_literal("I'm back and I'm ringin' the bell");
-    let result_start = plain.first_n(33).unwrap();
+    let result_start = plain.first_n_as_collection(33).unwrap();
 
     assert_eq!(result_start, expected_result_start);
 
     let expected_result_end = BytesType::from_unicode_literal("Play that funky music \n");
-    let result_end = plain.last_n(23).unwrap();
+    let result_end = plain.last_n_as_collection(23).unwrap();
 
     assert_eq!(result_end, expected_result_end);
 }

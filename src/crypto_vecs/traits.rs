@@ -4,10 +4,27 @@ use crate::crypto_vecs::{self, Base64Type, BytesType, HexadecimalType, UnicodeTy
 
 // ================
 
-pub trait InternalDataString {
-    fn new_from(data: String) -> Self;
+pub trait InternalData {
+    type Collection;
+
+    fn new_from(data: Self::Collection) -> Self;
+    fn with_capacity(capacity: usize) -> Self;
+
     fn capacity(&self) -> usize;
-    fn clean_and_validate(data: String) -> Result<String, String>;
+    fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String>;
+
+    fn get_data(&self) -> &Self::Collection;
+
+    // ----------------
+
+    fn with_capacity_bits(capacity_bits: usize) -> Self
+    where
+        Self: Sized,
+    {
+        let capacity = crypto_vecs::bits_to_bytes(capacity_bits);
+
+        Self::with_capacity(capacity)
+    }
 }
 
 pub trait InternalDataVec {

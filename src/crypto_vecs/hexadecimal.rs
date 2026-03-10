@@ -1,7 +1,7 @@
 use hex;
 
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalDataString, LenBytes, Representation, ToBytes,
+    Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
 use crate::crypto_vecs::{BytesType, CryptoString};
 
@@ -16,19 +16,25 @@ pub type HexadecimalType = CryptoString<self::Hexadecimal>;
 
 // ================
 
-impl InternalDataString for Hexadecimal {
-    fn new_from(data: String) -> Self {
+impl InternalData for Hexadecimal {
+    type Collection = String;
+
+    fn new_from(data: Self::Collection) -> Self {
         match Self::clean_and_validate(data) {
             Ok(data) => Self { hexadecimal: data },
             Err(error) => panic!("{}", error),
         }
     }
 
+    fn with_capacity(capacity: usize) -> Self {
+        Self::new_from(Self::Collection::with_capacity(capacity))
+    }
+
     fn capacity(&self) -> usize {
         self.hexadecimal.capacity()
     }
 
-    fn clean_and_validate(data: String) -> Result<String, String> {
+    fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
         let string_without_whitespace = data
             .split_ascii_whitespace()
             .fold(String::default(), |acc, string_slice| acc + string_slice)
@@ -52,6 +58,10 @@ impl InternalDataString for Hexadecimal {
                 invalid_characters
             ))
         }
+    }
+
+    fn get_data(&self) -> &Self::Collection {
+        &self.hexadecimal
     }
 }
 

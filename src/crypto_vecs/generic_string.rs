@@ -2,7 +2,7 @@ use std::{convert, fmt};
 
 use crate::crypto_vecs::BytesType;
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalDataString, LenBytes, Representation, ToBytes,
+    Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
 
 // ================
@@ -10,20 +10,28 @@ use crate::crypto_vecs::traits::{
 #[derive(Clone, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct CryptoString<C>
 where
-    C: InternalDataString,
+    C: InternalData,
 {
     data: C,
 }
 
 // ================
 
-impl<C> InternalDataString for CryptoString<C>
+impl<C> InternalData for CryptoString<C>
 where
-    C: InternalDataString,
+    C: InternalData<Collection = String>,
 {
+    type Collection = String;
+
     fn new_from(data: String) -> Self {
         Self {
             data: C::new_from(data),
+        }
+    }
+
+    fn with_capacity(capacity: usize) -> Self {
+        Self {
+            data: C::with_capacity(capacity),
         }
     }
 
@@ -34,13 +42,17 @@ where
     fn clean_and_validate(data: String) -> Result<String, String> {
         C::clean_and_validate(data)
     }
+
+    fn get_data(&self) -> &Self::Collection {
+        self.data.get_data()
+    }
 }
 
 // ----------------
 
 impl<C, E> Elements for CryptoString<C>
 where
-    C: InternalDataString + Elements<Element = E>,
+    C: InternalData + Elements<Element = E>,
 {
     type Element = E;
 
@@ -58,7 +70,7 @@ where
 
 impl<C> Representation for CryptoString<C>
 where
-    C: InternalDataString + Representation,
+    C: InternalData + Representation,
 {
     fn representation_name(&self) -> &str {
         self.data.representation_name()
@@ -73,7 +85,7 @@ where
 
 impl<C> fmt::Display for CryptoString<C>
 where
-    C: InternalDataString + Elements + Representation,
+    C: InternalData + Elements + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -88,7 +100,7 @@ where
 
 impl<C> fmt::Debug for CryptoString<C>
 where
-    C: InternalDataString + Elements + Representation,
+    C: InternalData + Elements + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)
@@ -99,7 +111,7 @@ where
 
 impl<C> convert::From<String> for CryptoString<C>
 where
-    C: InternalDataString,
+    C: InternalData<Collection = String>,
 {
     fn from(data: String) -> Self {
         Self::new_from(data)
@@ -108,7 +120,7 @@ where
 
 impl<C> convert::From<&str> for CryptoString<C>
 where
-    C: InternalDataString,
+    C: InternalData<Collection = String>,
 {
     fn from(data: &str) -> Self {
         Self::new_from(data.to_string())
@@ -117,7 +129,7 @@ where
 
 impl<C> convert::From<&BytesType> for CryptoString<C>
 where
-    C: InternalDataString + FromBytes,
+    C: InternalData + FromBytes,
 {
     fn from(bytes: &BytesType) -> Self {
         Self::from_bytes(bytes)
@@ -128,7 +140,7 @@ where
 
 impl<C> LenBytes for CryptoString<C>
 where
-    C: InternalDataString + LenBytes,
+    C: InternalData + LenBytes,
 {
     fn len_bytes(&self) -> usize {
         self.data.len_bytes()
@@ -139,7 +151,7 @@ where
 
 impl<C> FromBytes for CryptoString<C>
 where
-    C: InternalDataString + FromBytes,
+    C: InternalData + FromBytes,
 {
     fn from_bytes(bytes: &BytesType) -> Self {
         Self {
@@ -150,7 +162,7 @@ where
 
 impl<C> ToBytes for CryptoString<C>
 where
-    C: InternalDataString + ToBytes,
+    C: InternalData + ToBytes,
 {
     fn to_bytes(&self) -> BytesType {
         self.data.to_bytes()

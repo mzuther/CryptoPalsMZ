@@ -88,10 +88,10 @@ impl UnicodeType {
     // TODO: add tests
     pub fn replace_prefix(unicode: &str, prefix: &str, mut new_prefix: String) -> String {
         let without_prefix = unicode
-            .strip_prefix(&prefix)
-            .expect(&format!("prefix \"{}\" not found", prefix));
+            .strip_prefix(prefix)
+            .unwrap_or_else(|| panic!("prefix \"{}\" not found", prefix));
 
-        new_prefix.extend(without_prefix.chars());
+        new_prefix.push_str(without_prefix);
 
         new_prefix
     }
@@ -100,10 +100,10 @@ impl UnicodeType {
     pub fn replace_suffix(unicode: &str, suffix: &str, new_suffix: &str) -> String {
         let mut with_new_suffix = unicode
             .strip_suffix(suffix)
-            .expect(&format!("suffix \"{}\" not found", suffix))
+            .unwrap_or_else(|| panic!("suffix \"{}\" not found", suffix))
             .to_string();
 
-        with_new_suffix.extend(new_suffix.chars());
+        with_new_suffix.push_str(new_suffix);
 
         with_new_suffix
     }

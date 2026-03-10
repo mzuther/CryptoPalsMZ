@@ -46,7 +46,7 @@ where
     // ----------------
 
     fn data(&self) -> &Vec<E> {
-        &self.data.data()
+        self.data.data()
     }
 
     fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, E> {
@@ -77,9 +77,7 @@ where
     type Element = E;
 
     fn data_mut(&mut self) -> &mut Vec<Self::Element> {
-        let temp = self.data.data_mut();
-
-        temp
+        self.data.data_mut()
     }
 
     fn push(&mut self, value: Self::Element) {
@@ -276,7 +274,7 @@ where
 {
     // reference to vec
     fn as_ref(&self) -> &Vec<E> {
-        self.data().as_ref()
+        self.data()
     }
 }
 
@@ -319,7 +317,7 @@ where
 {
     pub fn iter(&self) -> self::CryptoVecIter<'_, E> {
         self::CryptoVecIter {
-            vec_ref: &self.data.data(),
+            vec_ref: self.data.data(),
             current_index: 0,
         }
     }

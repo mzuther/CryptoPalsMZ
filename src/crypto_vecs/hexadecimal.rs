@@ -98,7 +98,7 @@ impl Representation for Hexadecimal {
             self.elements()
                 .enumerate()
                 .fold(String::default(), |mut acc, (index, element)| {
-                    acc.extend(element.chars());
+                    acc.push_str(&element);
 
                     // separate blocks
                     if index % block_size == block_size - 1 {

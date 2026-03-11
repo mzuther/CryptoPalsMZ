@@ -4,7 +4,7 @@
 
 use std::fs;
 
-use cryptopals::crypto_vecs::traits::ToBytes;
+use cryptopals::crypto_vecs::traits::{InternalDataVec, ToBytes};
 use cryptopals::crypto_vecs::{BytesType, UnicodeType};
 
 // ================
@@ -68,9 +68,9 @@ fn challenge_06() {
     assert_eq!(manual_key, proposed_key);
 
     let plain = cypher.fixed_xor(&manual_key);
-    let result_iso = plain.to_iso_8859_1();
+    let result_ascii = plain.to_codepage_1252();
 
-    println!("{result_iso}");
+    println!("{result_ascii}");
     println!();
 
     // assert_eq!(result, expected_result);

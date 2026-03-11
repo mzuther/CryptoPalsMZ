@@ -1,5 +1,5 @@
 use openssl::{cipher, cipher_ctx};
-use std::{convert, slice, vec};
+use std::{convert, slice, sync, vec};
 
 use crate::crypto_vecs::traits::{
     Elements, FromBytes, InternalDataVec, InternalDataVecMut, LenBytes, Representation, ToBytes,
@@ -165,6 +165,31 @@ impl IntoIterator for Bytes {
 
 // ================
 
+static MAPPING_CODEPAGE_1252: sync::LazyLock<Vec<char>> = sync::LazyLock::new(|| {
+    concat!(
+        "␀␁␂␃␄␅␆␇␈␉␊␋␌␍␎␏",
+        "␐␑␒␓␔␕␖␗␘␙␚␛␜␝␞␟",
+        " !\"#$%&'()*+,-./",
+        "0123456789:;<=>?",
+        "@ABCDEFGHIJKLMNO",
+        "PQRSTUVWXYZ[\\]^_",
+        "`abcdefghijklmno",
+        "pqrstuvwxyz{|}~␡",
+        "€�‚ƒ„…†‡ˆ‰Š‹Œ�Ž�",
+        "�‘’“”•–—˜™š›œ�žŸ",
+        "�¡¢£¤¥¦§¨©ª«¬�®¯",
+        "°±²³´µ¶·¸¹º»¼½¾¿",
+        "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏ",
+        "ÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞß",
+        "àáâãäåæçèéêëìíîï",
+        "ðñòóôõö÷øùúûüýþÿ"
+    )
+    .chars()
+    .collect()
+});
+
+// ----------------
+
 impl BytesType {
     const LOOKUP_BITS_IN_NIBBLE: [u32; 16] = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
 
@@ -207,10 +232,13 @@ impl BytesType {
         self.to_blocks(bytes)
     }
 
-    pub fn to_iso_8859_1(&self) -> String {
-        self.iter().fold(Default::default(), |acc, &byte| {
-            format!("{acc}{}", byte as char)
-        })
+    // convert bytes to Windows code page 1252 (with placeholders for special
+    // characters); this is very useful for checking decoded strings without
+    // "breaking" the terminal
+    pub fn to_codepage_1252(&self) -> String {
+        self.iter()
+            .map(|n: &u8| MAPPING_CODEPAGE_1252[*n as usize])
+            .collect()
     }
 
     // ----------------
@@ -504,21 +532,44 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_bytes_to_iso_8859_1_ascii() {
+    fn unit_bytes_to_codepage_1252_ascii() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0x33]);
         let expected_result = String::from("Ab3");
 
-        let result = bytes.to_iso_8859_1();
+        let result = bytes.to_codepage_1252();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_bytes_to_iso_8859_1_unicode() {
+    fn unit_bytes_to_codepage_1252_unicode() {
         let bytes = BytesType::from(vec![0x46, 0x72, 0xc3, 0xbc, 0x68, 0x6a, 0x61, 0x68, 0x72]);
         let expected_result = String::from("FrÃ¼hjahr");
 
-        let result = bytes.to_iso_8859_1();
+        let result = bytes.to_codepage_1252();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_to_codepage_1252_unicode_string() {
+        let unicode = UnicodeType::from("\n Hi. Servus. Grüezi. 你好.\t");
+        let bytes = unicode.to_bytes();
+
+        let expected_result = String::from("␊ Hi. Servus. GrÃ¼ezi. ä½�å¥½.␉");
+
+        let result = bytes.to_codepage_1252();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_to_codepage_1252_complete_alphabet() {
+        let bytes = BytesType::new_from((0x00..=0xff).collect());
+
+        let expected_result = String::from_iter(MAPPING_CODEPAGE_1252.iter());
+
+        let result = bytes.to_codepage_1252();
 
         assert_eq!(result, expected_result);
     }

@@ -169,7 +169,7 @@ pub fn print_histogram(
         println!("{bin}");
     }
 
-    // println!("{}", bytes.to_iso_8859_1());
+    // println!("{}", bytes.to_codepage_1252());
     println!();
 }
 

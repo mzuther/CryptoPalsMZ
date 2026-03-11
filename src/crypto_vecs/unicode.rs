@@ -1,3 +1,5 @@
+use std::convert;
+
 use crate::crypto_vecs::traits::{
     Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
@@ -35,10 +37,6 @@ impl InternalData for Unicode {
     fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
         Ok(data.clone())
     }
-
-    fn get_data(&self) -> &Self::Collection {
-        &self.unicode
-    }
 }
 
 // ----------------
@@ -69,6 +67,14 @@ impl Representation for Unicode {
 impl LenBytes for Unicode {
     fn len_bytes(&self) -> usize {
         self.unicode.len()
+    }
+}
+
+// ----------------
+
+impl convert::AsRef<str> for Unicode {
+    fn as_ref(&self) -> &str {
+        self.unicode.as_ref()
     }
 }
 

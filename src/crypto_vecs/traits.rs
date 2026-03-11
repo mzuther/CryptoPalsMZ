@@ -13,8 +13,6 @@ pub trait InternalData {
     fn capacity(&self) -> usize;
     fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String>;
 
-    fn get_data(&self) -> &Self::Collection;
-
     // ----------------
 
     fn with_capacity_bits(capacity_bits: usize) -> Self

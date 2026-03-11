@@ -1,4 +1,5 @@
 use hex;
+use std::convert;
 
 use crate::crypto_vecs::traits::{
     Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
@@ -58,10 +59,6 @@ impl InternalData for Hexadecimal {
                 invalid_characters
             ))
         }
-    }
-
-    fn get_data(&self) -> &Self::Collection {
-        &self.hexadecimal
     }
 }
 
@@ -127,6 +124,14 @@ impl Representation for Hexadecimal {
 impl LenBytes for Hexadecimal {
     fn len_bytes(&self) -> usize {
         self.hexadecimal.len() / 2
+    }
+}
+
+// ----------------
+
+impl convert::AsRef<str> for Hexadecimal {
+    fn as_ref(&self) -> &str {
+        self.hexadecimal.as_ref()
     }
 }
 

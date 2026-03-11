@@ -253,12 +253,8 @@ where
 
 impl<C, E> convert::AsMut<Vec<E>> for CryptoVec<C, E>
 where
-    C: AsMut<Vec<E>>
-        + Elements<Element = E>
-        + InternalDataVec<Element = E>
-        + InternalDataVecMut<Element = E>,
+    C: AsMut<Vec<E>> + Elements<Element = E>,
 {
-    // reference to mutable vec
     fn as_mut(&mut self) -> &mut Vec<E> {
         self.data.as_mut()
     }
@@ -266,15 +262,10 @@ where
 
 impl<C, E> convert::AsRef<Vec<E>> for CryptoVec<C, E>
 where
-    C: Clone
-        + Elements<Element = E>
-        + InternalDataVec<Element = E>
-        + InternalDataVecMut<Element = E>,
-    E: Clone,
+    C: AsRef<Vec<E>> + Elements<Element = E>,
 {
-    // reference to vec
     fn as_ref(&self) -> &Vec<E> {
-        self.data()
+        self.data.as_ref()
     }
 }
 

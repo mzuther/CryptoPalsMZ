@@ -42,10 +42,6 @@ where
     fn clean_and_validate(data: String) -> Result<String, String> {
         C::clean_and_validate(data)
     }
-
-    fn get_data(&self) -> &Self::Collection {
-        self.data.get_data()
-    }
 }
 
 // ----------------
@@ -133,6 +129,17 @@ where
 {
     fn from(bytes: &BytesType) -> Self {
         Self::from_bytes(bytes)
+    }
+}
+
+// ----------------
+
+impl<C> convert::AsRef<str> for CryptoString<C>
+where
+    C: AsRef<str> + InternalData,
+{
+    fn as_ref(&self) -> &str {
+        self.data.as_ref()
     }
 }
 

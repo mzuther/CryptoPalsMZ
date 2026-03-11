@@ -1,9 +1,10 @@
+use regex::Regex;
+use std::convert;
+
 use crate::crypto_vecs::traits::{
     Elements, FromBytes, InternalData, InternalDataVecMut, LenBytes, Representation, ToBytes,
 };
 use crate::crypto_vecs::{BytesType, CryptoString};
-
-use regex::Regex;
 
 // ================
 
@@ -97,10 +98,6 @@ impl InternalData for Base64 {
             ))
         }
     }
-
-    fn get_data(&self) -> &Self::Collection {
-        &self.base64
-    }
 }
 
 // ----------------
@@ -147,6 +144,14 @@ impl Representation for Base64 {
 impl LenBytes for Base64 {
     fn len_bytes(&self) -> usize {
         self.to_bytes().len_bytes()
+    }
+}
+
+// ----------------
+
+impl convert::AsRef<str> for Base64 {
+    fn as_ref(&self) -> &str {
+        self.base64.as_ref()
     }
 }
 

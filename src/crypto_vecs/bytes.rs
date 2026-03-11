@@ -140,17 +140,15 @@ impl Extend<u8> for Bytes {
 
 // ----------------
 
-impl convert::AsMut<Vec<u8>> for Bytes {
-    // reference to mutable vec
-    fn as_mut(&mut self) -> &mut Vec<u8> {
-        self.bytes.as_mut()
+impl convert::AsRef<Vec<u8>> for Bytes {
+    fn as_ref(&self) -> &Vec<u8> {
+        self.bytes.as_ref()
     }
 }
 
-impl convert::AsRef<Vec<u8>> for Bytes {
-    // reference to vec
-    fn as_ref(&self) -> &Vec<u8> {
-        self.bytes.as_ref()
+impl convert::AsMut<Vec<u8>> for Bytes {
+    fn as_mut(&mut self) -> &mut Vec<u8> {
+        self.bytes.as_mut()
     }
 }
 

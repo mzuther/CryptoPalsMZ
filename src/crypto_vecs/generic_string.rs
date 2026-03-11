@@ -12,7 +12,7 @@ pub struct CryptoString<C>
 where
     C: InternalData,
 {
-    data: C,
+    collection: C,
 }
 
 // ================
@@ -25,18 +25,18 @@ where
 
     fn new_from(data: String) -> Self {
         Self {
-            data: C::new_from(data),
+            collection: C::new_from(data),
         }
     }
 
     fn with_capacity(capacity: usize) -> Self {
         Self {
-            data: C::with_capacity(capacity),
+            collection: C::with_capacity(capacity),
         }
     }
 
     fn capacity(&self) -> usize {
-        self.data.capacity()
+        self.collection.capacity()
     }
 
     fn clean_and_validate(data: String) -> Result<String, String> {
@@ -53,12 +53,12 @@ where
     type Element = E;
 
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
-        self.data.elements()
+        self.collection.elements()
     }
 
     // implemented for "Hexadecimal"
     fn len(&self) -> usize {
-        self.data.len()
+        self.collection.len()
     }
 }
 
@@ -69,11 +69,11 @@ where
     C: InternalData + Representation,
 {
     fn representation_name(&self) -> &str {
-        self.data.representation_name()
+        self.collection.representation_name()
     }
 
     fn representation(&self) -> String {
-        self.data.representation()
+        self.collection.representation()
     }
 }
 
@@ -88,7 +88,7 @@ where
             f,
             "{}[{}] {{ {} }}",
             self.representation_name(),
-            self.data.len(),
+            self.collection.len(),
             self.representation()
         )
     }
@@ -139,7 +139,7 @@ where
     C: AsRef<str> + InternalData,
 {
     fn as_ref(&self) -> &str {
-        self.data.as_ref()
+        self.collection.as_ref()
     }
 }
 
@@ -150,7 +150,7 @@ where
     C: InternalData + LenBytes,
 {
     fn len_bytes(&self) -> usize {
-        self.data.len_bytes()
+        self.collection.len_bytes()
     }
 }
 
@@ -162,7 +162,7 @@ where
 {
     fn from_bytes(bytes: &BytesType) -> Self {
         Self {
-            data: C::from_bytes(bytes),
+            collection: C::from_bytes(bytes),
         }
     }
 }
@@ -172,6 +172,6 @@ where
     C: InternalData + ToBytes,
 {
     fn to_bytes(&self) -> BytesType {
-        self.data.to_bytes()
+        self.collection.to_bytes()
     }
 }

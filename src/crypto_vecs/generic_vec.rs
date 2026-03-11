@@ -12,7 +12,7 @@ pub struct CryptoVec<C, E>
 where
     C: Elements<Element = E>,
 {
-    data: C,
+    collection: C,
 }
 
 #[derive(Clone)]
@@ -31,12 +31,12 @@ where
 
     fn new_from(data: Vec<E>) -> Self {
         Self {
-            data: C::new_from(data),
+            collection: C::new_from(data),
         }
     }
 
     fn capacity(&self) -> usize {
-        self.data.capacity()
+        self.collection.capacity()
     }
 
     fn clean_and_validate(data: Vec<E>) -> Result<Vec<E>, String> {
@@ -46,25 +46,25 @@ where
     // ----------------
 
     fn data(&self) -> &Vec<E> {
-        self.data.data()
+        self.collection.data()
     }
 
     fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, E> {
         assert!(chunk_size > 0, "chunk size must be non-zero");
 
-        self.data.chunks(chunk_size)
+        self.collection.chunks(chunk_size)
     }
 
     fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, E> {
         assert!(chunk_size > 0, "chunk size must be non-zero");
 
-        self.data.rchunks(chunk_size)
+        self.collection.rchunks(chunk_size)
     }
 
     // ----------------
 
     fn get(&self, index: usize) -> Option<&E> {
-        self.data.get(index)
+        self.collection.get(index)
     }
 }
 
@@ -77,11 +77,11 @@ where
     type Element = E;
 
     fn data_mut(&mut self) -> &mut Vec<Self::Element> {
-        self.data.data_mut()
+        self.collection.data_mut()
     }
 
     fn push(&mut self, value: Self::Element) {
-        self.data.push(value)
+        self.collection.push(value)
     }
 }
 
@@ -94,7 +94,7 @@ where
     type Element = E;
 
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
-        self.data.elements()
+        self.collection.elements()
     }
 }
 
@@ -105,11 +105,11 @@ where
     C: Representation + Elements<Element = E>,
 {
     fn representation_name(&self) -> &str {
-        self.data.representation_name()
+        self.collection.representation_name()
     }
 
     fn representation(&self) -> String {
-        self.data.representation()
+        self.collection.representation()
     }
 }
 
@@ -124,7 +124,7 @@ where
             f,
             "{}[{}] {{ {} }}",
             self.representation_name(),
-            self.data.len(),
+            self.collection.len(),
             self.representation()
         )
     }
@@ -187,7 +187,7 @@ where
 {
     fn from_bytes(bytes: &BytesType) -> Self {
         Self {
-            data: C::from_bytes(bytes),
+            collection: C::from_bytes(bytes),
         }
     }
 }
@@ -197,7 +197,7 @@ where
     C: Elements<Element = E> + ToBytes,
 {
     fn to_bytes(&self) -> BytesType {
-        self.data.to_bytes()
+        self.collection.to_bytes()
     }
 }
 
@@ -214,7 +214,7 @@ where
     type IntoIter = vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.data.into_iter()
+        self.collection.into_iter()
     }
 }
 
@@ -245,7 +245,7 @@ where
     C: Elements<Element = E>,
 {
     fn len_bytes(&self) -> usize {
-        self.data.len()
+        self.collection.len()
     }
 }
 
@@ -256,7 +256,7 @@ where
     C: AsMut<Vec<E>> + Elements<Element = E>,
 {
     fn as_mut(&mut self) -> &mut Vec<E> {
-        self.data.as_mut()
+        self.collection.as_mut()
     }
 }
 
@@ -265,7 +265,7 @@ where
     C: AsRef<Vec<E>> + Elements<Element = E>,
 {
     fn as_ref(&self) -> &Vec<E> {
-        self.data.as_ref()
+        self.collection.as_ref()
     }
 }
 
@@ -279,7 +279,7 @@ where
     where
         T: IntoIterator<Item = E>,
     {
-        self.data.extend(iter);
+        self.collection.extend(iter);
     }
 }
 
@@ -292,7 +292,7 @@ where
     where
         T: IntoIterator<Item = &'a E>,
     {
-        self.data.extend(iter.into_iter().copied());
+        self.collection.extend(iter.into_iter().copied());
     }
 }
 
@@ -308,7 +308,7 @@ where
 {
     pub fn iter(&self) -> self::CryptoVecIter<'_, E> {
         self::CryptoVecIter {
-            vec_ref: self.data.data(),
+            vec_ref: self.collection.data(),
             current_index: 0,
         }
     }
@@ -316,14 +316,14 @@ where
     // ----------------
 
     pub fn chunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
-        self.data
+        self.collection
             .chunks(chunk_size)
             .map(|chunk| Self::new_from(chunk.to_vec()))
             .collect()
     }
 
     pub fn rchunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
-        self.data
+        self.collection
             .rchunks(chunk_size)
             .map(|chunk| Self::new_from(chunk.to_vec()))
             .collect()

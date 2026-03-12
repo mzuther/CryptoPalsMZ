@@ -338,8 +338,12 @@ where
             .collect()
     }
 
-    pub fn first_n_as_collection(&self, length: usize) -> Option<Self> {
-        self.first_n(length).map(|x| Self::new_from(x.to_vec()))
+    pub fn take_n_as_collection(&self, length: usize) -> Option<Self> {
+        self.take_n(length).map(|x| Self::new_from(x.to_vec()))
+    }
+
+    pub fn skip_n_as_collection(&self, length: usize) -> Option<Self> {
+        self.skip_n(length).map(|x| Self::new_from(x.to_vec()))
     }
 
     pub fn last_n_as_collection(&self, length: usize) -> Option<Self> {

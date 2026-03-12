@@ -810,42 +810,83 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_first_n() {
+    fn unit_bytes_take_n() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result = vec![0x41, 0x62, 0xf3];
 
-        let result = bytes.first_n(3).unwrap();
+        let result = bytes.take_n(3).unwrap();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_bytes_first_n_longer_than_original() {
+    fn unit_bytes_take_n_longer_than_original() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result = vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e];
 
-        let result = bytes.first_n(12).unwrap();
+        let result = bytes.take_n(12).unwrap();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_bytes_first_n_as_collection() {
+    fn unit_bytes_take_n_as_collection() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result = BytesType::from(vec![0x41, 0x62, 0xf3]);
 
-        let result = bytes.first_n_as_collection(3).unwrap();
+        let result = bytes.take_n_as_collection(3).unwrap();
 
         assert_eq!(result, expected_result);
     }
 
     #[test]
-    fn unit_bytes_first_n_as_collection_longer_than_original() {
+    fn unit_bytes_take_n_as_collection_longer_than_original() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
         let expected_result =
             BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
 
-        let result = bytes.first_n_as_collection(12).unwrap();
+        let result = bytes.take_n_as_collection(12).unwrap();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_skip_n() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result = vec![0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e];
+
+        let result = bytes.skip_n(3).unwrap();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_skip_n_longer_than_original() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+
+        let expected_result = None;
+
+        let result = bytes.skip_n(12);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_skip_n_as_collection() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result = BytesType::from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+
+        let result = bytes.skip_n_as_collection(3).unwrap();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_bytes_skip_n_as_collection_longer_than_original() {
+        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let expected_result = None;
+
+        let result = bytes.skip_n_as_collection(12);
 
         assert_eq!(result, expected_result);
     }
@@ -1207,7 +1248,7 @@ mod tests {
             result
                 .last_n_as_collection(10 + suffix_size)
                 .unwrap()
-                .first_n_as_collection(10)
+                .take_n_as_collection(10)
                 .unwrap(),
             bytes
         );
@@ -1236,7 +1277,7 @@ mod tests {
 
         let result = bytes.affix_garbage(0, suffix_size);
 
-        assert_eq!(result.first_n_as_collection(10).unwrap(), bytes);
+        assert_eq!(result.take_n_as_collection(10).unwrap(), bytes);
         assert_eq!(result.len_bytes(), bytes.len_bytes() + suffix_size);
     }
 

@@ -25,7 +25,10 @@ pub trait InternalData {
     }
 }
 
-pub trait InternalDataVec {
+pub trait InternalDataVec
+where
+    Self: LenBytes,
+{
     type Element;
 
     fn new_from(data: Vec<Self::Element>) -> Self;
@@ -61,16 +64,30 @@ pub trait InternalDataVec {
         self.data().as_slice()
     }
 
-    fn first_n(&self, length: usize) -> Option<&[Self::Element]> {
-        assert!(length > 0);
+    fn take_n(&self, length: usize) -> Option<&[Self::Element]> {
+        if self.len_bytes() <= length {
+            Some(self.as_slice())
+        } else {
+            self.chunks(length).next()
+        }
+    }
 
-        self.chunks(length).next()
+    fn skip_n(&self, length: usize) -> Option<&[Self::Element]> {
+        if length == 0 {
+            Some(self.as_slice())
+        } else if length >= self.len_bytes() {
+            None
+        } else {
+            self.rchunks(self.len_bytes() - length).next()
+        }
     }
 
     fn last_n(&self, length: usize) -> Option<&[Self::Element]> {
-        assert!(length > 0);
-
-        self.rchunks(length).next()
+        if self.len_bytes() <= length {
+            Some(self.as_slice())
+        } else {
+            self.rchunks(length).next()
+        }
     }
 }
 

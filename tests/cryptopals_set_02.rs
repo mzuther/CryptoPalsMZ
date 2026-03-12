@@ -38,7 +38,7 @@ fn integration_challenge_10() {
 
     let expected_result_start =
         BytesType::from_unicode_literal("I'm back and I'm ringin' the bell");
-    let result_start = plain.first_n_as_collection(33).unwrap();
+    let result_start = plain.take_n_as_collection(33).unwrap();
 
     assert_eq!(result_start, expected_result_start);
 

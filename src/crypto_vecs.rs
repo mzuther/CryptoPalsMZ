@@ -26,7 +26,7 @@ pub use crate::crypto_vecs::unicode::UnicodeType;
 
 // ================
 
-fn bits_to_bytes(bits: usize) -> usize {
+pub fn bits_to_bytes(bits: usize) -> usize {
     assert!(
         bits.is_multiple_of(8),
         "{} bits are not divisible by 8",

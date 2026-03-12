@@ -293,6 +293,14 @@ impl BytesType {
         BytesType::create_random_key(key_size)
     }
 
+    pub fn affix_garbage(&self, prefix_size: usize, suffix_size: usize) -> BytesType {
+        let mut bytes_extended = BytesType::create_random_key(prefix_size);
+        bytes_extended.extend(self);
+        bytes_extended.extend(BytesType::create_random_key(suffix_size));
+
+        bytes_extended
+    }
+
     // ----------------
 
     pub fn aes_ecb_encrypt_block(
@@ -1185,6 +1193,62 @@ mod tests {
 
         assert_ne!(bytes_key, other_key);
         assert_eq!(bytes_key.len_bits(), other_key.len_bits());
+    }
+
+    #[test]
+    fn unit_bytes_affix_garbage() {
+        let prefix_size = 2;
+        let suffix_size = 9;
+        let bytes = BytesType::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+        let result = bytes.affix_garbage(prefix_size, suffix_size);
+
+        assert_eq!(
+            result
+                .last_n_as_collection(10 + suffix_size)
+                .unwrap()
+                .first_n_as_collection(10)
+                .unwrap(),
+            bytes
+        );
+
+        assert_eq!(
+            result.len_bytes(),
+            bytes.len_bytes() + prefix_size + suffix_size
+        );
+    }
+
+    #[test]
+    fn unit_bytes_affix_garbage_prefix() {
+        let prefix_size = 5;
+        let bytes = BytesType::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+        let result = bytes.affix_garbage(prefix_size, 0);
+
+        assert_eq!(result.last_n_as_collection(10).unwrap(), bytes);
+        assert_eq!(result.len_bytes(), bytes.len_bytes() + prefix_size);
+    }
+
+    #[test]
+    fn unit_bytes_affix_garbage_suffix() {
+        let suffix_size = 4;
+        let bytes = BytesType::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+        let result = bytes.affix_garbage(0, suffix_size);
+
+        assert_eq!(result.first_n_as_collection(10).unwrap(), bytes);
+        assert_eq!(result.len_bytes(), bytes.len_bytes() + suffix_size);
+    }
+
+    #[test]
+    fn unit_bytes_affix_garbag_different() {
+        let bytes = BytesType::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+
+        let affixed_1 = bytes.affix_garbage(3, 6);
+        let affixed_2 = bytes.affix_garbage(3, 6);
+
+        assert_ne!(affixed_1, affixed_2);
+        assert_eq!(affixed_1.len_bytes(), affixed_2.len_bytes());
     }
 
     // ----------------

@@ -5,6 +5,7 @@ use cryptopals::crypto_vecs::{Base64Type, BlockBytes, BytesType, HexadecimalType
 
 // ----------------
 
+// Convert hex to base64
 #[test]
 fn integration_challenge_01() {
     let hexadecimal = BytesType::from_hex_literal(
@@ -19,6 +20,7 @@ fn integration_challenge_01() {
     assert_eq!(result, expected_result);
 }
 
+// Convert base64 to hex
 #[test]
 fn integration_challenge_01_reverse() {
     let base64 = BytesType::from_base64_literal(
@@ -34,6 +36,7 @@ fn integration_challenge_01_reverse() {
     assert_eq!(result, expected_result);
 }
 
+// Fixed XOR
 #[test]
 fn integration_challenge_02() {
     let plain = BytesType::from_hex_literal("1c0111001f010100061a024b53535009181c");
@@ -47,6 +50,7 @@ fn integration_challenge_02() {
     assert_eq!(result, expected_result);
 }
 
+// Single-byte XOR cipher
 #[test]
 fn integration_challenge_03() {
     let cypher = BytesType::from_hex_literal(
@@ -66,6 +70,7 @@ fn integration_challenge_03() {
     assert_eq!(result, expected_result);
 }
 
+// Detect single-character XOR
 #[test]
 fn integration_challenge_04() {
     let all_strings_hex: String =
@@ -102,6 +107,7 @@ fn integration_challenge_04() {
     assert_eq!(result, expected_result);
 }
 
+// Implement repeating-key XOR
 #[test]
 fn integration_challenge_05() {
     let plain = BytesType::from_unicode_literal(
@@ -119,6 +125,7 @@ fn integration_challenge_05() {
     assert_eq!(result, expected_result);
 }
 
+// Break repeating-key XOR
 #[test]
 fn integration_challenge_06() {
     let mut base64_string: String =
@@ -168,6 +175,7 @@ fn integration_challenge_06() {
     assert_eq!(result_key, expected_result);
 }
 
+// AES in ECB mode
 #[test]
 fn integration_challenge_07() {
     let block_size_bits = 128;
@@ -192,6 +200,7 @@ fn integration_challenge_07() {
     assert_eq!(result_end, expected_result_end);
 }
 
+// Detect AES in ECB mode
 #[test]
 fn integration_challenge_08() {
     let all_strings_hex: String =

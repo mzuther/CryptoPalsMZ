@@ -221,18 +221,17 @@ pub fn guess_keysize_from_hamming_distance(
             let current_chunk_iter = blocks.iter();
             let next_chunk_iter = blocks.iter().skip(1);
 
-            let edit_size = current_chunk_iter
+            let edit_size_normalized: f64 = current_chunk_iter
                 .zip(next_chunk_iter)
                 .take(number_of_samples)
-                .fold(0, |acc, (current_chunk, next_chunk)| {
-                    acc + current_chunk.hamming_distance(next_chunk)
+                .fold(0.0, |acc, (current_chunk, next_chunk)| {
+                    acc + current_chunk.hamming_distance_normalized(next_chunk)
                 });
 
-            let edit_size_average = (edit_size as f64) / (number_of_samples as f64);
-            let edit_size_normalized = edit_size_average / (keysize as f64);
+            let edit_size_average = edit_size_normalized / (number_of_samples as f64);
 
             let score = ScoreKeysize {
-                score: edit_size_normalized,
+                score: edit_size_average,
                 keysize,
             };
 
@@ -345,10 +344,13 @@ mod tests {
         let other = BytesType::from_unicode_literal("wokka wokka!!!");
 
         let expected_result = 37;
+        let expected_result_relative = expected_result as f64 / 112.0;
 
         let result = bytes.hamming_distance(&other);
+        let result_relative = bytes.hamming_distance_normalized(&other);
 
         assert_eq!(result, expected_result);
+        assert_eq!(result_relative, expected_result_relative);
     }
 
     // ----------------

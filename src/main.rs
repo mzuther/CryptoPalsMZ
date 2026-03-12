@@ -14,6 +14,7 @@ fn main() {
     challenge_11();
 }
 
+// An ECB/CBC detection oracle
 fn challenge_11() {
     let block_size_bits = 128;
 
@@ -92,6 +93,7 @@ fn encryption_oracle(plain: &BytesType, block_size_bits: usize) -> (&str, BytesT
 
 // ----------------
 
+// Break repeating-key XOR
 fn challenge_06() {
     let mut base64_string: String =
         fs::read_to_string("original/6.txt").expect("could not read file");

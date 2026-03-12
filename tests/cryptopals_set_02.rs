@@ -5,6 +5,7 @@ use cryptopals::crypto_vecs::traits::ToBytes;
 
 // ----------------
 
+// Implement PKCS#7 padding
 #[test]
 fn integration_challenge_09() {
     let block_size = 20;
@@ -20,6 +21,7 @@ fn integration_challenge_09() {
     assert_eq!(result, expected_result);
 }
 
+// Implement CBC mode
 #[test]
 fn integration_challenge_10() {
     let block_size_bits = 128;

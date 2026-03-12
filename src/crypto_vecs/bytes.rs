@@ -261,6 +261,14 @@ impl BytesType {
     }
 
     pub fn hamming_distance(&self, other: &Self) -> u32 {
+        assert_eq!(
+            self.len_bytes(),
+            other.len_bytes(),
+            "size of blocks not equal ({} bytes <-> {} bytes)",
+            self.len_bytes(),
+            other.len_bytes()
+        );
+
         let bytes_with_differing_bits = self.fixed_xor(other);
 
         bytes_with_differing_bits.iter().fold(0, |acc, &byte| {
@@ -277,6 +285,14 @@ impl BytesType {
 
             acc + differing_bits_low + differing_bits_high
         })
+    }
+
+    // normalized Hamming distance (relative to total number of bits)
+    //
+    // 0.0: all bits are identical
+    // 1.0: all bits have been inverted
+    pub fn hamming_distance_normalized(&self, other: &Self) -> f64 {
+        self.hamming_distance(other) as f64 / self.len_bits() as f64
     }
 
     // ----------------
@@ -1143,55 +1159,99 @@ mod tests {
         let bytes = BytesType::from(0x02);
         // from Vec<u8>
         let other = BytesType::from(vec![0xa0]);
+
         let expected_result = 3;
+        let expected_result_normalized = 0.375;
 
         let result = bytes.hamming_distance(&other);
+        let result_normalized = bytes.hamming_distance_normalized(&other);
 
         assert_eq!(result, expected_result);
+        assert_eq!(result_normalized, expected_result_normalized);
     }
 
     #[test]
     fn unit_bytes_hamming_distance_two_bytes_1() {
-        let bytes = BytesType::from(vec![0x02, 0xb0]);
-        let other = BytesType::from(vec![0xa0, 0x01]);
+        let bytes = BytesType::from_hex_literal("02b0");
+        let other = BytesType::from_hex_literal("a001");
+
         let expected_result = 7;
+        let expected_result_normalized = 0.4375;
 
         let result = bytes.hamming_distance(&other);
+        let result_normalized = bytes.hamming_distance_normalized(&other);
 
         assert_eq!(result, expected_result);
+        assert_eq!(result_normalized, expected_result_normalized);
     }
 
     #[test]
     fn unit_bytes_hamming_distance_two_bytes_2() {
-        let bytes = BytesType::from(vec![0x1d, 0x42]);
-        let other = BytesType::from(vec![0x1f, 0x4d]);
+        let bytes = BytesType::from_hex_literal("1d42");
+        let other = BytesType::from_hex_literal("1f4d");
+
         let expected_result = 5;
+        let expected_result_normalized = 0.3125;
 
         let result = bytes.hamming_distance(&other);
+        let result_normalized = bytes.hamming_distance_normalized(&other);
 
         assert_eq!(result, expected_result);
+        assert_eq!(result_normalized, expected_result_normalized);
     }
 
     #[test]
     fn unit_bytes_hamming_distance_three_bytes() {
-        let bytes = BytesType::from(vec![0x1d, 0x42, 0x1f]);
-        let other = BytesType::from(vec![0x4d, 0x0b, 0x0f]);
+        let bytes = BytesType::from_hex_literal("1d421f");
+        let other = BytesType::from_hex_literal("4d0b0f");
+
         let expected_result = 6;
+        let expected_result_normalized = 0.25;
 
         let result = bytes.hamming_distance(&other);
+        let result_normalized = bytes.hamming_distance_normalized(&other);
 
         assert_eq!(result, expected_result);
+        assert_eq!(result_normalized, expected_result_normalized);
     }
 
     #[test]
-    fn unit_bytes_hamming_distance_five_bytes() {
-        let bytes = BytesType::from(vec![0x1d, 0x42, 0x1f, 0x4d, 0x0b]);
-        let other = BytesType::from(vec![0x0f, 0x02, 0x1f, 0x4f, 0x13]);
+    fn unit_bytes_hamming_distance_five_bytes_1() {
+        let bytes = BytesType::from_hex_literal("1d421f4d0b");
+        let other = BytesType::from_hex_literal("0f021f4f13");
+
         let expected_result = 6;
+        let expected_result_normalized = 0.15;
 
         let result = bytes.hamming_distance(&other);
+        let result_normalized = bytes.hamming_distance_normalized(&other);
 
         assert_eq!(result, expected_result);
+        assert_eq!(result_normalized, expected_result_normalized);
+    }
+
+    #[test]
+    fn unit_bytes_hamming_distance_five_bytes_2() {
+        let bytes = BytesType::from_hex_literal("0f021f4f13");
+        let other = BytesType::from_hex_literal("4e3f78120a");
+
+        let expected_result = 20;
+        let expected_result_normalized = 0.5;
+
+        let result = bytes.hamming_distance(&other);
+        let result_normalized = bytes.hamming_distance_normalized(&other);
+
+        assert_eq!(result, expected_result);
+        assert_eq!(result_normalized, expected_result_normalized);
+    }
+
+    #[test]
+    #[should_panic(expected = "size of blocks not equal")]
+    fn unit_bytes_hamming_distance_unequal_size() {
+        let bytes = BytesType::from_hex_literal("1d421f4d0b");
+        let other = BytesType::from_hex_literal("0f021f4f");
+
+        let _ = bytes.hamming_distance(&other);
     }
 
     // ----------------

@@ -205,16 +205,25 @@ where
 
 impl<C, E> IntoIterator for self::CryptoVec<C, E>
 where
-    C: IntoIterator<IntoIter = std::vec::IntoIter<E>>
-        + Elements<Element = E>
-        + InternalDataVec<Element = E>
-        + InternalDataVecMut<Element = E>,
+    C: IntoIterator<IntoIter = std::vec::IntoIter<E>> + Elements<Element = E>,
 {
     type Item = E;
     type IntoIter = vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.collection.into_iter()
+    }
+}
+
+impl<'a, C, E> IntoIterator for &'a self::CryptoVec<C, E>
+where
+    C: Clone + IntoIterator<IntoIter = std::vec::IntoIter<E>> + Elements<Element = E>,
+{
+    type Item = E;
+    type IntoIter = vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.collection.clone().into_iter()
     }
 }
 

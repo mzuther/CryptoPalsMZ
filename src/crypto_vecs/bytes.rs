@@ -1,4 +1,5 @@
 use openssl::{cipher, cipher_ctx};
+use rand::prelude::*;
 use std::{convert, slice, sync, vec};
 
 use crate::crypto_vecs::traits::{
@@ -227,9 +228,9 @@ impl BytesType {
     }
 
     pub fn to_blocks_bits(&self, block_size_bits: usize) -> BlockBytes {
-        let bytes = crypto_vecs::bits_to_bytes(block_size_bits);
+        let block_size = crypto_vecs::bits_to_bytes(block_size_bits);
 
-        self.to_blocks(bytes)
+        self.to_blocks(block_size)
     }
 
     // convert bytes to Windows code page 1252 (with placeholders for special
@@ -276,6 +277,20 @@ impl BytesType {
 
             acc + differing_bits_low + differing_bits_high
         })
+    }
+
+    // ----------------
+
+    pub fn create_random_key(key_size: usize) -> Self {
+        let mut rng = rand::rng();
+
+        BytesType::new_from((0..key_size).map(|_| rng.random()).collect())
+    }
+
+    pub fn create_random_key_bits(key_size_bits: usize) -> Self {
+        let key_size = crypto_vecs::bits_to_bytes(key_size_bits);
+
+        BytesType::create_random_key(key_size)
     }
 
     // ----------------
@@ -1128,6 +1143,48 @@ mod tests {
         let result = bytes.hamming_distance(&other);
 
         assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_bytes_create_random_key_length() {
+        let key_size = 16;
+
+        let bytes_key = BytesType::create_random_key(key_size);
+
+        assert_eq!(bytes_key.len_bytes(), key_size);
+    }
+
+    #[test]
+    fn unit_bytes_create_random_key_different() {
+        let key_size = 16;
+
+        let bytes_key = BytesType::create_random_key(key_size);
+        let other_key = BytesType::create_random_key(key_size);
+
+        assert_ne!(bytes_key, other_key);
+        assert_eq!(bytes_key.len_bytes(), other_key.len_bytes());
+    }
+
+    #[test]
+    fn unit_bytes_create_random_key_bits_length() {
+        let key_size_bits = 256;
+
+        let bytes_key = BytesType::create_random_key_bits(key_size_bits);
+
+        assert_eq!(bytes_key.len_bits(), key_size_bits);
+    }
+
+    #[test]
+    fn unit_bytes_create_random_key_bits_different() {
+        let key_size_bits = 256;
+
+        let bytes_key = BytesType::create_random_key_bits(key_size_bits);
+        let other_key = BytesType::create_random_key_bits(key_size_bits);
+
+        assert_ne!(bytes_key, other_key);
+        assert_eq!(bytes_key.len_bits(), other_key.len_bits());
     }
 
     // ----------------

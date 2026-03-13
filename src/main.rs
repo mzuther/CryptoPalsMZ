@@ -25,10 +25,10 @@ fn challenge_11() {
     ));
     let plain = plain_unicode.to_bytes();
 
-    for _ in 0..5 {
+    for _ in 0..10 {
         let (encryption_mode, cypher) = encryption_oracle(&plain, block_size_bits);
         let detected_mode = if is_ebc_mode(&cypher, block_size_bits) {
-            "EBC"
+            "ECB"
         } else {
             "CBC"
         };
@@ -52,9 +52,10 @@ fn is_ebc_mode(cypher: &BytesType, block_size_bits: usize) -> bool {
     for skipped_bytes in 0..block_size {
         let cypher_skipped = cypher
             .skip_n_as_collection(skipped_bytes)
-            .ok_or(BlockBytes::new_bits(block_size_bits));
+            .unwrap_or(BytesType::default())
+            .to_blocks_bits(block_size_bits);
 
-        let duplicate_blocks = get_duplicate_blocks(&cypher_skipped.unwrap(), block_size_bits);
+        let duplicate_blocks = cypher_skipped.find_duplicate_blocks();
 
         if duplicate_blocks.len() > 0 {
             return true;
@@ -65,7 +66,9 @@ fn is_ebc_mode(cypher: &BytesType, block_size_bits: usize) -> bool {
 }
 
 fn get_duplicate_blocks(cypher: &BytesType, block_size_bits: usize) -> BlockBytes {
-    cypher.to_blocks_bits(block_size_bits).find_duplicate_blocks()
+    cypher
+        .to_blocks_bits(block_size_bits)
+        .find_duplicate_blocks()
 }
 
 fn encryption_oracle(plain: &BytesType, block_size_bits: usize) -> (&str, BytesType) {

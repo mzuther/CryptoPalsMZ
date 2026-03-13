@@ -52,3 +52,11 @@ pub static ENGLISH_LETTER_FREQUENCIES: sync::LazyLock<indexmap::IndexMap<u8, f64
 
         letter_frequencies_from_array(&english_letter_frequencies)
     });
+
+// ----------------
+
+#[derive(Debug, PartialEq)]
+pub enum AesMode {
+    ECB,
+    NonECB,
+}

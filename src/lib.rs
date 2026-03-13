@@ -3,10 +3,11 @@ pub mod crypto_vecs;
 
 // ----------------
 
+use rand::prelude::*;
 use std::{cmp, collections::HashMap, ops::Range};
 
-use crate::crypto_vecs::BytesType;
-use crate::crypto_vecs::traits::LenBytes;
+use crate::crypto_vecs::traits::{LenBytes, ToBytes};
+use crate::crypto_vecs::{BlockBytes, BytesType};
 
 // ================
 
@@ -300,6 +301,55 @@ fn transpose_strings_internal(strings: &[String], reverse_transposition: bool) -
         acc.push(String::from_iter(line));
         acc
     })
+}
+
+// ----------------
+
+pub fn aes_encryption_oracle(
+    plain: &BytesType,
+    block_size_bits: usize,
+) -> (constants::AesMode, BlockBytes) {
+    let mut rng = rand::rng();
+
+    let plain_padded = plain.affix_garbage(rng.random_range(5..=10), rng.random_range(5..=10));
+    let plain_padded_blocks = plain_padded.to_blocks_bits(block_size_bits);
+    let key = BytesType::create_random_key_bits(block_size_bits);
+
+    // create ECB in 50% of the cases
+    if rng.random() {
+        let cypher_blocks = plain_padded_blocks.aes_ecb_encrypt(&key).unwrap();
+
+        (constants::AesMode::ECB, cypher_blocks)
+    } else {
+        let initialization_vector = BytesType::create_random_key_bits(block_size_bits);
+
+        let cypher_blocks = plain_padded_blocks
+            .aes_cbc_encrypt(&key, &initialization_vector)
+            .unwrap();
+
+        (constants::AesMode::NonECB, cypher_blocks)
+    }
+}
+
+// TODO: implement "skip_n_as_collection()" for "BlockBytes"
+pub fn detect_aes_mode(cypher_blocks: &BlockBytes) -> constants::AesMode {
+    let block_size = cypher_blocks.get_block_size();
+
+    // remove any possible padding before detection
+    for skipped_bytes in 0..block_size {
+        let cypher_truncated = cypher_blocks
+            .to_bytes()
+            .skip_n_as_collection(skipped_bytes)
+            .unwrap_or(BytesType::default())
+            .to_blocks(block_size);
+
+        // detect repetitive blocks
+        if cypher_truncated.find_duplicate_blocks().len() > 0 {
+            return constants::AesMode::ECB;
+        }
+    }
+
+    constants::AesMode::NonECB
 }
 
 // ================

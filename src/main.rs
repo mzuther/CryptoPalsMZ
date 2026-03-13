@@ -2,7 +2,6 @@
 
 // ----------------
 
-use rand::prelude::*;
 use std::fs;
 
 use cryptopals::crypto_vecs::traits::{InternalDataVec, ToBytes};
@@ -18,80 +17,26 @@ fn main() {
 fn challenge_11() {
     let block_size_bits = 128;
 
-    let plain_unicode = UnicodeType::from(concat!(
-        "Detect the block cipher mode the function is using each time. ",
-        "You should end up with a piece of code that, pointed at a black ",
-        "box that might be encrypting ECB or CBC, tells you which one is happening."
-    ));
+    let plain_unicode = UnicodeType::from("Detect the block".repeat(3));
     let plain = plain_unicode.to_bytes();
 
-    for _ in 0..10 {
-        let (encryption_mode, cypher) = encryption_oracle(&plain, block_size_bits);
-        let detected_mode = if is_ebc_mode(&cypher, block_size_bits) {
-            "ECB"
-        } else {
-            "CBC"
-        };
+    let x = (1..=10_000).fold(Vec::default(), |mut acc, n| {
+        let (encryption_mode, cypher) = cryptopals::aes_encryption_oracle(&plain, block_size_bits);
+        let detected_mode = cryptopals::detect_aes_mode(&cypher);
 
-        println!(
-            "{}  {} -> {}",
-            if encryption_mode == detected_mode {
-                "correct:  "
-            } else {
-                "incorrect:"
-            },
-            encryption_mode,
-            detected_mode
-        );
-    }
-}
+        if encryption_mode != detected_mode {
+            let error_message = format!("{:?} != {:?}", encryption_mode, detected_mode);
 
-fn is_ebc_mode(cypher: &BytesType, block_size_bits: usize) -> bool {
-    let block_size = crypto_vecs::bits_to_bytes(block_size_bits);
-
-    for skipped_bytes in 0..block_size {
-        let cypher_skipped = cypher
-            .skip_n_as_collection(skipped_bytes)
-            .unwrap_or(BytesType::default())
-            .to_blocks_bits(block_size_bits);
-
-        let duplicate_blocks = cypher_skipped.find_duplicate_blocks();
-
-        if duplicate_blocks.len() > 0 {
-            return true;
+            println!("{}", error_message);
+            acc.push(error_message);
         }
-    }
 
-    false
-}
+        if n % 1_000 == 0 {
+            println!("{}", n);
+        }
 
-fn get_duplicate_blocks(cypher: &BytesType, block_size_bits: usize) -> BlockBytes {
-    cypher
-        .to_blocks_bits(block_size_bits)
-        .find_duplicate_blocks()
-}
-
-fn encryption_oracle(plain: &BytesType, block_size_bits: usize) -> (&str, BytesType) {
-    let mut rng = rand::rng();
-
-    let plain_extended = plain.affix_garbage(rng.random_range(5..=10), rng.random_range(5..=10));
-    let plain_blocks = plain_extended.to_blocks_bits(block_size_bits);
-
-    let key = BytesType::create_random_key_bits(block_size_bits);
-
-    if rng.random() {
-        let cypher_blocks = plain_blocks.aes_ecb_encrypt(&key).unwrap();
-
-        ("ECB", cypher_blocks.to_bytes())
-    } else {
-        let initialization_vector = BytesType::create_random_key_bits(block_size_bits);
-
-        let cypher_blocks = plain_blocks
-            .aes_cbc_encrypt(&key, &initialization_vector)
-            .unwrap();
-
-        ("CBC", cypher_blocks.to_bytes())
-    }
+        acc
+    });
 }
 
 // ----------------

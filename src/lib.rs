@@ -217,25 +217,13 @@ pub fn guess_keysize_from_hamming_distance(
     keysize_range
         .clone()
         .fold(Vec::with_capacity(number_of_keys), |mut acc, keysize| {
-            let blocks = bytes.to_blocks(keysize);
-            let current_chunk_iter = blocks.iter();
-            let next_chunk_iter = blocks.iter().skip(1);
-
-            let edit_size_normalized: f64 = current_chunk_iter
-                .zip(next_chunk_iter)
-                .take(number_of_samples)
-                .fold(0.0, |acc, (current_chunk, next_chunk)| {
-                    acc + current_chunk.hamming_distance_normalized(next_chunk)
-                });
-
-            let edit_size_average = edit_size_normalized / (number_of_samples as f64);
-
-            let score = ScoreKeysize {
-                score: edit_size_average,
+            acc.push(ScoreKeysize {
+                score: bytes
+                    .to_blocks(keysize)
+                    .hamming_distance_average(number_of_samples),
                 keysize,
-            };
+            });
 
-            acc.push(score);
             acc
         })
 }

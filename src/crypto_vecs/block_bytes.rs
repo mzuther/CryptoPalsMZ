@@ -259,6 +259,32 @@ impl self::BlockBytes {
         )
     }
 
+    // normalized Hamming distance, averaged by number of calculations
+    //
+    // 0.0: all bits are identical
+    // 1.0: all bits have been inverted
+    pub fn hamming_distance_average(&self, number_of_samples: usize) -> f64 {
+        assert!(number_of_samples > 0, "at least one sample needed");
+
+        assert!(
+            number_of_samples < self.len(),
+            "{} blocks needed, found only {}",
+            number_of_samples + 1,
+            self.len()
+        );
+
+        let sum_of_edit_sizes: f64 = self
+            .iter()
+            .zip(self.iter().skip(1))
+            .take(number_of_samples)
+            .map(|(current_chunk, next_chunk)| {
+                current_chunk.hamming_distance_normalized(next_chunk)
+            })
+            .sum();
+
+        sum_of_edit_sizes / (number_of_samples as f64)
+    }
+
     // ----------------
 
     #[inline]
@@ -616,6 +642,74 @@ mod tests {
         let result = block_bytes.find_duplicate_blocks();
 
         assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    #[should_panic(expected = "at least one sample needed")]
+    fn unit_blockbytes_hamming_distance_no_samples() {
+        let block_size = 5;
+        let number_of_samples = 0;
+
+        let bytes = BytesType::from_hex_literal("1d421f4d0b 0f021f4f13 4e3f78120a");
+        let block_bytes = bytes.to_blocks(block_size);
+
+        let _ = block_bytes.hamming_distance_average(number_of_samples);
+    }
+
+    #[test]
+    fn unit_blockbytes_hamming_distance_one_sample() {
+        let block_size = 5;
+        let number_of_samples = 1;
+
+        let bytes = BytesType::from_hex_literal("1d421f4d0b 0f021f4f13 4e3f78120a");
+        let block_bytes = bytes.to_blocks(block_size);
+
+        let expected_result = 0.15;
+
+        let result = block_bytes.hamming_distance_average(number_of_samples);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_blockbytes_hamming_distance_two_samples() {
+        let block_size = 5;
+        let number_of_samples = 2;
+
+        let bytes = BytesType::from_hex_literal("1d421f4d0b 0f021f4f13 4e3f78120a");
+        let block_bytes = bytes.to_blocks(block_size);
+
+        let expected_result = 0.325;
+
+        let result = block_bytes.hamming_distance_average(number_of_samples);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    #[should_panic(expected = "4 blocks needed, found only 3")]
+    fn unit_blockbytes_hamming_distance_not_enough_blocks() {
+        let block_size = 5;
+        let number_of_samples = 3;
+
+        let bytes = BytesType::from_hex_literal("1d421f4d0b 0f021f4f13 4e3f78120a");
+        let block_bytes = bytes.to_blocks(block_size);
+
+        let _ = block_bytes.hamming_distance_average(number_of_samples);
+    }
+
+    #[test]
+    #[should_panic(expected = "size of blocks not equal")]
+    fn unit_blockbytes_hamming_distance_unequal_size() {
+        let block_size = 6;
+        let number_of_samples = 2;
+
+        let bytes = BytesType::from_hex_literal("1d421f4d0b 0f021f4f13 4e3f78120a");
+        let block_bytes = bytes.to_blocks(block_size);
+
+        let _ = block_bytes.hamming_distance_average(number_of_samples);
     }
 
     // ----------------

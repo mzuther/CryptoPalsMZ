@@ -3,7 +3,7 @@ use std::{collections::HashMap, fs};
 use cryptopals::crypto_vecs::traits::ToBytes;
 use cryptopals::crypto_vecs::{Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType};
 
-// ----------------
+// ================
 
 // Convert hex to base64
 #[test]
@@ -36,6 +36,8 @@ fn integration_challenge_01_reverse() {
     assert_eq!(result, expected_result);
 }
 
+// ----------------
+
 // Fixed XOR
 #[test]
 fn integration_challenge_02() {
@@ -49,6 +51,8 @@ fn integration_challenge_02() {
 
     assert_eq!(result, expected_result);
 }
+
+// ----------------
 
 // Single-byte XOR cipher
 #[test]
@@ -69,6 +73,8 @@ fn integration_challenge_03() {
 
     assert_eq!(result, expected_result);
 }
+
+// ----------------
 
 // Detect single-character XOR
 #[test]
@@ -107,6 +113,8 @@ fn integration_challenge_04() {
     assert_eq!(result, expected_result);
 }
 
+// ----------------
+
 // Implement repeating-key XOR
 #[test]
 fn integration_challenge_05() {
@@ -124,6 +132,8 @@ fn integration_challenge_05() {
 
     assert_eq!(result, expected_result);
 }
+
+// ----------------
 
 // Break repeating-key XOR
 #[test]
@@ -175,6 +185,8 @@ fn integration_challenge_06() {
     assert_eq!(result_key, expected_result);
 }
 
+// ----------------
+
 // AES in ECB mode
 #[test]
 fn integration_challenge_07() {
@@ -199,6 +211,8 @@ fn integration_challenge_07() {
 
     assert_eq!(result_end, expected_result_end);
 }
+
+// ----------------
 
 // Detect AES in ECB mode
 #[test]

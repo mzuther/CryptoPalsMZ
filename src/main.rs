@@ -2,7 +2,6 @@
 
 // ----------------
 
-use rayon::prelude::*;
 use std::fs;
 
 use cryptopals::crypto_vecs::traits::{InternalDataVec, ToBytes};
@@ -11,48 +10,7 @@ use cryptopals::crypto_vecs::{self, BlockBytes, BytesType, UnicodeType};
 // ================
 
 fn main() {
-    challenge_11();
-}
-
-// An ECB/CBC detection oracle
-fn challenge_11() {
-    let iterations = 10_000;
-    let notify_after_iterations = 1_000;
-
-    let block_size_bits = 128;
-    let plain_unicode = UnicodeType::from("Detect the block".repeat(3));
-    let plain = plain_unicode.to_bytes();
-
-    let result = (1..=iterations)
-        .into_par_iter()
-        .fold(
-            || Vec::default(),
-            |mut acc, n| {
-                let (encryption_mode, cypher) =
-                    cryptopals::aes_encryption_oracle(&plain, block_size_bits);
-                let detected_mode = cryptopals::detect_aes_mode(&cypher);
-
-                if encryption_mode != detected_mode {
-                    let error_message = format!("{:?} != {:?}", encryption_mode, detected_mode);
-
-                    println!("{}", error_message);
-                    acc.push(error_message);
-                }
-
-                if n % notify_after_iterations == 0 {
-                    println!("{}", n);
-                }
-
-                acc
-            },
-        )
-        .reduce(
-            || Default::default(),
-            |mut a, b| {
-                a.extend(b);
-                a
-            },
-        );
+    challenge_06();
 }
 
 // ----------------

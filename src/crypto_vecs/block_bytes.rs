@@ -307,6 +307,11 @@ impl self::BlockBytes {
             return Err(number_of_missing_bytes);
         }
 
+        // incorrect padding, last byte must not be zero
+        if padding_length == 0 {
+            return Err(0);
+        }
+
         let padding = last_block_vec
             .rchunks(padding_length)
             .next()
@@ -911,6 +916,18 @@ mod tests {
         let block_size = 8;
         let padded =
             BytesType::from_unicode_literal("YELLOW SUBMARI\x01\x02").to_blocks(block_size);
+
+        let expected_result = Err(String::from("invalid PKCS#7 padding"));
+
+        let result = padded.unpad_pkcs7();
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_blockbytes_unpad_pkcs7_incorrect_padding_zero_at_end() {
+        let block_size = 8;
+        let padded = BytesType::from_unicode_literal("YELLOW SUBMARIN\x00").to_blocks(block_size);
 
         let expected_result = Err(String::from("invalid PKCS#7 padding"));
 

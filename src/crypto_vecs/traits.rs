@@ -176,5 +176,5 @@ pub trait ToBytes {
 // ================
 
 pub trait EncryptionOracle {
-    fn encrypt(&self, plain: &BytesType) -> Result<BlockBytes, String>;
+    fn encrypt(&self, plain: BytesType) -> Result<BlockBytes, String>;
 }

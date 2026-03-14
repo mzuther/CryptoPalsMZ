@@ -34,11 +34,9 @@ fn challenge_12() {
         ),
     );
 
-    let padding_until_next_block =
-        find_padding_to_next_block_using_encryption_oracle(&oracle, 0).unwrap();
+    let padding_until_next_block = find_padding_to_next_block_via_oracle(&oracle, 0).unwrap();
     let block_size =
-        find_padding_to_next_block_using_encryption_oracle(&oracle, padding_until_next_block)
-            .unwrap();
+        find_padding_to_next_block_via_oracle(&oracle, padding_until_next_block).unwrap();
 
     let ecb_probe = BytesType::from_unicode_literal(&"Detector".repeat(6));
     let aes_mode = cryptopals::detect_aes_mode(&ecb_probe.to_blocks(block_size));
@@ -50,7 +48,7 @@ fn challenge_12() {
     println!("Detected block size:  {}", block_size);
     println!("Detected AES mode:    {}", aes_mode);
 
-    let cypher_without_probe = oracle.encrypt(&Default::default()).unwrap();
+    let cypher_without_probe = oracle.encrypt(Default::default()).unwrap();
 
     println!();
     println!("Decrypting using oracle ...");
@@ -58,7 +56,7 @@ fn challenge_12() {
     let plain = (0..cypher_without_probe.number_of_blocks()).fold(
         BytesType::default(),
         |mut acc, block_index| {
-            acc.extend(decypher_block_using_encryption_oracle(
+            acc.extend(decypher_block_via_oracle(
                 &oracle,
                 &acc,
                 block_index,
@@ -76,7 +74,7 @@ fn challenge_12() {
     println!("{}", plain.to_unicode().as_ref());
 }
 
-fn find_padding_to_next_block_using_encryption_oracle(
+fn find_padding_to_next_block_via_oracle(
     oracle: &oracles::AesSuffixEncryption,
     padding_size: usize,
 ) -> Option<usize> {
@@ -86,12 +84,12 @@ fn find_padding_to_next_block_using_encryption_oracle(
         probe.extend(vec![b'A'; padding_size]);
     }
 
-    let cypher_length_original = oracle.encrypt(&probe).unwrap().len_bytes();
+    let cypher_length_original = oracle.encrypt(probe.clone()).unwrap().len_bytes();
 
     for padding_length in (1..) {
         probe.push(b'A');
 
-        let cypher_length_with_probe = oracle.encrypt(&probe).unwrap().len_bytes();
+        let cypher_length_with_probe = oracle.encrypt(probe.clone()).unwrap().len_bytes();
 
         if cypher_length_with_probe > cypher_length_original {
             return Some(padding_length);
@@ -101,7 +99,7 @@ fn find_padding_to_next_block_using_encryption_oracle(
     None
 }
 
-fn decypher_block_using_encryption_oracle(
+fn decypher_block_via_oracle(
     oracle: &oracles::AesSuffixEncryption,
     plain_part: &BytesType,
     block_index: usize,
@@ -119,7 +117,7 @@ fn decypher_block_using_encryption_oracle(
 
         let mut probe_last_byte =
             BytesType::from_unicode_literal(&"A".repeat(block_size - current_position - 1));
-        let cypher_original_minus_one = oracle.encrypt(&probe_last_byte).unwrap().to_bytes();
+        let cypher_original_minus_one = oracle.encrypt(probe_last_byte.clone()).unwrap().to_bytes();
 
         let cypher_original_minus_one_current_block = cypher_original_minus_one
             .skip_n_as_collection(skipped_bytes)
@@ -139,7 +137,7 @@ fn decypher_block_using_encryption_oracle(
                 "block has wrong size"
             );
 
-            let cypher_probe = oracle.encrypt(&probe).unwrap().to_bytes();
+            let cypher_probe = oracle.encrypt(probe).unwrap().to_bytes();
             let cypher_probe_first_block = cypher_probe
                 .skip_n_as_collection(skipped_bytes)
                 .unwrap()

@@ -37,12 +37,9 @@ impl AesSuffixEncryption {
 // ----------------
 
 impl EncryptionOracle for AesSuffixEncryption {
-    fn encrypt(&self, plain: &BytesType) -> Result<BlockBytes, String> {
-        let mut plain_appended = plain.clone();
-        plain_appended.extend(&self.plain_suffix);
+    fn encrypt(&self, mut plain: BytesType) -> Result<BlockBytes, String> {
+        plain.extend(&self.plain_suffix);
 
-        plain_appended
-            .to_blocks(self.block_size)
-            .aes_ecb_encrypt(&self.key)
+        plain.to_blocks(self.block_size).aes_ecb_encrypt(&self.key)
     }
 }

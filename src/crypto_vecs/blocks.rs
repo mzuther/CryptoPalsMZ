@@ -135,12 +135,12 @@ where
     // ----------------
 
     // number of blocks
-    pub fn len(&self) -> usize {
+    pub fn number_of_blocks(&self) -> usize {
         self.blocks.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.number_of_blocks() == 0
     }
 
     // ----------------

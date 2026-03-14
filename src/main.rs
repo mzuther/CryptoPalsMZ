@@ -35,15 +35,17 @@ fn challenge_12() {
 
     let cypher_without_probe = aes_encryption_oracle_new(&Default::default());
 
-    let plain =
-        (0..cypher_without_probe.len()).fold(BytesType::default(), |mut acc, block_index| {
+    let plain = (0..cypher_without_probe.number_of_blocks()).fold(
+        BytesType::default(),
+        |mut acc, block_index| {
             acc.extend(decypher_block_using_encryption_oracle(
                 block_index,
                 block_size,
             ));
 
             acc
-        });
+        },
+    );
 }
 
 fn find_padding_to_next_block_using_encryption_oracle(padding_size: usize) -> Option<usize> {

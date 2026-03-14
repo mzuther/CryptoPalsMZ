@@ -344,7 +344,7 @@ pub fn detect_aes_mode(cypher_blocks: &BlockBytes) -> constants::AesMode {
             .to_blocks(block_size);
 
         // detect repetitive blocks
-        if cypher_truncated.find_duplicate_blocks().len() > 0 {
+        if cypher_truncated.find_duplicate_blocks().number_of_blocks() > 0 {
             return constants::AesMode::ECB;
         }
     }

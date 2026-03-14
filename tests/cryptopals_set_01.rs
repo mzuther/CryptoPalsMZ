@@ -239,7 +239,7 @@ fn integration_challenge_08() {
 
             let duplicate_blocks = cypher_blocks.find_duplicate_blocks();
 
-            if duplicate_blocks.len() > 0 {
+            if duplicate_blocks.number_of_blocks() > 0 {
                 cyphers_with_duplicates.insert(index, duplicate_blocks);
             }
 

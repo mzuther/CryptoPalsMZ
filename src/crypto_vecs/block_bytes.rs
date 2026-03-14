@@ -124,12 +124,12 @@ impl self::BlockBytes {
     // ----------------
 
     // number of blocks
-    pub fn len(&self) -> usize {
+    pub fn number_of_blocks(&self) -> usize {
         self.blocks.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.number_of_blocks() == 0
     }
 
     // ----------------
@@ -267,10 +267,10 @@ impl self::BlockBytes {
         assert!(number_of_samples > 0, "at least one sample needed");
 
         assert!(
-            number_of_samples < self.len(),
+            number_of_samples < self.number_of_blocks(),
             "{} blocks needed, found only {}",
             number_of_samples + 1,
-            self.len()
+            self.number_of_blocks()
         );
 
         let sum_of_edit_sizes: f64 = self
@@ -530,11 +530,11 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_blockbytes_len_single_block() {
+    fn unit_blockbytes_number_of_blocks_single_block() {
         let block_size = 7;
         let result = BytesType::from_hex_literal("4162f3d3 426f12").to_blocks(block_size);
 
-        assert_eq!(result.len(), 1);
+        assert_eq!(result.number_of_blocks(), 1);
         assert_eq!(result.len_bytes(), 7);
     }
 
@@ -543,7 +543,7 @@ mod tests {
         let block_size = 6;
         let result = BytesType::from_hex_literal("4162f3d3 426f120d ff").to_blocks(block_size);
 
-        assert_eq!(result.len(), 2);
+        assert_eq!(result.number_of_blocks(), 2);
         assert_eq!(result.len_bytes(), 9);
     }
 

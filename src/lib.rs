@@ -4,7 +4,7 @@ pub mod oracles;
 
 // ----------------
 
-use std::{cmp, collections::HashMap, ops::Range};
+use std::{cmp, collections::HashMap, ops};
 
 use crate::crypto_vecs::traits::{LenBytes, ToBytes};
 use crate::crypto_vecs::{BlockBytes, BytesType};
@@ -53,22 +53,16 @@ fn get_letter_frequencies(bytes: &BytesType) -> HashMap<u8, f64> {
     let percent_per_byte = 1.0 / (bytes.len_bytes() as f64);
 
     bytes.iter().fold(Default::default(), |mut acc, &byte| {
-        let mut key = byte;
-
-        // space
-        if key == 0x20 {
-        }
-        // upper-case letters (convert to lower-case)
-        else if (0x41..=0x5a).contains(&key) {
-            key += 0x20;
-        }
-        // lower-case letters
-        else if (0x61..=0x7a).contains(&key) {
-        }
-        // remaining characters (convert to "*")
-        else {
-            key = 0x2a;
-        }
+        let key = match byte {
+            // space
+            0x20 => byte,
+            // upper-case letters (convert to lower-case)
+            0x41..=0x5a => byte + 0x20,
+            // lower-case letters
+            0x61..=0x7a => byte,
+            // remaining characters (convert to "*")
+            _ => 0x2a,
+        };
 
         let count = acc.entry(key).or_insert(0.0);
         *count += percent_per_byte;
@@ -195,22 +189,21 @@ fn score_letter_frequencies(bytes: &BytesType) -> f64 {
     // malus for non-letters
     english_letter_frequencies
         .iter()
-        .fold(total_score, |mut acc, (&letter, percentage_found)| {
-            // any character except lower-case letters
-            if !(0x61..=0x7a).contains(&letter) {
-                // with the exception of space, comma, and dot
-                if letter != 0x20 && letter != 0x2c && letter != 0x2e {
-                    acc += 2.0 * percentage_found;
-                }
+        .fold(total_score, |acc, (&letter, percentage_found)| {
+            match letter {
+                // space, comma and dot are fine
+                0x20 | 0x2c | 0x2e => acc,
+                // so are lower-case letters
+                0x61..=0x7a => acc,
+                // add malus
+                _ => acc + 2.0 * percentage_found,
             }
-
-            acc
         })
 }
 
 pub fn guess_keysize_from_hamming_distance(
     bytes: &BytesType,
-    keysize_range: &Range<usize>,
+    keysize_range: &ops::Range<usize>,
     number_of_samples: usize,
 ) -> Vec<ScoreKeysize> {
     let number_of_keys = keysize_range.len();

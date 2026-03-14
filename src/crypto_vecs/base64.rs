@@ -166,28 +166,26 @@ impl FromBytes for Base64 {
             .fold(String::default(), |mut acc, &segment| {
                 acc.push(match segment {
                     // padding character (=)
-                    None => 61,
+                    None => 0x3d,
                     Some(byte) => {
-                        assert!(byte < 64, "{} is not a valid base64 segment", byte);
-
-                        // upper case letter
-                        if byte < 26 {
-                            byte + 65
-                        // lower case letter
-                        } else if byte < 52 {
-                            byte + 71
-                        // plus
-                        } else if byte == 62 {
-                            43
-                        // slash
-                        } else if byte == 63 {
-                            47
-                        // digit
-                        } else {
-                            byte - 4
+                        match byte {
+                            // upper case letter
+                            0..26 => byte + 0x41,
+                            // lower case letter
+                            26..52 => byte + 0x47,
+                            // digit
+                            52..62 => byte - 0x04,
+                            // plus
+                            62 => 0x2b,
+                            // slash
+                            63 => 0x2f,
+                            undefined => {
+                                panic!("base64 bytes must be below 64, found {}", undefined)
+                            }
                         }
                     }
                 } as char);
+
                 acc
             });
 
@@ -203,27 +201,21 @@ impl ToBytes for Base64 {
             .base64
             .bytes()
             .fold(Vec::default(), |mut acc, char_int| {
-                let char_option;
-
-                // plus
-                if char_int == 43 {
-                    char_option = Some(62);
-                // slash
-                } else if char_int == 47 {
-                    char_option = Some(63);
-                // padding character (=)
-                } else if char_int == 61 {
-                    char_option = None;
-                // digit
-                } else if char_int <= 57 {
-                    char_option = Some(char_int + 4);
-                // upper case letter
-                } else if char_int <= 90 {
-                    char_option = Some(char_int - 65);
-                // lower case letter
-                } else {
-                    char_option = Some(char_int - 71);
-                }
+                let char_option = match char_int {
+                    // plus
+                    0x2b => Some(62),
+                    // slash
+                    0x2f => Some(63),
+                    // digit
+                    0x30..=0x39 => Some(char_int + 4),
+                    // padding character (=)
+                    0x3d => None,
+                    // upper case letter
+                    0x41..=0x5a => Some(char_int - 65),
+                    // lower case letter
+                    0x61..=0x7a => Some(char_int - 71),
+                    undefined => panic!("0x{} is not a valid base64 character", undefined),
+                };
 
                 assert!(
                     char_option.is_none_or(|x| x < 64),

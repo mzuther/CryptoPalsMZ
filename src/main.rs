@@ -49,23 +49,21 @@ fn challenge_12() {
     println!("Detected AES mode:    {}", aes_mode);
 
     let cypher_without_probe = oracle.encrypt(Default::default());
+    let blocks_in_cypher = cypher_without_probe.unwrap().number_of_blocks();
 
     println!();
     println!("Decrypting using oracle ...");
 
-    let plain = (0..cypher_without_probe.unwrap().number_of_blocks()).fold(
-        BytesType::default(),
-        |mut acc, block_index| {
-            acc.extend(decypher_block_via_oracle(
-                &oracle,
-                &acc,
-                block_index,
-                block_size,
-            ));
+    let plain = (0..blocks_in_cypher).fold(BytesType::default(), |mut acc, block_index| {
+        acc.extend(decypher_block_via_oracle(
+            &oracle,
+            &acc,
+            block_index,
+            block_size,
+        ));
 
-            acc
-        },
-    );
+        acc
+    });
 
     println!();
     println!("Decrypted message:");
@@ -76,27 +74,33 @@ fn challenge_12() {
 
 fn find_padding_to_next_block_via_oracle(
     oracle: &oracles::AesEcbSuffix,
-    padding_size: usize,
-) -> Option<usize> {
+    pre_padding_size: usize,
+) -> Result<usize, String> {
     let mut probe = BytesType::default();
 
-    if padding_size > 0 {
-        probe.extend(vec![b'A'; padding_size]);
+    if pre_padding_size > 0 {
+        probe.extend(vec![b'A'; pre_padding_size]);
     }
 
-    let cypher_length_original = oracle.encrypt(probe.clone()).unwrap().len_bytes();
+    let cypher_length = oracle.encrypt(probe.clone()).unwrap().len_bytes();
 
-    for padding_length in (1..) {
+    // start from length 1 as we immediately append a byte; exit after
+    // 1024 bytes of padding
+    for padding_length in (1..1024) {
         probe.push(b'A');
 
-        let cypher_length_with_probe = oracle.encrypt(probe.clone()).unwrap().len_bytes();
-
-        if cypher_length_with_probe > cypher_length_original {
-            return Some(padding_length);
-        }
+        match oracle.encrypt(probe.clone()).response() {
+            Ok(cypher) => {
+                // new block was added by PKCS#7
+                if cypher.len_bytes() > cypher_length {
+                    return Ok(padding_length);
+                }
+            }
+            Err(e) => return Err(e.clone()),
+        };
     }
 
-    None
+    Err("could not detect padding".to_string())
 }
 
 fn decypher_block_via_oracle(

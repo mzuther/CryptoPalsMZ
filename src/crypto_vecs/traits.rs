@@ -1,6 +1,7 @@
 use std::slice;
 
 use crate::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType};
+use crate::oracles;
 
 // ================
 
@@ -175,6 +176,6 @@ pub trait ToBytes {
 
 // ================
 
-pub trait EncryptionOracle {
-    fn encrypt(&self, plain: BytesType) -> Result<BlockBytes, String>;
+pub trait EncryptionOracle<H> {
+    fn encrypt(&self, plain: BytesType) -> oracles::OracleResponse<BlockBytes, H>;
 }

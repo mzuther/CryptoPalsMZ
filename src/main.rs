@@ -48,12 +48,12 @@ fn challenge_12() {
     println!("Detected block size:  {}", block_size);
     println!("Detected AES mode:    {}", aes_mode);
 
-    let cypher_without_probe = oracle.encrypt(Default::default()).unwrap();
+    let cypher_without_probe = oracle.encrypt(Default::default());
 
     println!();
     println!("Decrypting using oracle ...");
 
-    let plain = (0..cypher_without_probe.number_of_blocks()).fold(
+    let plain = (0..cypher_without_probe.unwrap().number_of_blocks()).fold(
         BytesType::default(),
         |mut acc, block_index| {
             acc.extend(decypher_block_via_oracle(

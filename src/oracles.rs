@@ -3,13 +3,48 @@ use crate::crypto_vecs::{self, BlockBytes, BytesType, traits::LenBytes};
 
 // ================
 
+pub struct OracleResponse<R, H> {
+    response: Result<R, String>,
+    hint: Option<H>,
+}
+
+// ================
+
+impl<R, H> OracleResponse<R, H> {
+    pub fn response(&self) -> &Result<R, String> {
+        &self.response
+    }
+
+    pub fn expect(&self, msg: &str) -> &R {
+        self.response.as_ref().expect(msg)
+    }
+
+    pub fn unwrap(&self) -> &R {
+        self.response.as_ref().unwrap()
+    }
+
+    pub fn has_hint(&self) -> bool {
+        self.hint.is_some()
+    }
+
+    pub fn hint(&self) -> &Option<H> {
+        &self.hint
+    }
+
+    pub fn unwrap_hint(&self) -> &H {
+        self.hint.as_ref().unwrap()
+    }
+}
+
+// ================
+
 pub struct AesSuffixEncryption {
     block_size: usize,
     key: BytesType,
     plain_suffix: BytesType,
 }
 
-// ================
+// ----------------
 
 impl AesSuffixEncryption {
     // move "key" and "plain_suffix" into struct so they cannot be read from calling code
@@ -36,10 +71,13 @@ impl AesSuffixEncryption {
 
 // ----------------
 
-impl EncryptionOracle for AesSuffixEncryption {
-    fn encrypt(&self, mut plain: BytesType) -> Result<BlockBytes, String> {
+impl EncryptionOracle<()> for AesSuffixEncryption {
+    fn encrypt(&self, mut plain: BytesType) -> OracleResponse<BlockBytes, ()> {
         plain.extend(&self.plain_suffix);
 
-        plain.to_blocks(self.block_size).aes_ecb_encrypt(&self.key)
+        OracleResponse {
+            response: plain.to_blocks(self.block_size).aes_ecb_encrypt(&self.key),
+            hint: None,
+        }
     }
 }

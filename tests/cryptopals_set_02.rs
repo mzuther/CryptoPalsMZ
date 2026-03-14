@@ -74,7 +74,7 @@ fn integration_challenge_11() {
                 let detected_mode = cryptopals::detect_aes_mode(&cypher);
 
                 if encryption_mode != detected_mode {
-                    let error_message = format!("* {:?} != {:?}\n", encryption_mode, detected_mode);
+                    let error_message = format!("* {} != {}\n", encryption_mode, detected_mode);
 
                     acc.push_str(&error_message);
                 }

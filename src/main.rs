@@ -27,13 +27,20 @@ fn challenge_12() {
         find_padding_to_next_block_using_encryption_oracle(padding_until_next_block).unwrap();
 
     let ecb_probe = BytesType::from_unicode_literal(&"Detector".repeat(6));
+    let aes_mode = cryptopals::detect_aes_mode(&ecb_probe.to_blocks(block_size));
 
-    assert_eq!(
-        cryptopals::detect_aes_mode(&ecb_probe.to_blocks(block_size)),
-        constants::AesMode::ECB
-    );
+    assert_eq!(aes_mode, constants::AesMode::ECB);
+
+    println!();
+    println!("Detected padding:     {}", padding_until_next_block);
+    println!("Detected block size:  {}", block_size);
+    println!("Detected AES mode:    {}", aes_mode);
 
     let cypher_without_probe = aes_encryption_oracle_new(&Default::default());
+
+    println!();
+    println!("Decrypting using oracle ...");
+    println!();
 
     let plain = (0..cypher_without_probe.number_of_blocks()).fold(
         BytesType::default(),
@@ -71,6 +78,8 @@ fn find_padding_to_next_block_using_encryption_oracle(padding_size: usize) -> Op
 }
 
 fn decypher_block_using_encryption_oracle(block_index: usize, block_size: usize) -> BytesType {
+    println!("  -----");
+
     let skipped_bytes = block_index * block_size;
 
     let plain_part = (0..block_size)
@@ -109,7 +118,7 @@ fn decypher_block_using_encryption_oracle(block_index: usize, block_size: usize)
                 if first_block_cypher == first_block_cypher_minus_one {
                     acc.push(last_byte);
                     assert_eq!(acc.len_bytes(), n);
-                    println!("{:02}/{:02}: {}", block_index, n, acc.to_codepage_1252());
+                    println!("  {:02}/{:02}  {}", block_index, n, acc.to_codepage_1252());
 
                     break;
                 }

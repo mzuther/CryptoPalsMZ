@@ -1,5 +1,5 @@
 use indexmap;
-use std::sync;
+use std::{fmt, sync};
 
 // ================
 
@@ -59,4 +59,17 @@ pub static ENGLISH_LETTER_FREQUENCIES: sync::LazyLock<indexmap::IndexMap<u8, f64
 pub enum AesMode {
     ECB,
     NonECB,
+}
+
+impl fmt::Display for AesMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                AesMode::ECB => "ECB",
+                AesMode::NonECB => "NonECB",
+            }
+        )
+    }
 }

@@ -340,7 +340,7 @@ pub fn detect_aes_mode(cypher_blocks: &BlockBytes) -> constants::AesMode {
         let cypher_truncated = cypher_blocks
             .to_bytes()
             .skip_n_as_collection(skipped_bytes)
-            .unwrap_or(BytesType::default())
+            .unwrap_or_default()
             .to_blocks(block_size);
 
         // detect repetitive blocks

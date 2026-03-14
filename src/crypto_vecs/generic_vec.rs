@@ -215,7 +215,7 @@ where
     }
 }
 
-impl<'a, C, E> IntoIterator for &'a self::CryptoVec<C, E>
+impl<C, E> IntoIterator for &self::CryptoVec<C, E>
 where
     C: Clone + IntoIterator<IntoIter = std::vec::IntoIter<E>> + Elements<Element = E>,
 {

@@ -2,7 +2,7 @@
 
 // ----------------
 
-use std::{fs, usize};
+use std::fs;
 
 use cryptopals::constants;
 use cryptopals::crypto_vecs::traits::{
@@ -40,12 +40,12 @@ fn challenge_12() {
 
     println!();
     println!("Decrypting using oracle ...");
-    println!();
 
     let plain = (0..cypher_without_probe.number_of_blocks()).fold(
         BytesType::default(),
         |mut acc, block_index| {
             acc.extend(decypher_block_using_encryption_oracle(
+                &acc,
                 block_index,
                 block_size,
             ));
@@ -53,19 +53,25 @@ fn challenge_12() {
             acc
         },
     );
+
+    println!();
+    println!("Decrypted message:");
+
+    println!();
+    println!("{}", plain.to_unicode().as_ref());
 }
 
 fn find_padding_to_next_block_using_encryption_oracle(padding_size: usize) -> Option<usize> {
     let mut probe = BytesType::default();
 
     if padding_size > 0 {
-        probe.extend(vec!['A' as u8; padding_size]);
+        probe.extend(vec![b'A'; padding_size]);
     }
 
     let cypher_length_original = aes_encryption_oracle_new(&probe).len_bytes();
 
     for padding_length in (1..) {
-        probe.push('A' as u8);
+        probe.push(b'A');
 
         let cypher_length_with_probe = aes_encryption_oracle_new(&probe).len_bytes();
 
@@ -77,57 +83,68 @@ fn find_padding_to_next_block_using_encryption_oracle(padding_size: usize) -> Op
     None
 }
 
-fn decypher_block_using_encryption_oracle(block_index: usize, block_size: usize) -> BytesType {
-    println!("  -----");
+fn decypher_block_using_encryption_oracle(
+    plain_part: &BytesType,
+    block_index: usize,
+    block_size: usize,
+) -> BytesType {
+    println!();
 
     let skipped_bytes = block_index * block_size;
 
-    let plain_part = (0..block_size)
-        .map(|x| x + 1)
-        .fold(BytesType::default(), |mut acc, n| {
-            assert_eq!(
-                acc.len_bytes(),
-                n - 1,
-                "accumulator has wrong size (previous letter not found)"
-            );
-            let current_key_size = block_size - n;
+    (0..block_size).fold(BytesType::default(), |mut acc, current_position| {
+        // no more cyphertext
+        if current_position > acc.len_bytes() {
+            return acc;
+        }
 
-            let probe_last_byte = BytesType::from_unicode_literal(&"A".repeat(current_key_size));
-            let first_block_cypher_minus_one = aes_encryption_oracle_new(&probe_last_byte)
-                .to_bytes()
+        let mut probe_last_byte =
+            BytesType::from_unicode_literal(&"A".repeat(block_size - current_position - 1));
+        let cypher_original_minus_one = aes_encryption_oracle_new(&probe_last_byte).to_bytes();
+
+        let cypher_original_minus_one_current_block = cypher_original_minus_one
+            .skip_n_as_collection(skipped_bytes)
+            .unwrap()
+            .take_n_as_collection(block_size)
+            .unwrap();
+
+        probe_last_byte.extend(plain_part);
+        probe_last_byte.extend(&acc);
+
+        for last_byte in (0x00..=0xff) {
+            let mut probe = probe_last_byte.clone();
+            probe.push(last_byte);
+
+            assert!(
+                probe.len_bytes().is_multiple_of(block_size),
+                "block has wrong size"
+            );
+
+            let cypher_probe = aes_encryption_oracle_new(&probe).to_bytes();
+            let cypher_probe_first_block = cypher_probe
                 .skip_n_as_collection(skipped_bytes)
                 .unwrap()
                 .take_n_as_collection(block_size)
                 .unwrap();
 
-            for last_byte in (0x00..=0xff) {
-                let mut probe = probe_last_byte.clone();
-                probe.extend(&acc);
-                probe.push(last_byte);
+            if cypher_probe_first_block == cypher_original_minus_one_current_block {
+                acc.push(last_byte);
 
-                assert_eq!(probe.len_bytes(), block_size, "block has wrong size");
+                assert_eq!(current_position, acc.len_bytes() - 1);
 
-                let cypher = aes_encryption_oracle_new(&probe);
-                let first_block_cypher = cypher
-                    .to_bytes()
-                    .skip_n_as_collection(skipped_bytes)
-                    .unwrap()
-                    .take_n_as_collection(block_size)
-                    .unwrap();
+                println!(
+                    "  {:02}/{:02}  |{:16}|",
+                    block_index,
+                    current_position,
+                    acc.to_codepage_1252()
+                );
 
-                if first_block_cypher == first_block_cypher_minus_one {
-                    acc.push(last_byte);
-                    assert_eq!(acc.len_bytes(), n);
-                    println!("  {:02}/{:02}  {}", block_index, n, acc.to_codepage_1252());
-
-                    break;
-                }
+                break;
             }
+        }
 
-            acc
-        });
-
-    plain_part
+        acc
+    })
 }
 
 fn aes_encryption_oracle_new(plain: &BytesType) -> BlockBytes {

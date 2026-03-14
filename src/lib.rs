@@ -1,5 +1,6 @@
 pub mod constants;
 pub mod crypto_vecs;
+pub mod oracles;
 
 // ----------------
 

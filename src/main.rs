@@ -4,11 +4,12 @@
 
 use std::fs;
 
-use cryptopals::constants;
 use cryptopals::crypto_vecs::traits::{
-    FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes, ToBytes,
+    EncryptionOracle, FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
+    ToBytes,
 };
 use cryptopals::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, UnicodeType};
+use cryptopals::{constants, oracles};
 use rand::rand_core::block;
 use rayon::str::Bytes;
 
@@ -22,9 +23,22 @@ fn main() {
 
 // Byte-at-a-time ECB decryption (Simple)
 fn challenge_12() {
-    let padding_until_next_block = find_padding_to_next_block_using_encryption_oracle(0).unwrap();
+    let oracle = oracles::AesSuffixEncryption::new_bits(
+        128,
+        BytesType::from_base64_literal(
+            "\
+            Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg
+            aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
+            dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg
+            YnkK",
+        ),
+    );
+
+    let padding_until_next_block =
+        find_padding_to_next_block_using_encryption_oracle(&oracle, 0).unwrap();
     let block_size =
-        find_padding_to_next_block_using_encryption_oracle(padding_until_next_block).unwrap();
+        find_padding_to_next_block_using_encryption_oracle(&oracle, padding_until_next_block)
+            .unwrap();
 
     let ecb_probe = BytesType::from_unicode_literal(&"Detector".repeat(6));
     let aes_mode = cryptopals::detect_aes_mode(&ecb_probe.to_blocks(block_size));
@@ -36,7 +50,7 @@ fn challenge_12() {
     println!("Detected block size:  {}", block_size);
     println!("Detected AES mode:    {}", aes_mode);
 
-    let cypher_without_probe = aes_encryption_oracle_new(&Default::default());
+    let cypher_without_probe = oracle.encrypt(&Default::default()).unwrap();
 
     println!();
     println!("Decrypting using oracle ...");
@@ -45,6 +59,7 @@ fn challenge_12() {
         BytesType::default(),
         |mut acc, block_index| {
             acc.extend(decypher_block_using_encryption_oracle(
+                &oracle,
                 &acc,
                 block_index,
                 block_size,
@@ -61,19 +76,22 @@ fn challenge_12() {
     println!("{}", plain.to_unicode().as_ref());
 }
 
-fn find_padding_to_next_block_using_encryption_oracle(padding_size: usize) -> Option<usize> {
+fn find_padding_to_next_block_using_encryption_oracle(
+    oracle: &oracles::AesSuffixEncryption,
+    padding_size: usize,
+) -> Option<usize> {
     let mut probe = BytesType::default();
 
     if padding_size > 0 {
         probe.extend(vec![b'A'; padding_size]);
     }
 
-    let cypher_length_original = aes_encryption_oracle_new(&probe).len_bytes();
+    let cypher_length_original = oracle.encrypt(&probe).unwrap().len_bytes();
 
     for padding_length in (1..) {
         probe.push(b'A');
 
-        let cypher_length_with_probe = aes_encryption_oracle_new(&probe).len_bytes();
+        let cypher_length_with_probe = oracle.encrypt(&probe).unwrap().len_bytes();
 
         if cypher_length_with_probe > cypher_length_original {
             return Some(padding_length);
@@ -84,6 +102,7 @@ fn find_padding_to_next_block_using_encryption_oracle(padding_size: usize) -> Op
 }
 
 fn decypher_block_using_encryption_oracle(
+    oracle: &oracles::AesSuffixEncryption,
     plain_part: &BytesType,
     block_index: usize,
     block_size: usize,
@@ -100,7 +119,7 @@ fn decypher_block_using_encryption_oracle(
 
         let mut probe_last_byte =
             BytesType::from_unicode_literal(&"A".repeat(block_size - current_position - 1));
-        let cypher_original_minus_one = aes_encryption_oracle_new(&probe_last_byte).to_bytes();
+        let cypher_original_minus_one = oracle.encrypt(&probe_last_byte).unwrap().to_bytes();
 
         let cypher_original_minus_one_current_block = cypher_original_minus_one
             .skip_n_as_collection(skipped_bytes)
@@ -120,7 +139,7 @@ fn decypher_block_using_encryption_oracle(
                 "block has wrong size"
             );
 
-            let cypher_probe = aes_encryption_oracle_new(&probe).to_bytes();
+            let cypher_probe = oracle.encrypt(&probe).unwrap().to_bytes();
             let cypher_probe_first_block = cypher_probe
                 .skip_n_as_collection(skipped_bytes)
                 .unwrap()
@@ -145,26 +164,6 @@ fn decypher_block_using_encryption_oracle(
 
         acc
     })
-}
-
-fn aes_encryption_oracle_new(plain: &BytesType) -> BlockBytes {
-    let block_size_bits = 128;
-
-    // this is not efficient, but well hidden, and that is the main point here
-    let plain_secret = BytesType::from_base64_literal(
-        "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg
-        aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq
-        dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg
-        YnkK",
-    );
-
-    let mut plain_appended = plain.clone();
-    plain_appended.extend(plain_secret);
-
-    let plain_appended_blocks = plain_appended.to_blocks_bits(block_size_bits);
-    let key = BytesType::from_hex_literal("90405f56 52d48857 e932db66 8b526fd2");
-
-    plain_appended_blocks.aes_ecb_encrypt(&key).unwrap()
 }
 
 // ----------------

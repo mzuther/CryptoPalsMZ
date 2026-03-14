@@ -1,6 +1,6 @@
 use std::slice;
 
-use crate::crypto_vecs::{self, Base64Type, BytesType, HexadecimalType, UnicodeType};
+use crate::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType};
 
 // ================
 
@@ -171,4 +171,10 @@ pub trait ToBytes {
     fn to_unicode(&self) -> self::UnicodeType {
         self::UnicodeType::from(&self.to_bytes())
     }
+}
+
+// ================
+
+pub trait EncryptionOracle {
+    fn encrypt(&self, plain: &BytesType) -> Result<BlockBytes, String>;
 }

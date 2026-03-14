@@ -1,8 +1,9 @@
 use rayon::prelude::*;
 use std::fs;
 
-use cryptopals::crypto_vecs::traits::ToBytes;
+use cryptopals::crypto_vecs::traits::{EncryptionOracle, ToBytes};
 use cryptopals::crypto_vecs::{BytesType, UnicodeType};
+use cryptopals::oracles;
 
 // ================
 
@@ -69,11 +70,14 @@ fn integration_challenge_11() {
         .fold(
             || String::default(),
             |mut acc, _| {
-                let (encryption_mode, cypher) =
-                    cryptopals::aes_encryption_oracle(&plain, block_size_bits);
+                let oracle_response =
+                    oracles::AesEcbDetection::new_bits(block_size_bits).encrypt(plain.clone());
+
+                let cypher = oracle_response.unwrap();
+                let encryption_mode = oracle_response.unwrap_hint();
                 let detected_mode = cryptopals::detect_aes_mode(&cypher);
 
-                if encryption_mode != detected_mode {
+                if *encryption_mode != detected_mode {
                     let error_message = format!("* {} != {}\n", encryption_mode, detected_mode);
 
                     acc.push_str(&error_message);

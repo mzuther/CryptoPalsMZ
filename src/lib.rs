@@ -4,7 +4,6 @@ pub mod oracles;
 
 // ----------------
 
-use rand::prelude::*;
 use std::{cmp, collections::HashMap, ops::Range};
 
 use crate::crypto_vecs::traits::{LenBytes, ToBytes};
@@ -305,32 +304,6 @@ fn transpose_strings_internal(strings: &[String], reverse_transposition: bool) -
 }
 
 // ----------------
-
-pub fn aes_encryption_oracle(
-    plain: &BytesType,
-    block_size_bits: usize,
-) -> (constants::AesMode, BlockBytes) {
-    let mut rng = rand::rng();
-
-    let plain_padded = plain.affix_garbage(rng.random_range(5..=10), rng.random_range(5..=10));
-    let plain_padded_blocks = plain_padded.to_blocks_bits(block_size_bits);
-    let key = BytesType::create_random_key_bits(block_size_bits);
-
-    // create ECB in 50% of the cases
-    if rng.random() {
-        let cypher_blocks = plain_padded_blocks.aes_ecb_encrypt(&key).unwrap();
-
-        (constants::AesMode::ECB, cypher_blocks)
-    } else {
-        let initialization_vector = BytesType::create_random_key_bits(block_size_bits);
-
-        let cypher_blocks = plain_padded_blocks
-            .aes_cbc_encrypt(&key, &initialization_vector)
-            .unwrap();
-
-        (constants::AesMode::NonECB, cypher_blocks)
-    }
-}
 
 // TODO: implement "skip_n_as_collection()" for "BlockBytes"
 pub fn detect_aes_mode(cypher_blocks: &BlockBytes) -> constants::AesMode {

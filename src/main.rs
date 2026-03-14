@@ -23,7 +23,7 @@ fn main() {
 
 // Byte-at-a-time ECB decryption (Simple)
 fn challenge_12() {
-    let oracle = oracles::AesSuffixEncryption::new_bits(
+    let oracle = oracles::AesEcbSuffix::new_bits(
         128,
         BytesType::from_base64_literal(
             "\
@@ -75,7 +75,7 @@ fn challenge_12() {
 }
 
 fn find_padding_to_next_block_via_oracle(
-    oracle: &oracles::AesSuffixEncryption,
+    oracle: &oracles::AesEcbSuffix,
     padding_size: usize,
 ) -> Option<usize> {
     let mut probe = BytesType::default();
@@ -100,7 +100,7 @@ fn find_padding_to_next_block_via_oracle(
 }
 
 fn decypher_block_via_oracle(
-    oracle: &oracles::AesSuffixEncryption,
+    oracle: &oracles::AesEcbSuffix,
     plain_part: &BytesType,
     block_index: usize,
     block_size: usize,

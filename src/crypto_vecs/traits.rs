@@ -83,13 +83,24 @@ where
         }
     }
 
-    fn last_n(&self, length: usize) -> Option<&[Self::Element]> {
+    fn rtake_n(&self, length: usize) -> Option<&[Self::Element]> {
         if self.len_bytes() <= length {
             Some(self.as_slice())
         } else {
             self.rchunks(length).next()
         }
     }
+
+    fn rskip_n(&self, length: usize) -> Option<&[Self::Element]> {
+        if length == 0 {
+            Some(self.as_slice())
+        } else if length >= self.len_bytes() {
+            None
+        } else {
+            self.chunks(self.len_bytes() - length).next()
+        }
+    }
+
 }
 
 pub trait InternalDataVecMut {

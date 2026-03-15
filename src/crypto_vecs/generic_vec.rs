@@ -346,8 +346,12 @@ where
         self.skip_n(length).map(|x| Self::new_from(x.to_vec()))
     }
 
-    pub fn last_n_as_collection(&self, length: usize) -> Option<Self> {
-        self.last_n(length).map(|x| Self::new_from(x.to_vec()))
+    pub fn rtake_n_as_collection(&self, length: usize) -> Option<Self> {
+        self.rtake_n(length).map(|x| Self::new_from(x.to_vec()))
+    }
+
+    pub fn rskip_n_as_collection(&self, length: usize) -> Option<Self> {
+        self.rskip_n(length).map(|x| Self::new_from(x.to_vec()))
     }
 
     // clone of underlying vec

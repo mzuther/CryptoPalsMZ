@@ -229,15 +229,19 @@ impl self::BlockBytes {
     }
 
     pub fn rtake_n_as_collection(&mut self, length: usize) -> Option<Self> {
-        let bytes_to_skip = self.len_bytes() - length;
-
-        self.skip_n_as_collection(bytes_to_skip)
+        Some(
+            self.to_bytes()
+                .rtake_n_as_collection(length)?
+                .to_blocks(self.get_block_size()),
+        )
     }
 
     pub fn rskip_n_as_collection(&mut self, length: usize) -> Option<Self> {
-        let bytes_to_keep = self.len_bytes() - length;
-
-        self.take_n_as_collection(bytes_to_keep)
+        Some(
+            self.to_bytes()
+                .rskip_n_as_collection(length)?
+                .to_blocks(self.get_block_size()),
+        )
     }
 
     // ----------------

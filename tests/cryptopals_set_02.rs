@@ -49,7 +49,7 @@ fn integration_challenge_10() {
     assert_eq!(result_start, expected_result_start);
 
     let expected_result_end = BytesType::from_unicode_literal("Play that funky music \n");
-    let result_end = plain.last_n_as_collection(23).unwrap();
+    let result_end = plain.rtake_n_as_collection(23).unwrap();
 
     assert_eq!(result_end, expected_result_end);
 }

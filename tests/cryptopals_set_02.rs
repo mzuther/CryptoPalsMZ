@@ -2,7 +2,7 @@ use rayon::prelude::*;
 use std::fs;
 
 use cryptopals::crypto_vecs::traits::{EncryptionOracle, ToBytes};
-use cryptopals::crypto_vecs::{self, BytesType, UnicodeType};
+use cryptopals::crypto_vecs::{self, BlockBytes, BytesType, UnicodeType};
 use cryptopals::{constants, oracles};
 
 // ================
@@ -141,17 +141,21 @@ Did you stop? No, I just drove by\n\x01",
         .number_of_blocks();
 
     // decypher block by block
-    let result =
-        (0..blocks_in_cypher).fold(BytesType::default(), |mut acc, current_block_index| {
-            acc.extend(cryptopals::decypher_block_via_oracle(
-                &oracle,
-                &acc,
-                detected_block_size,
-                current_block_index,
-            ));
+    let result = (0..blocks_in_cypher)
+        .fold(
+            BlockBytes::new(detected_block_size),
+            |mut acc, current_block_index| {
+                acc.push(cryptopals::decypher_block_via_oracle(
+                    &oracle,
+                    &acc,
+                    detected_block_size,
+                    current_block_index,
+                ));
 
-            acc
-        });
+                acc
+            },
+        )
+        .to_bytes();
 
     assert_eq!(result, expected_result);
 }

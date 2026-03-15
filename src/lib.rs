@@ -6,7 +6,7 @@ pub mod oracles;
 
 use std::{cmp, collections::HashMap, ops};
 
-use crate::crypto_vecs::traits::{EncryptionOracle, InternalDataVec, InternalDataVecMut, LenBytes};
+use crate::crypto_vecs::traits::{EncryptionOracle, InternalDataVec, InternalDataVecMut, LenBytes, ToBytes};
 use crate::crypto_vecs::{BlockBytes, BytesType};
 
 // ================
@@ -316,7 +316,7 @@ pub fn detect_aes_mode(cypher_blocks: &BlockBytes) -> constants::AesMode {
 
 pub fn decypher_block_via_oracle(
     oracle: &oracles::AesEcbSuffix,
-    plain_part: &BytesType,
+    plain_part: &BlockBytes,
     block_size: usize,
     current_block_index: usize,
 ) -> BytesType {
@@ -340,7 +340,7 @@ pub fn decypher_block_via_oracle(
             .take_n_as_collection(block_size)
             .unwrap();
 
-        probe_padding_and_plain.extend(plain_part);
+        probe_padding_and_plain.extend(plain_part.to_bytes());
         probe_padding_and_plain.extend(&acc);
 
         // detect plaintext byte by changing last byte of probe

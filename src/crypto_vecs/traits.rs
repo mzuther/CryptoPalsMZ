@@ -181,6 +181,12 @@ pub trait EncryptionOracle<H> {
 
     // ----------------
 
+    fn encrypt_blocks(&self, plain: BlockBytes) -> oracles::OracleResponse<BlockBytes, H> {
+        self.encrypt(plain.to_bytes())
+    }
+
+    // ----------------
+
     fn bytes_missing_in_last_block(&self, pre_padding_size: usize) -> Result<usize, String> {
         let mut probe = BytesType::default();
 

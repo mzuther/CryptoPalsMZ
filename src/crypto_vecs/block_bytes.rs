@@ -210,21 +210,34 @@ impl self::BlockBytes {
         );
     }
 
-    pub fn drop_from_last_block(&mut self, number_of_bytes: usize) {
-        let last_block_size = self.get_last_block_size();
+    // ----------------
 
-        assert!(
-            number_of_bytes < last_block_size,
-            "cannot drop {} bytes, has only {} bytes",
-            number_of_bytes,
-            last_block_size
-        );
+    pub fn take_n_as_collection(&self, length: usize) -> Option<Self> {
+        Some(
+            self.to_bytes()
+                .take_n_as_collection(length)?
+                .to_blocks(self.get_block_size()),
+        )
+    }
 
-        let last_block = self.get_last_block_mut();
+    pub fn skip_n_as_collection(&self, length: usize) -> Option<Self> {
+        Some(
+            self.to_bytes()
+                .skip_n_as_collection(length)?
+                .to_blocks(self.get_block_size()),
+        )
+    }
 
-        *last_block = last_block
-            .take_n_as_collection(last_block_size - number_of_bytes)
-            .expect("block length has been asserted above");
+    pub fn rtake_n_as_collection(&mut self, length: usize) -> Option<Self> {
+        let bytes_to_skip = self.len_bytes() - length;
+
+        self.skip_n_as_collection(bytes_to_skip)
+    }
+
+    pub fn rskip_n_as_collection(&mut self, length: usize) -> Option<Self> {
+        let bytes_to_keep = self.len_bytes() - length;
+
+        self.take_n_as_collection(bytes_to_keep)
     }
 
     // ----------------
@@ -367,11 +380,12 @@ impl self::BlockBytes {
 
                 if padding_length == self.get_block_size() {
                     unpadded.pop();
+                    Ok(unpadded)
                 } else {
-                    unpadded.drop_from_last_block(padding_length);
+                    Ok(unpadded
+                        .rskip_n_as_collection(padding_length)
+                        .expect("validity of padding length checked by match statement"))
                 }
-
-                Ok(unpadded)
             }
             Err(_) => Err(String::from("invalid PKCS#7 padding")),
         }

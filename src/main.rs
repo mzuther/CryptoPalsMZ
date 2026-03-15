@@ -50,12 +50,12 @@ fn challenge_12() {
     println!();
     println!("Decrypting using oracle ...");
 
-    let plain = (0..blocks_in_cypher).fold(BytesType::default(), |mut acc, block_index| {
+    let plain = (0..blocks_in_cypher).fold(BytesType::default(), |mut acc, current_block_index| {
         acc.extend(decypher_block_via_oracle(
             &oracle,
             &acc,
-            block_index,
             block_size,
+            current_block_index,
         ));
 
         acc
@@ -71,24 +71,25 @@ fn challenge_12() {
 fn decypher_block_via_oracle(
     oracle: &oracles::AesEcbSuffix,
     plain_part: &BytesType,
-    block_index: usize,
     block_size: usize,
+    current_block_index: usize,
 ) -> BytesType {
     println!();
 
-    let skipped_bytes = block_index * block_size;
+    let skipped_bytes = block_size * current_block_index;
 
     (0..block_size).fold(BytesType::default(), |mut acc, current_position| {
-        // no more cyphertext
+        // no cyphertext left
         if current_position > acc.len_bytes() {
             return acc;
         }
 
         let mut probe_last_byte =
-            BytesType::from_unicode_literal(&"A".repeat(block_size - current_position - 1));
-        let cypher_original_minus_one = oracle.encrypt(probe_last_byte.clone()).unwrap().to_bytes();
+            BytesType::new_from(vec![b'A'; block_size - current_position - 1]);
 
-        let cypher_original_minus_one_current_block = cypher_original_minus_one
+        let cypher_original_minus_one_current_block = oracle
+            .encrypt(probe_last_byte.clone())
+            .unwrap()
             .skip_n_as_collection(skipped_bytes)
             .unwrap()
             .take_n_as_collection(block_size)
@@ -106,8 +107,9 @@ fn decypher_block_via_oracle(
                 "block has wrong size"
             );
 
-            let cypher_probe = oracle.encrypt(probe).unwrap().to_bytes();
-            let cypher_probe_first_block = cypher_probe
+            let cypher_probe_first_block = oracle
+                .encrypt(probe)
+                .unwrap()
                 .skip_n_as_collection(skipped_bytes)
                 .unwrap()
                 .take_n_as_collection(block_size)
@@ -120,7 +122,7 @@ fn decypher_block_via_oracle(
 
                 println!(
                     "  {:02}/{:02}  |{:16}|",
-                    block_index,
+                    current_block_index,
                     current_position,
                     acc.to_codepage_1252()
                 );

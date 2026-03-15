@@ -6,7 +6,7 @@ pub mod oracles;
 
 use std::{cmp, collections::HashMap, ops};
 
-use crate::crypto_vecs::traits::{LenBytes, ToBytes};
+use crate::crypto_vecs::traits::LenBytes;
 use crate::crypto_vecs::{BlockBytes, BytesType};
 
 // ================
@@ -298,17 +298,12 @@ fn transpose_strings_internal(strings: &[String], reverse_transposition: bool) -
 
 // ----------------
 
-// TODO: implement "skip_n_as_collection()" for "BlockBytes"
 pub fn detect_aes_mode(cypher_blocks: &BlockBytes) -> constants::AesMode {
     let block_size = cypher_blocks.get_block_size();
 
-    // remove any possible padding before detection
+    // remove padding of any possible length before detection
     for skipped_bytes in 0..block_size {
-        let cypher_truncated = cypher_blocks
-            .to_bytes()
-            .skip_n_as_collection(skipped_bytes)
-            .unwrap_or_default()
-            .to_blocks(block_size);
+        let cypher_truncated = cypher_blocks.skip_n_as_collection(skipped_bytes).unwrap();
 
         // detect repetitive blocks
         if cypher_truncated.find_duplicate_blocks().number_of_blocks() > 0 {

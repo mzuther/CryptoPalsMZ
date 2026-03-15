@@ -178,4 +178,41 @@ pub trait ToBytes {
 
 pub trait EncryptionOracle<H> {
     fn encrypt(&self, plain: BytesType) -> oracles::OracleResponse<BlockBytes, H>;
+
+    // ----------------
+
+    fn bytes_missing_in_last_block(&self, pre_padding_size: usize) -> Result<usize, String> {
+        let mut probe = BytesType::default();
+
+        if pre_padding_size > 0 {
+            probe.extend(vec![b'A'; pre_padding_size]);
+        }
+
+        let original_length = self.encrypt(probe.clone()).unwrap().len_bytes();
+
+        // start from 1 as we immediately append a byte to the probe;
+        // exit after 1024 bytes of padding to prevent eternal loop
+        for padding_length in 1..1024 {
+            probe.push(b'A');
+
+            match self.encrypt(probe.clone()).response() {
+                Ok(cypher_with_padding) => {
+                    // new block was added by encryptor
+                    if cypher_with_padding.len_bytes() > original_length {
+                        return Ok(padding_length);
+                    }
+                }
+                Err(e) => return Err(e.clone()),
+            };
+        }
+
+        Err("could not detect padding".to_string())
+    }
+
+    fn detect_block_size(&self) -> Result<usize, String> {
+        // ensure last block is full before detecting block size
+        let pre_padding_size = self.bytes_missing_in_last_block(0)?;
+
+        self.bytes_missing_in_last_block(pre_padding_size)
+    }
 }

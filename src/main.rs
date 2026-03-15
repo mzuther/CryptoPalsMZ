@@ -34,17 +34,13 @@ fn challenge_12() {
         ),
     );
 
-    let padding_until_next_block = find_padding_to_next_block_via_oracle(&oracle, 0).unwrap();
-    let block_size =
-        find_padding_to_next_block_via_oracle(&oracle, padding_until_next_block).unwrap();
-
+    let block_size = oracle.detect_block_size().unwrap();
     let ecb_probe = BytesType::from_unicode_literal(&"Detector".repeat(6));
     let aes_mode = cryptopals::detect_aes_mode(&ecb_probe.to_blocks(block_size));
 
     assert_eq!(aes_mode, constants::AesMode::ECB);
 
     println!();
-    println!("Detected padding:     {}", padding_until_next_block);
     println!("Detected block size:  {}", block_size);
     println!("Detected AES mode:    {}", aes_mode);
 
@@ -70,37 +66,6 @@ fn challenge_12() {
 
     println!();
     println!("{}", plain.to_unicode().as_ref());
-}
-
-fn find_padding_to_next_block_via_oracle(
-    oracle: &oracles::AesEcbSuffix,
-    pre_padding_size: usize,
-) -> Result<usize, String> {
-    let mut probe = BytesType::default();
-
-    if pre_padding_size > 0 {
-        probe.extend(vec![b'A'; pre_padding_size]);
-    }
-
-    let cypher_length = oracle.encrypt(probe.clone()).unwrap().len_bytes();
-
-    // start from length 1 as we immediately append a byte; exit after
-    // 1024 bytes of padding
-    for padding_length in (1..1024) {
-        probe.push(b'A');
-
-        match oracle.encrypt(probe.clone()).response() {
-            Ok(cypher) => {
-                // new block was added by PKCS#7
-                if cypher.len_bytes() > cypher_length {
-                    return Ok(padding_length);
-                }
-            }
-            Err(e) => return Err(e.clone()),
-        };
-    }
-
-    Err("could not detect padding".to_string())
 }
 
 fn decypher_block_via_oracle(

@@ -6,7 +6,7 @@ pub mod oracles;
 
 use std::{cmp, collections::HashMap, ops};
 
-use crate::crypto_vecs::traits::LenBytes;
+use crate::crypto_vecs::traits::{EncryptionOracle, InternalDataVec, InternalDataVecMut, LenBytes};
 use crate::crypto_vecs::{BlockBytes, BytesType};
 
 // ================
@@ -312,6 +312,59 @@ pub fn detect_aes_mode(cypher_blocks: &BlockBytes) -> constants::AesMode {
     }
 
     constants::AesMode::NonECB
+}
+
+pub fn decypher_block_via_oracle(
+    oracle: &oracles::AesEcbSuffix,
+    plain_part: &BytesType,
+    block_size: usize,
+    current_block_index: usize,
+) -> BytesType {
+    let bytes_to_skip = block_size * current_block_index;
+
+    // iterate over bytes of block
+    (0..block_size).fold(BytesType::default(), |mut acc, current_position| {
+        // no cyphertext left
+        if current_position > acc.len_bytes() {
+            return acc;
+        }
+
+        let probe_padding = BytesType::new_from(vec![b'A'; block_size - current_position - 1]);
+        let mut probe_padding_and_plain = probe_padding.clone();
+
+        let cypher_block_padding = oracle
+            .encrypt(probe_padding)
+            .unwrap()
+            .skip_n_as_collection(bytes_to_skip)
+            .unwrap()
+            .take_n_as_collection(block_size)
+            .unwrap();
+
+        probe_padding_and_plain.extend(plain_part);
+        probe_padding_and_plain.extend(&acc);
+
+        // detect plaintext byte by changing last byte of probe
+        for last_byte in 0x00..=0xff {
+            let mut probe_current = probe_padding_and_plain.clone();
+            probe_current.push(last_byte);
+
+            let cypher_block_current = oracle
+                .encrypt(probe_current)
+                .unwrap()
+                .skip_n_as_collection(bytes_to_skip)
+                .unwrap()
+                .take_n_as_collection(block_size)
+                .unwrap();
+
+            if cypher_block_current == cypher_block_padding {
+                acc.push(last_byte);
+
+                break;
+            }
+        }
+
+        acc
+    })
 }
 
 // ================

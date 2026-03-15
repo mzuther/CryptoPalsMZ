@@ -95,6 +95,7 @@ dependencies = [
  "rand",
  "rayon",
  "regex",
+ "serde_json",
 ]
 
 [[package]]

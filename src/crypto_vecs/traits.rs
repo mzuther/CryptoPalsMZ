@@ -216,3 +216,9 @@ pub trait EncryptionOracle<H> {
         self.bytes_missing_in_last_block(pre_padding_size)
     }
 }
+
+// ----------------
+
+pub trait DecryptionOracle<R, H> {
+    fn decrypt(&self, cypher: &BytesType) -> oracles::OracleResponse<R, H>;
+}

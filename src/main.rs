@@ -5,8 +5,8 @@
 use std::fs;
 
 use cryptopals::crypto_vecs::traits::{
-    EncryptionOracle, FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
-    ToBytes,
+    DecryptionOracle, EncryptionOracle, FromBytes, InternalData, InternalDataVec,
+    InternalDataVecMut, LenBytes, ToBytes,
 };
 use cryptopals::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, UnicodeType};
 use cryptopals::{constants, oracles};
@@ -16,7 +16,35 @@ use rayon::str::Bytes;
 // ================
 
 fn main() {
-    challenge_06();
+    challenge_13();
+}
+
+// ----------------
+
+// ECB cut-and-paste
+fn challenge_13() {
+    let block_size_bits = 128;
+
+    let oracle = oracles::AesEcbCookieCutter::new_bits(block_size_bits);
+
+    let email_address = "foo@bar.com";
+    let cypher = oracle
+        .encrypt(BytesType::from_unicode_literal(email_address))
+        .unwrap()
+        .to_bytes();
+
+    println!();
+    println!("cypher:\n{}", cypher);
+
+    let plain = oracle.decrypt(&cypher);
+    let plain_cookie = plain.unwrap().to_bytes().to_codepage_1252();
+    let plain_parsed = oracle.parse_key_value_cookie(&plain_cookie);
+
+    println!();
+    println!("plain:\n{}", plain_cookie);
+    println!("\n{:#}", plain_parsed.unwrap());
+
+    println!();
 }
 
 // ----------------

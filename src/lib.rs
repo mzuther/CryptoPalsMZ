@@ -6,7 +6,9 @@ pub mod oracles;
 
 use std::{cmp, collections::HashMap, ops};
 
-use crate::crypto_vecs::traits::{EncryptionOracle, InternalDataVec, InternalDataVecMut, LenBytes, ToBytes};
+use crate::crypto_vecs::traits::{
+    EncryptionOracle, InternalDataVec, InternalDataVecMut, LenBytes, ToBytes,
+};
 use crate::crypto_vecs::{BlockBytes, BytesType};
 
 // ================
@@ -321,6 +323,7 @@ pub fn decypher_block_via_oracle(
     current_block_index: usize,
 ) -> BytesType {
     let bytes_to_skip = block_size * current_block_index;
+    let mut current_pkcs7_byte = None;
 
     // iterate over bytes of block
     (0..block_size).fold(BytesType::default(), |mut acc, current_position| {
@@ -330,36 +333,69 @@ pub fn decypher_block_via_oracle(
         }
 
         let probe_padding = BytesType::new_from(vec![b'A'; block_size - current_position - 1]);
-        let mut probe_padding_and_plain = probe_padding.clone();
 
         let cypher_block_padding = oracle
-            .encrypt(probe_padding)
+            .encrypt(probe_padding.clone())
             .unwrap()
             .skip_n_as_collection(bytes_to_skip)
             .unwrap()
             .take_n_as_collection(block_size)
             .unwrap();
 
-        probe_padding_and_plain.extend(plain_part.to_bytes());
-        probe_padding_and_plain.extend(&acc);
+        let mut run_loop = true;
 
-        // detect plaintext byte by changing last byte of probe
-        for last_byte in 0x00..=0xff {
-            let mut probe_current = probe_padding_and_plain.clone();
-            probe_current.push(last_byte);
+        while run_loop {
+            run_loop = false;
 
-            let cypher_block_current = oracle
-                .encrypt(probe_current)
-                .unwrap()
-                .skip_n_as_collection(bytes_to_skip)
-                .unwrap()
-                .take_n_as_collection(block_size)
-                .unwrap();
+            // detect plaintext byte by changing last byte of probe
+            if let Some(padding_size) = current_pkcs7_byte {
+                // remove padding from last iteration (e.g. "0x02 0x02"), as it
+                // will interfere with detection in the current iteration
+                acc = acc
+                    .rskip_n_as_collection(padding_size)
+                    .expect("detected PKCS#7 incorrectly");
 
-            if cypher_block_current == cypher_block_padding {
-                acc.push(last_byte);
+                // correct padding for this iteration (e.g. "0x03 0x03")
+                let new_padding_size = padding_size + 1;
+                current_pkcs7_byte = Some(new_padding_size);
 
-                break;
+                // add correct padding, but one byte short to allow detection
+                // of last byte
+                acc.extend(vec![new_padding_size as u8; new_padding_size - 1]);
+            }
+
+            let mut probe_padding_and_plain = probe_padding.clone();
+            probe_padding_and_plain.extend(plain_part.to_bytes());
+            probe_padding_and_plain.extend(&acc);
+
+            let mut byte_detected = false;
+
+            // detect plaintext byte by changing last byte of probe
+            for last_byte in 0x00..=0xff {
+                let mut probe_current = probe_padding_and_plain.clone();
+                probe_current.push(last_byte);
+
+                let cypher_block_current = oracle
+                    .encrypt(probe_current)
+                    .unwrap()
+                    .skip_n_as_collection(bytes_to_skip)
+                    .unwrap()
+                    .take_n_as_collection(block_size)
+                    .unwrap();
+
+                if cypher_block_current == cypher_block_padding {
+                    byte_detected = true;
+
+                    acc.push(last_byte);
+                    break;
+                }
+            }
+
+            if !byte_detected && current_pkcs7_byte.is_none() {
+                // re-run and try to detect PKCS#7
+                current_pkcs7_byte = Some(1);
+
+                run_loop = true;
             }
         }
 

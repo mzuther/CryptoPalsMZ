@@ -120,7 +120,7 @@ fn integration_challenge_12() {
         "Rollin' in my 5.0
 With my rag-top down so my hair can blow
 The girlies on standby waving just to say hi
-Did you stop? No, I just drove by\n\x01",
+Did you stop? No, I just drove by\n",
     );
 
     let detected_block_size = oracle.detect_block_size().unwrap();
@@ -155,6 +155,8 @@ Did you stop? No, I just drove by\n\x01",
                 acc
             },
         )
+        .unpad_pkcs7()
+        .unwrap()
         .to_bytes();
 
     assert_eq!(result, expected_result);

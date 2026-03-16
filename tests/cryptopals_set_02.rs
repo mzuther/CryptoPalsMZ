@@ -2,8 +2,8 @@ use rayon::prelude::*;
 use std::fs;
 
 use cryptopals::crypto_vecs::traits::{EncryptionOracle, ToBytes};
-use cryptopals::crypto_vecs::{self, BlockBytes, BytesType, UnicodeType};
-use cryptopals::{constants, oracles};
+use cryptopals::crypto_vecs::{BytesType, UnicodeType};
+use cryptopals::oracles;
 
 // ================
 
@@ -103,10 +103,8 @@ fn integration_challenge_11() {
 // Byte-at-a-time ECB decryption (Simple)
 #[test]
 fn integration_challenge_12() {
-    let block_size_bits = 128;
-
     let oracle = oracles::AesEcbSuffix::new_bits(
-        block_size_bits,
+        128,
         BytesType::from_base64_literal(
             "\
             Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkg
@@ -123,38 +121,7 @@ The girlies on standby waving just to say hi
 Did you stop? No, I just drove by\n",
     );
 
-    let detected_block_size = oracle.detect_block_size().unwrap();
-
-    assert_eq!(
-        detected_block_size,
-        crypto_vecs::bits_to_bytes(block_size_bits)
-    );
-
-    let ecb_probe = BytesType::from_unicode_literal(&"Detector".repeat(6));
-    let aes_mode = cryptopals::detect_aes_mode(&ecb_probe.to_blocks(detected_block_size));
-
-    assert_eq!(aes_mode, constants::AesMode::ECB);
-
-    let blocks_in_cypher = oracle
-        .encrypt(Default::default())
-        .unwrap()
-        .number_of_blocks();
-
-    // decypher block by block
-    let result = (0..blocks_in_cypher)
-        .fold(
-            BlockBytes::new(detected_block_size),
-            |mut acc, current_block_index| {
-                acc.push(cryptopals::decypher_block_via_oracle(
-                    &oracle,
-                    &acc,
-                    detected_block_size,
-                    current_block_index,
-                ));
-
-                acc
-            },
-        )
+    let result = cryptopals::decypher_aes_ecb_via_oracle(&oracle)
         .unpad_pkcs7()
         .unwrap()
         .to_bytes();

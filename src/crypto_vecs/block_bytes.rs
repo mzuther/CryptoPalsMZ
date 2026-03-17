@@ -146,6 +146,10 @@ impl self::BlockBytes {
         self.blocks.to_vec()
     }
 
+    fn get_nth_block(&self, n: usize) -> Option<&BytesType> {
+        self.blocks.get(n)
+    }
+
     fn get_last_block(&self) -> &BytesType {
         self.iter().last().expect("BlockBytes must not be empty")
     }
@@ -275,6 +279,28 @@ impl self::BlockBytes {
             },
         )
     }
+
+    pub fn find_changed_blocks(&self, other: &Self) -> Vec<usize> {
+        assert_eq!(
+            self.get_block_size(),
+            other.get_block_size(),
+            "block sizes differ: {} and {}",
+            self.get_block_size(),
+            other.get_block_size()
+        );
+
+        let number_of_blocks = self.number_of_blocks().max(other.number_of_blocks());
+
+        (0..number_of_blocks).fold(Vec::default(), |mut acc, index| {
+            if self.get_nth_block(index) != other.get_nth_block(index) {
+                acc.push(index)
+            }
+
+            acc
+        })
+    }
+
+    // ----------------
 
     // normalized Hamming distance, averaged by number of calculations
     //
@@ -663,6 +689,101 @@ mod tests {
         let expected_result = self::BlockBytes::new(block_size);
 
         let result = block_bytes.find_duplicate_blocks();
+
+        assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_blockbytes_find_changed_blocks() {
+        let block_size = 4;
+
+        let block_bytes = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+            .to_blocks(block_size);
+        let block_other = BytesType::from_hex_literal("00000000 d4cbd0aa ffffffff 3a1b7e49")
+            .to_blocks(block_size);
+
+        let expected_result = vec![0, 2];
+
+        let result = block_bytes.find_changed_blocks(&block_other);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_blockbytes_find_changed_blocks_identical() {
+        let block_size = 4;
+
+        let block_bytes = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+            .to_blocks(block_size);
+        let block_other = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+            .to_blocks(block_size);
+
+        let expected_result = Vec::<usize>::default();
+
+        let result = block_bytes.find_changed_blocks(&block_other);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_blockbytes_find_changed_blocks_empty() {
+        let block_size = 4;
+
+        let block_bytes = BytesType::default().to_blocks(block_size);
+        let block_other = BytesType::default().to_blocks(block_size);
+
+        let expected_result = Vec::<usize>::default();
+
+        let result = block_bytes.find_changed_blocks(&block_other);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_blockbytes_find_changed_blocks_missing_bytes() {
+        let block_size = 4;
+
+        let block_bytes = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+            .to_blocks(block_size);
+        let block_other =
+            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b").to_blocks(block_size);
+
+        let expected_result = vec![3];
+
+        let result = block_bytes.find_changed_blocks(&block_other);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_blockbytes_find_changed_blocks_longer() {
+        let block_size = 4;
+
+        let block_bytes = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+            .to_blocks(block_size);
+        let block_other = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa").to_blocks(block_size);
+
+        let expected_result = vec![2, 3];
+
+        let result = block_bytes.find_changed_blocks(&block_other);
+
+        assert_eq!(result, expected_result);
+    }
+
+    #[test]
+    fn unit_blockbytes_find_changed_blocks_shorter() {
+        let block_size = 4;
+
+        let block_bytes =
+            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db").to_blocks(block_size);
+        let block_other = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+            .to_blocks(block_size);
+
+        let expected_result = vec![3];
+
+        let result = block_bytes.find_changed_blocks(&block_other);
 
         assert_eq!(result, expected_result);
     }

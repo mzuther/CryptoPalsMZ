@@ -86,7 +86,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{}[{}] {{ {} }}",
+            "{}[{:02}] {{ {} }}",
             self.representation_name(),
             self.collection.len(),
             self.representation()

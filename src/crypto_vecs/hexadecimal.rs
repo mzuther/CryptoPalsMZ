@@ -217,7 +217,7 @@ mod tests {
     #[test]
     fn unit_hexadecimal_to_string() {
         let hexadecimal = HexadecimalType::from("41c3bc");
-        let expected_result = String::from("Hexadecimal[3] { 41c3bc }");
+        let expected_result = String::from("Hexadecimal[03] { 41c3bc }");
 
         let result = hexadecimal.to_string();
 
@@ -227,7 +227,7 @@ mod tests {
     #[test]
     fn unit_hexadecimal_to_string_two_blocks() {
         let hexadecimal = HexadecimalType::from("21a3dcf4 dba1");
-        let expected_result = String::from("Hexadecimal[6] { 21a3dcf4 dba1 }");
+        let expected_result = String::from("Hexadecimal[06] { 21a3dcf4 dba1 }");
 
         let result = hexadecimal.to_string();
 
@@ -237,7 +237,7 @@ mod tests {
     #[test]
     fn unit_hexadecimal_to_string_odd_length() {
         let hexadecimal = HexadecimalType::from(" 1a3dcf4 dba1");
-        let expected_result = String::from("Hexadecimal[6] { 01a3dcf4 dba1 }");
+        let expected_result = String::from("Hexadecimal[06] { 01a3dcf4 dba1 }");
 
         let result = hexadecimal.to_string();
 
@@ -247,7 +247,7 @@ mod tests {
     #[test]
     fn unit_hexadecimal_to_string_no_space_at_end() {
         let hexadecimal = HexadecimalType::from("21a3dcf4dba1bddb");
-        let expected_result = String::from("Hexadecimal[8] { 21a3dcf4 dba1bddb }");
+        let expected_result = String::from("Hexadecimal[08] { 21a3dcf4 dba1bddb }");
 
         let result = hexadecimal.to_string();
 
@@ -257,7 +257,7 @@ mod tests {
     #[test]
     fn unit_hexadecimal_to_string_trim_whitespace() {
         let hexadecimal = HexadecimalType::from("\t41\n  c3b\n\tce4b\n da\r\n 0\n\n");
-        let expected_result = String::from("Hexadecimal[6] { 41c3bce4 bda0 }");
+        let expected_result = String::from("Hexadecimal[06] { 41c3bce4 bda0 }");
 
         let result = hexadecimal.to_string();
 

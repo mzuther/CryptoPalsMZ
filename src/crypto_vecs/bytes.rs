@@ -1095,7 +1095,7 @@ mod tests {
     #[test]
     fn unit_bytes_to_string_single_byte() {
         let bytes = BytesType::from(0xaf);
-        let expected_result = String::from("Bytes[1] { af }");
+        let expected_result = String::from("Bytes[01] { af }");
 
         let result = bytes.to_string();
 
@@ -1105,7 +1105,7 @@ mod tests {
     #[test]
     fn unit_bytes_to_string_byte_vector() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3]);
-        let expected_result = String::from("Bytes[3] { 4162f3 }");
+        let expected_result = String::from("Bytes[03] { 4162f3 }");
 
         let result = bytes.to_string();
 
@@ -1115,7 +1115,7 @@ mod tests {
     #[test]
     fn unit_bytes_to_string_three_blocks() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
-        let expected_result = String::from("Bytes[9] { 4162f3d3 426f120d 1e }");
+        let expected_result = String::from("Bytes[09] { 4162f3d3 426f120d 1e }");
 
         let result = bytes.to_string();
 
@@ -1125,7 +1125,7 @@ mod tests {
     #[test]
     fn unit_bytes_to_string_no_space_at_end() {
         let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
-        let expected_result = String::from("Bytes[8] { 4162f3d3 426f120d }");
+        let expected_result = String::from("Bytes[08] { 4162f3d3 426f120d }");
 
         let result = bytes.to_string();
 

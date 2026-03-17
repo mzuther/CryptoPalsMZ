@@ -100,7 +100,6 @@ where
             self.chunks(self.len_bytes() - length).next()
         }
     }
-
 }
 
 pub trait InternalDataVecMut {
@@ -226,11 +225,13 @@ pub trait EncryptionOracle<H> {
         Err("could not detect padding".to_string())
     }
 
-    fn detect_block_size(&self) -> Result<usize, String> {
+    fn detect_block_size(&self) -> Result<(usize, usize), String> {
         // ensure last block is full before detecting block size
-        let pre_padding_size = self.bytes_missing_in_last_block(0)?;
+        let bytes_to_new_block = self.bytes_missing_in_last_block(0)?;
 
-        self.bytes_missing_in_last_block(pre_padding_size)
+        let block_size = self.bytes_missing_in_last_block(bytes_to_new_block)?;
+
+        Ok((bytes_to_new_block, block_size))
     }
 }
 

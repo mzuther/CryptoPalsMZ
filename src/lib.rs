@@ -317,7 +317,7 @@ pub fn detect_aes_mode(cypher_blocks: &BlockBytes) -> constants::AesMode {
 }
 
 pub fn decypher_aes_ecb_via_oracle(oracle: &oracles::AesEcbSuffix) -> BlockBytes {
-    let detected_block_size = oracle.detect_block_size().unwrap();
+    let (_, detected_block_size) = oracle.detect_block_size().unwrap();
 
     // prevent overflow of ECB probe
     assert!(detected_block_size < 256);

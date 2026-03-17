@@ -23,27 +23,76 @@ fn main() {
 
 // ECB cut-and-paste
 fn challenge_13() {
-    let block_size_bits = 128;
+    // 1. find block size and probe (email) length needed to create new block
+    //
+    //    missing bytes:  9
+    //    block size:     16
+    //
+    //
+    // 2. find length of prefix before email address
+    //
+    //    -> compare encryption of probe AAAAAAAAAAAAAAAAfoo@bar.com
+    //                          to probe AAAAAAAAAxyAAAAAfoo@bar.com (move "xy")
+    //    -> *two* blocks change when "xy" is split between two blocks
+    //
+    //    splitting point:  10
+    //    prefix length:    (16 - splitting point) % 16 = 6
+    //
+    //
+    // 3. create probe to encrypt ["user" in bytes + 12 * 0x12]
+    //
+    //    probe length:  missing bytes to new block (9) + length of "user" (4) = 13
+    //    probe:         12foo@bar.com
+    //    cypher:        2ddc9547 da54a918 e36a3af3 50f05d46
+    //                   f61352a4 294fefc0 95b74da4 d51404e4
+    //                   22d1e11c 327d7d74 5f00d637 d2a6cde2
+    //    last block:    22d1e11c 327d7d74 5f00d637 d2a6cde2
+    //
+    //
+    // 4. create last block for admin user
+    //
+    //    probe:         [(16 - 6 = 10 * digit because of prefix) + ("admin" + 11 * 0x0B) + "@bar.com"]
+    //                   1234567890admin\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B@bar.com
+    //    second block:  33c0df83 dbe10178 98360f25 51a9a23c
+    //
+    //
+    // 5. use cypher from (3), but change last to block to second block of (4)
+    //
+    //    -> email length: 25 - 4 = 21
+    //
+    //    cypher:        2ddc9547 da54a918 e36a3af3 50f05d46
+    //                   f61352a4 294fefc0 95b74da4 d51404e4
+    //                   33c0df83 dbe10178 98360f25 51a9a23c !!!
 
-    let oracle = oracles::AesEcbCookieCutter::new_bits(block_size_bits);
+    let oracle = oracles::AesEcbCookieCutter::from_key(BytesType::from_hex_literal(
+        "7442f9fc 87041483 6ae3dbbe a79dccea",
+    ));
 
-    let email_address = "foo@bar.com";
+    let (bytes_to_new_block, detected_block_size) = oracle.detect_block_size().unwrap();
+
+    println!();
+    println!("bytes to new block:  {}", bytes_to_new_block);
+    println!("block size:          {}", detected_block_size);
+
+    let email_address = "1234567890admin\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B@bar.com";
     let cypher = oracle
         .encrypt(BytesType::from_unicode_literal(email_address))
         .unwrap()
         .to_bytes();
 
     println!();
-    println!("cypher:\n{}", cypher);
+    println!("cypher: {}", cypher);
 
-    let plain = oracle.decrypt(&cypher);
-    let plain_cookie = plain.unwrap().to_bytes().to_codepage_1252();
-    let plain_parsed = oracle.parse_key_value_cookie(&plain_cookie);
+    let plain = oracle.decrypt(&BytesType::from_hex_literal(
+        "
+        2ddc9547 da54a918 e36a3af3 50f05d46
+        f61352a4 294fefc0 95b74da4 d51404e4
+        33c0df83 dbe10178 98360f25 51a9a23c
+        ",
+    ));
 
     println!();
-    println!("plain:\n{}", plain_cookie);
-    println!("\n{:#}", plain_parsed.unwrap());
-
+    println!("plain:  |{}|", plain.unwrap().to_bytes().to_codepage_1252());
     println!();
 }
 

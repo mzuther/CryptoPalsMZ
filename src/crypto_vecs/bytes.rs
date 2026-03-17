@@ -3,7 +3,8 @@ use rand::prelude::*;
 use std::{convert, slice, sync, vec};
 
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalDataVec, InternalDataVecMut, LenBytes, Representation, ToBytes,
+    AutoProbe, Elements, FromBytes, InternalDataVec, InternalDataVecMut, LenBytes, Representation,
+    ToBytes,
 };
 use crate::crypto_vecs::{self, Base64Type, BlockBytes, HexadecimalType, UnicodeType};
 
@@ -432,6 +433,10 @@ impl BytesType {
         BlockBytes::from(transposed_blocks)
     }
 }
+
+// ----------------
+
+impl AutoProbe<u8> for BytesType {}
 
 // ================
 

@@ -5,7 +5,7 @@
 use std::fs;
 
 use cryptopals::crypto_vecs::traits::{
-    DecryptionOracle, EncryptionOracle, FromBytes, InternalData, InternalDataVec,
+    AutoProbe, DecryptionOracle, EncryptionOracle, FromBytes, InternalData, InternalDataVec,
     InternalDataVecMut, LenBytes, ToBytes,
 };
 use cryptopals::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, UnicodeType};
@@ -93,6 +93,20 @@ fn challenge_13() {
 
     println!();
     println!("plain:  |{}|", plain.unwrap().to_bytes().to_codepage_1252());
+
+    let size_min = 0;
+    let size_max = detected_block_size;
+
+    println!();
+    for current in BytesType::new_auto_probe(b'A', size_min, size_max) {
+        println!("{}", current);
+    }
+
+    println!();
+    for current in BytesType::new_auto_probe(b'A', size_max, size_min) {
+        println!("{}", current);
+    }
+
     println!();
 }
 

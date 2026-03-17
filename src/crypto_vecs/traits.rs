@@ -1,4 +1,4 @@
-use std::slice;
+use std::{iter, slice};
 
 use crate::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType};
 use crate::oracles;
@@ -182,6 +182,48 @@ pub trait ToBytes {
     fn to_unicode(&self) -> self::UnicodeType {
         self::UnicodeType::from(&self.to_bytes())
     }
+}
+
+// ================
+
+pub trait AutoProbe<E>
+where
+    Self: InternalDataVec<Element = E>,
+{
+    fn new_auto_probe(
+        item: E,
+        size_start: usize,
+        size_end: usize,
+    ) -> iter::FromFn<impl FnMut() -> Option<Self>>
+    where
+        Self: Sized,
+        E: Clone,
+    {
+        let is_expanding = size_start < size_end;
+
+        let mut current_counter = size_start.min(size_end);
+        let counter_end = size_start.max(size_end);
+
+        std::iter::from_fn(move || {
+            if current_counter <= counter_end {
+                let result = Some(Self::new_from(vec![
+                    item.clone();
+                    if is_expanding {
+                        current_counter
+                    } else {
+                        counter_end - current_counter
+                    }
+                ]));
+                current_counter += 1;
+
+                result
+            } else {
+                None
+            }
+        })
+    }
+
+    // ----------------
 }
 
 // ================

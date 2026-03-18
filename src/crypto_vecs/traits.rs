@@ -1,6 +1,8 @@
 use std::{iter, slice};
 
-use crate::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType};
+use crate::crypto_vecs::{
+    self, Base64Type, BlockBytes, Bytes, BytesType, HexadecimalType, UnicodeType,
+};
 use crate::oracles;
 
 // ================
@@ -193,20 +195,24 @@ pub trait FromBytes {
 // ----------------
 
 pub trait ToBytes {
-    fn to_bytes(&self) -> self::BytesType;
+    fn to_bytes_raw(&self) -> Bytes;
 
     // ----------------
 
-    fn to_hexadecimal(&self) -> self::HexadecimalType {
-        self::HexadecimalType::from(&self.to_bytes())
+    fn to_bytes(&self) -> BytesType {
+        BytesType::new_from_ref(&self.to_bytes_raw().as_ref())
     }
 
-    fn to_base64(&self) -> self::Base64Type {
-        self::Base64Type::from(&self.to_bytes())
+    fn to_hexadecimal(&self) -> HexadecimalType {
+        HexadecimalType::from(&self.to_bytes())
     }
 
-    fn to_unicode(&self) -> self::UnicodeType {
-        self::UnicodeType::from(&self.to_bytes())
+    fn to_base64(&self) -> Base64Type {
+        Base64Type::from(&self.to_bytes())
+    }
+
+    fn to_unicode(&self) -> UnicodeType {
+        UnicodeType::from(&self.to_bytes())
     }
 }
 

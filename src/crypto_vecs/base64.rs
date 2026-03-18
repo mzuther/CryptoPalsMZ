@@ -4,7 +4,7 @@ use std::convert;
 use crate::crypto_vecs::traits::{
     Elements, FromBytes, InternalData, InternalDataVecMut, LenBytes, Representation, ToBytes,
 };
-use crate::crypto_vecs::{BytesType, CryptoString};
+use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
 
 // ================
 
@@ -196,7 +196,7 @@ impl FromBytes for Base64 {
 // ----------------
 
 impl ToBytes for Base64 {
-    fn to_bytes(&self) -> BytesType {
+    fn to_bytes_raw(&self) -> Bytes {
         let decoded_bytes = self
             .base64
             .bytes()
@@ -227,9 +227,7 @@ impl ToBytes for Base64 {
                 acc
             });
 
-        let base64_bytes = Self::assemble_bytes_from_segments(&decoded_bytes, 6);
-
-        BytesType::from(base64_bytes)
+        Self::assemble_bytes_from_segments(&decoded_bytes, 6)
     }
 }
 
@@ -303,7 +301,7 @@ impl Base64 {
         segments_to_encode
     }
 
-    fn assemble_bytes_from_segments(bytes: &[Option<u8>], bits_per_segment: u8) -> BytesType {
+    fn assemble_bytes_from_segments(bytes: &[Option<u8>], bits_per_segment: u8) -> Bytes {
         let bits_per_byte = 8;
         let mut inverted_bit_output = 0;
         let mut byte_in_progress = 0;

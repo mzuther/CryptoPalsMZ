@@ -3,7 +3,7 @@ use std::convert;
 use crate::crypto_vecs::traits::{
     Elements, FromBytes, InternalData, InternalDataVec, LenBytes, Representation, ToBytes,
 };
-use crate::crypto_vecs::{BytesType, CryptoString};
+use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
 
 // ================
 
@@ -91,10 +91,10 @@ impl FromBytes for Unicode {
 // ----------------
 
 impl ToBytes for Unicode {
-    fn to_bytes(&self) -> BytesType {
+    fn to_bytes_raw(&self) -> Bytes {
         let unicode_bytes = Vec::from(self.unicode.clone());
 
-        BytesType::from(unicode_bytes)
+        Bytes::new_from(unicode_bytes)
     }
 }
 

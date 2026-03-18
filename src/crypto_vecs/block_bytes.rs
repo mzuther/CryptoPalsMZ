@@ -1,7 +1,7 @@
 use std::{convert, fmt, iter, slice, vec};
 
 use crate::crypto_vecs::traits::{InternalDataVec, LenBytes, ToBytes};
-use crate::crypto_vecs::{self, BytesType};
+use crate::crypto_vecs::{self, Bytes, BytesType};
 
 // ================
 
@@ -57,9 +57,9 @@ impl convert::From<Vec<BytesType>> for self::BlockBytes {
 }
 
 impl ToBytes for self::BlockBytes {
-    fn to_bytes(&self) -> BytesType {
+    fn to_bytes_raw(&self) -> Bytes {
         self.iter().fold(Default::default(), |mut acc, block| {
-            acc.extend(block.to_vec());
+            acc.extend(block);
             acc
         })
     }

@@ -20,7 +20,7 @@ pub use crate::crypto_vecs::generic_vec::CryptoVec;
 pub use crate::crypto_vecs::base64::Base64Type;
 pub use crate::crypto_vecs::block_bytes::BlockBytes;
 pub use crate::crypto_vecs::blocks::Blocks;
-pub use crate::crypto_vecs::bytes::BytesType;
+pub use crate::crypto_vecs::bytes::{Bytes, BytesType};
 pub use crate::crypto_vecs::hexadecimal::HexadecimalType;
 pub use crate::crypto_vecs::unicode::UnicodeType;
 

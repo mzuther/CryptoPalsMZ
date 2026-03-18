@@ -127,8 +127,15 @@ impl FromBytes for Bytes {
 }
 
 impl ToBytes for Bytes {
+    fn to_bytes_raw(&self) -> Bytes {
+        self.clone()
+    }
+
+    // ----------------
+
+    // performance (prevent round trip via trait)
     fn to_bytes(&self) -> BytesType {
-        BytesType::new_from(self.bytes.clone())
+        BytesType::new_from_ref(&self.bytes)
     }
 }
 

@@ -1,10 +1,10 @@
 use std::{convert, fmt, slice, vec};
 
-use crate::crypto_vecs::BytesType;
 use crate::crypto_vecs::traits::{
     Elements, FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
     Representation, ToBytes,
 };
+use crate::crypto_vecs::{Bytes, BytesType};
 
 // ================
 
@@ -211,8 +211,8 @@ impl<C, E> ToBytes for CryptoVec<C, E>
 where
     C: Elements<Element = E> + ToBytes,
 {
-    fn to_bytes(&self) -> BytesType {
-        self.collection.to_bytes()
+    fn to_bytes_raw(&self) -> Bytes {
+        self.collection.to_bytes_raw()
     }
 }
 

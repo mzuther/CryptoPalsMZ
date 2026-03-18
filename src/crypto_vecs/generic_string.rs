@@ -1,6 +1,6 @@
 use std::{convert, fmt};
 
-use crate::crypto_vecs::BytesType;
+use crate::crypto_vecs::{Bytes, BytesType};
 use crate::crypto_vecs::traits::{
     Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
@@ -171,7 +171,7 @@ impl<C> ToBytes for CryptoString<C>
 where
     C: InternalData + ToBytes,
 {
-    fn to_bytes(&self) -> BytesType {
-        self.collection.to_bytes()
+    fn to_bytes_raw(&self) -> Bytes {
+        self.collection.to_bytes_raw()
     }
 }

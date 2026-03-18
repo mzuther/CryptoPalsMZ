@@ -4,7 +4,7 @@ use std::convert;
 use crate::crypto_vecs::traits::{
     Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
-use crate::crypto_vecs::{BytesType, CryptoString};
+use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
 
 // ================
 
@@ -146,10 +146,10 @@ impl FromBytes for Hexadecimal {
 // ----------------
 
 impl ToBytes for Hexadecimal {
-    fn to_bytes(&self) -> BytesType {
+    fn to_bytes_raw(&self) -> Bytes {
         let hex_bytes = hex::decode(&self.hexadecimal).expect("broken conversion");
 
-        BytesType::from(hex_bytes)
+        Bytes::new_from(hex_bytes)
     }
 }
 

@@ -28,7 +28,8 @@ pub trait InternalData {
 
 pub trait InternalDataVec
 where
-    Self: LenBytes,
+    Self: Sized + LenBytes,
+    Self::Element: Clone,
 {
     type Element;
 
@@ -45,25 +46,27 @@ where
 
     // ----------------
 
-    fn with_capacity(bytes: usize) -> Self
-    where
-        Self: Sized,
-    {
+    fn with_capacity(bytes: usize) -> Self {
         Self::new_from(Vec::with_capacity(bytes))
     }
 
-    fn with_capacity_bits(bits: usize) -> Self
-    where
-        Self: Sized,
-    {
+    fn with_capacity_bits(bits: usize) -> Self {
         let bytes = crypto_vecs::bits_to_bytes(bits);
 
         Self::new_from(Vec::with_capacity(bytes))
     }
 
+    // clone of underlying collection
+    fn to_vec(&self) -> Vec<Self::Element> {
+        self.data().to_vec()
+    }
+
+    // reference to underlying collection
     fn as_slice(&self) -> &[Self::Element] {
         self.data().as_slice()
     }
+
+    // ----------------
 
     fn take_n(&self, length: usize) -> Option<&[Self::Element]> {
         if self.len_bytes() <= length {
@@ -99,6 +102,36 @@ where
         } else {
             self.chunks(self.len_bytes() - length).next()
         }
+    }
+
+    // ----------------
+
+    fn chunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
+        self.chunks(chunk_size)
+            .map(|chunk| Self::new_from(chunk.to_vec()))
+            .collect()
+    }
+
+    fn rchunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
+        self.rchunks(chunk_size)
+            .map(|chunk| Self::new_from(chunk.to_vec()))
+            .collect()
+    }
+
+    fn take_n_as_collection(&self, length: usize) -> Option<Self> {
+        self.take_n(length).map(|x| Self::new_from(x.to_vec()))
+    }
+
+    fn skip_n_as_collection(&self, length: usize) -> Option<Self> {
+        self.skip_n(length).map(|x| Self::new_from(x.to_vec()))
+    }
+
+    fn rtake_n_as_collection(&self, length: usize) -> Option<Self> {
+        self.rtake_n(length).map(|x| Self::new_from(x.to_vec()))
+    }
+
+    fn rskip_n_as_collection(&self, length: usize) -> Option<Self> {
+        self.rskip_n(length).map(|x| Self::new_from(x.to_vec()))
     }
 }
 
@@ -222,8 +255,6 @@ where
             }
         })
     }
-
-    // ----------------
 }
 
 // ================

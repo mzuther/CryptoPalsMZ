@@ -26,6 +26,7 @@ pub struct CryptoVecIter<'a, E> {
 impl<C, E> InternalDataVec for CryptoVec<C, E>
 where
     C: InternalDataVec<Element = E> + Elements<Element = E>,
+    E: Clone,
 {
     type Element = E;
 
@@ -144,6 +145,7 @@ where
 impl<C, E> convert::From<Vec<E>> for self::CryptoVec<C, E>
 where
     C: InternalDataVec<Element = E> + Elements<Element = E>,
+    E: Clone,
 {
     fn from(data: Vec<E>) -> Self {
         Self::new_from(data)
@@ -320,42 +322,5 @@ where
             vec_ref: self.collection.data(),
             current_index: 0,
         }
-    }
-
-    // ----------------
-
-    pub fn chunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
-        self.collection
-            .chunks(chunk_size)
-            .map(|chunk| Self::new_from(chunk.to_vec()))
-            .collect()
-    }
-
-    pub fn rchunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
-        self.collection
-            .rchunks(chunk_size)
-            .map(|chunk| Self::new_from(chunk.to_vec()))
-            .collect()
-    }
-
-    pub fn take_n_as_collection(&self, length: usize) -> Option<Self> {
-        self.take_n(length).map(|x| Self::new_from(x.to_vec()))
-    }
-
-    pub fn skip_n_as_collection(&self, length: usize) -> Option<Self> {
-        self.skip_n(length).map(|x| Self::new_from(x.to_vec()))
-    }
-
-    pub fn rtake_n_as_collection(&self, length: usize) -> Option<Self> {
-        self.rtake_n(length).map(|x| Self::new_from(x.to_vec()))
-    }
-
-    pub fn rskip_n_as_collection(&self, length: usize) -> Option<Self> {
-        self.rskip_n(length).map(|x| Self::new_from(x.to_vec()))
-    }
-
-    // clone of underlying vec
-    pub fn to_vec(&self) -> Vec<E> {
-        self.data().to_vec()
     }
 }

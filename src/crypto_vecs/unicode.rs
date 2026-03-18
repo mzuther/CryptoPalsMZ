@@ -1,7 +1,7 @@
 use std::convert;
 
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+    Elements, FromBytes, InternalData, InternalDataVec, LenBytes, Representation, ToBytes,
 };
 use crate::crypto_vecs::{BytesType, CryptoString};
 

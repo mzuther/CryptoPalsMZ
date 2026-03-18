@@ -158,7 +158,7 @@ where
     E: Clone,
 {
     fn from(data: &[E]) -> Self {
-        Self::new_from(data.to_vec())
+        Self::new_from_ref(data)
     }
 }
 

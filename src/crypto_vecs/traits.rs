@@ -46,6 +46,10 @@ where
 
     // ----------------
 
+    fn new_from_ref(data: &[Self::Element]) -> Self {
+        Self::new_from(data.to_vec())
+    }
+
     fn with_capacity(bytes: usize) -> Self {
         Self::new_from(Vec::with_capacity(bytes))
     }
@@ -108,30 +112,34 @@ where
 
     fn chunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
         self.chunks(chunk_size)
-            .map(|chunk| Self::new_from(chunk.to_vec()))
+            .map(|chunk| Self::new_from_ref(chunk))
             .collect()
     }
 
     fn rchunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
         self.rchunks(chunk_size)
-            .map(|chunk| Self::new_from(chunk.to_vec()))
+            .map(|chunk| Self::new_from_ref(chunk))
             .collect()
     }
 
     fn take_n_as_collection(&self, length: usize) -> Option<Self> {
-        self.take_n(length).map(|x| Self::new_from(x.to_vec()))
+        self.take_n(length)
+            .map(|element| Self::new_from_ref(element))
     }
 
     fn skip_n_as_collection(&self, length: usize) -> Option<Self> {
-        self.skip_n(length).map(|x| Self::new_from(x.to_vec()))
+        self.skip_n(length)
+            .map(|element| Self::new_from_ref(element))
     }
 
     fn rtake_n_as_collection(&self, length: usize) -> Option<Self> {
-        self.rtake_n(length).map(|x| Self::new_from(x.to_vec()))
+        self.rtake_n(length)
+            .map(|element| Self::new_from_ref(element))
     }
 
     fn rskip_n_as_collection(&self, length: usize) -> Option<Self> {
-        self.rskip_n(length).map(|x| Self::new_from(x.to_vec()))
+        self.rskip_n(length)
+            .map(|element| Self::new_from_ref(element))
     }
 }
 

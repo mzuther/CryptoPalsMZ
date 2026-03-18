@@ -2,6 +2,7 @@ use openssl::{cipher, cipher_ctx};
 use rand::prelude::*;
 use std::{convert, slice, sync, vec};
 
+use crate::crypto_vecs::hexadecimal::Hexadecimal;
 use crate::crypto_vecs::traits::{
     AutoProbe, Elements, FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
     Representation, ToBytes,
@@ -27,6 +28,10 @@ impl InternalData for Bytes {
             Ok(data) => Self { bytes: data },
             Err(error) => panic!("{}", error),
         }
+    }
+
+    fn from_literal(string_literal: &str) -> Self {
+        Hexadecimal::from_literal(string_literal).to_bytes_raw()
     }
 
     fn with_capacity(bytes: usize) -> Self {
@@ -213,19 +218,19 @@ impl BytesType {
     // ----------------
 
     pub fn from_hex_literal(string_literal: &str) -> Self {
-        let hexadecimal = HexadecimalType::from(string_literal);
+        let hexadecimal = HexadecimalType::from_literal(string_literal);
 
         hexadecimal.to_bytes()
     }
 
     pub fn from_base64_literal(string_literal: &str) -> Self {
-        let base64 = Base64Type::from(string_literal);
+        let base64 = Base64Type::from_literal(string_literal);
 
         base64.to_bytes()
     }
 
     pub fn from_unicode_literal(string_literal: &str) -> Self {
-        let unicode = UnicodeType::from(string_literal);
+        let unicode = UnicodeType::from_literal(string_literal);
 
         unicode.to_bytes()
     }

@@ -29,6 +29,12 @@ where
         }
     }
 
+    fn from_literal(string_literal: &str) -> Self {
+        Self {
+            collection: C::from_literal(string_literal),
+        }
+    }
+
     fn with_capacity(capacity: usize) -> Self {
         Self {
             collection: C::with_capacity(capacity),

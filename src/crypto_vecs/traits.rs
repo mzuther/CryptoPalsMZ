@@ -11,6 +11,7 @@ pub trait InternalData {
     type Collection;
 
     fn new_from(data: Self::Collection) -> Self;
+    fn from_literal(string_literal: &str) -> Self;
     fn with_capacity(capacity: usize) -> Self;
 
     fn capacity(&self) -> usize;

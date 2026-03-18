@@ -37,6 +37,12 @@ where
         }
     }
 
+    fn from_literal(string_literal: &str) -> Self {
+        Self {
+            collection: C::from_literal(string_literal),
+        }
+    }
+
     fn with_capacity(bytes: usize) -> Self {
         Self::new_from(Self::Collection::with_capacity(bytes))
     }

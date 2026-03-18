@@ -27,6 +27,10 @@ impl InternalData for Hexadecimal {
         }
     }
 
+    fn from_literal(string_literal: &str) -> Self {
+        Self::new_from(string_literal.to_string())
+    }
+
     fn with_capacity(capacity: usize) -> Self {
         Self::new_from(Self::Collection::with_capacity(capacity))
     }

@@ -2,7 +2,8 @@ use std::{convert, fmt, slice, vec};
 
 use crate::crypto_vecs::BytesType;
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalDataVec, InternalDataVecMut, LenBytes, Representation, ToBytes,
+    Elements, FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
+    Representation, ToBytes,
 };
 
 // ================
@@ -23,17 +24,21 @@ pub struct CryptoVecIter<'a, E> {
 
 // ================
 
-impl<C, E> InternalDataVec for CryptoVec<C, E>
+impl<C, E> InternalData for CryptoVec<C, E>
 where
-    C: InternalDataVec<Element = E> + Elements<Element = E>,
+    C: Elements<Element = E> + InternalData<Collection = Vec<E>>,
     E: Clone,
 {
-    type Element = E;
+    type Collection = Vec<E>;
 
-    fn new_from(data: Vec<E>) -> Self {
+    fn new_from(data: Self::Collection) -> Self {
         Self {
             collection: C::new_from(data),
         }
+    }
+
+    fn with_capacity(bytes: usize) -> Self {
+        Self::new_from(Self::Collection::with_capacity(bytes))
     }
 
     fn capacity(&self) -> usize {
@@ -43,8 +48,16 @@ where
     fn clean_and_validate(data: Vec<E>) -> Result<Vec<E>, String> {
         C::clean_and_validate(data)
     }
+}
 
-    // ----------------
+// ----------------
+
+impl<C, E> InternalDataVec for CryptoVec<C, E>
+where
+    C: Elements<Element = E> + InternalDataVec<Element = E>,
+    E: Clone,
+{
+    type Element = E;
 
     fn data(&self) -> &Vec<E> {
         self.collection.data()
@@ -144,7 +157,7 @@ where
 
 impl<C, E> convert::From<Vec<E>> for self::CryptoVec<C, E>
 where
-    C: InternalDataVec<Element = E> + Elements<Element = E>,
+    C: InternalData<Collection = Vec<E>> + InternalDataVec<Element = E> + Elements<Element = E>,
     E: Clone,
 {
     fn from(data: Vec<E>) -> Self {
@@ -154,7 +167,7 @@ where
 
 impl<C, E> convert::From<&[E]> for self::CryptoVec<C, E>
 where
-    C: InternalDataVec<Element = E> + Elements<Element = E>,
+    C: InternalData<Collection = Vec<E>> + InternalDataVec<Element = E> + Elements<Element = E>,
     E: Clone,
 {
     fn from(data: &[E]) -> Self {
@@ -164,7 +177,7 @@ where
 
 impl<C, E> convert::From<E> for self::CryptoVec<C, E>
 where
-    C: InternalDataVec<Element = E> + Elements<Element = E>,
+    C: InternalData<Collection = Vec<E>> + InternalDataVec<Element = E> + Elements<Element = E>,
     E: Clone,
 {
     fn from(element: E) -> Self {

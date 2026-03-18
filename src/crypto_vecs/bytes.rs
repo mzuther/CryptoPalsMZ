@@ -3,8 +3,8 @@ use rand::prelude::*;
 use std::{convert, slice, sync, vec};
 
 use crate::crypto_vecs::traits::{
-    AutoProbe, Elements, FromBytes, InternalDataVec, InternalDataVecMut, LenBytes, Representation,
-    ToBytes,
+    AutoProbe, Elements, FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
+    Representation, ToBytes,
 };
 use crate::crypto_vecs::{self, Base64Type, BlockBytes, HexadecimalType, UnicodeType};
 
@@ -19,25 +19,33 @@ pub type BytesType = crypto_vecs::CryptoVec<Bytes, u8>;
 
 // ================
 
-impl InternalDataVec for Bytes {
-    type Element = u8;
+impl InternalData for Bytes {
+    type Collection = Vec<u8>;
 
-    fn new_from(data: Vec<Self::Element>) -> Self {
+    fn new_from(data: Self::Collection) -> Self {
         match Self::clean_and_validate(data) {
             Ok(data) => Self { bytes: data },
             Err(error) => panic!("{}", error),
         }
     }
 
+    fn with_capacity(bytes: usize) -> Self {
+        Self::new_from(Vec::with_capacity(bytes))
+    }
+
     fn capacity(&self) -> usize {
         self.bytes.capacity()
     }
 
-    fn clean_and_validate(data: Vec<Self::Element>) -> Result<Vec<Self::Element>, String> {
+    fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
         Ok(data)
     }
+}
 
-    // ----------------
+// ----------------
+
+impl InternalDataVec for Bytes {
+    type Element = u8;
 
     fn data(&self) -> &Vec<Self::Element> {
         &self.bytes

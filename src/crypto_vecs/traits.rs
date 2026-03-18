@@ -28,15 +28,10 @@ pub trait InternalData {
 
 pub trait InternalDataVec
 where
-    Self: Sized + LenBytes,
+    Self: Sized + InternalData<Collection = Vec<Self::Element>> + LenBytes,
     Self::Element: Clone,
 {
     type Element;
-
-    fn new_from(data: Vec<Self::Element>) -> Self;
-
-    fn capacity(&self) -> usize;
-    fn clean_and_validate(data: Vec<Self::Element>) -> Result<Vec<Self::Element>, String>;
 
     fn data(&self) -> &Vec<Self::Element>;
     fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, Self::Element>;
@@ -48,16 +43,6 @@ where
 
     fn new_from_ref(data: &[Self::Element]) -> Self {
         Self::new_from(data.to_vec())
-    }
-
-    fn with_capacity(bytes: usize) -> Self {
-        Self::new_from(Vec::with_capacity(bytes))
-    }
-
-    fn with_capacity_bits(bits: usize) -> Self {
-        let bytes = crypto_vecs::bits_to_bytes(bits);
-
-        Self::new_from(Vec::with_capacity(bytes))
     }
 
     // clone of underlying collection

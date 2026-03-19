@@ -7,7 +7,8 @@ pub mod oracles;
 use std::{cmp, collections::HashMap, ops};
 
 use crate::crypto_vecs::traits::{
-    EncryptionOracle, InternalData, InternalDataVec, InternalDataVecMut, LenBytes, ToBytes,
+    AutoProbe, EncryptionOracle, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
+    ToBytes,
 };
 use crate::crypto_vecs::{BlockBytes, BytesType};
 
@@ -361,82 +362,78 @@ fn decypher_aes_ecb_block_via_oracle(
     let bytes_to_skip = block_size * current_block_index;
     let mut current_pkcs7_byte = None;
 
-    // iterate over bytes of block
-    (0..block_size).fold(BytesType::default(), |mut acc, current_position| {
-        // no cyphertext left
-        if current_position > acc.len_bytes() {
-            return acc;
-        }
+    // decypyher block, byte by byte
+    BytesType::new_auto_probe_repeat(b'A', block_size - 1, 0).fold(
+        BytesType::default(),
+        |mut acc, probe_padding| {
+            let cypher_block_padding = oracle
+                .encrypt(probe_padding.clone())
+                .unwrap()
+                .skip_n_as_collection(bytes_to_skip)
+                .unwrap()
+                .take_n_as_collection(block_size)
+                .unwrap();
 
-        let probe_padding = BytesType::new_from(vec![b'A'; block_size - current_position - 1]);
+            let mut run_loop = true;
 
-        let cypher_block_padding = oracle
-            .encrypt(probe_padding.clone())
-            .unwrap()
-            .skip_n_as_collection(bytes_to_skip)
-            .unwrap()
-            .take_n_as_collection(block_size)
-            .unwrap();
+            while run_loop {
+                run_loop = false;
 
-        let mut run_loop = true;
+                // detect plaintext byte by changing last byte of probe
+                if let Some(padding_size) = current_pkcs7_byte {
+                    // remove padding from last iteration (e.g. "0x02 0x02"), as it
+                    // will interfere with detection in the current iteration
+                    acc = acc
+                        .rskip_n_as_collection(padding_size)
+                        .expect("detected PKCS#7 incorrectly");
 
-        while run_loop {
-            run_loop = false;
+                    // correct padding for this iteration (e.g. "0x03 0x03")
+                    let new_padding_size = padding_size + 1;
+                    current_pkcs7_byte = Some(new_padding_size);
 
-            // detect plaintext byte by changing last byte of probe
-            if let Some(padding_size) = current_pkcs7_byte {
-                // remove padding from last iteration (e.g. "0x02 0x02"), as it
-                // will interfere with detection in the current iteration
-                acc = acc
-                    .rskip_n_as_collection(padding_size)
-                    .expect("detected PKCS#7 incorrectly");
+                    // add correct padding, but one byte short to allow detection
+                    // of last byte
+                    acc.extend(vec![new_padding_size as u8; new_padding_size - 1]);
+                }
 
-                // correct padding for this iteration (e.g. "0x03 0x03")
-                let new_padding_size = padding_size + 1;
-                current_pkcs7_byte = Some(new_padding_size);
+                let mut probe_padding_and_plain = probe_padding.clone();
+                probe_padding_and_plain.extend(plain_part.to_bytes());
+                probe_padding_and_plain.extend(&acc);
 
-                // add correct padding, but one byte short to allow detection
-                // of last byte
-                acc.extend(vec![new_padding_size as u8; new_padding_size - 1]);
-            }
+                let mut byte_detected = false;
 
-            let mut probe_padding_and_plain = probe_padding.clone();
-            probe_padding_and_plain.extend(plain_part.to_bytes());
-            probe_padding_and_plain.extend(&acc);
+                // detect plaintext byte by changing last byte of probe
+                for last_byte in 0x00..=0xff {
+                    let mut probe_current = probe_padding_and_plain.clone();
+                    probe_current.push(last_byte);
 
-            let mut byte_detected = false;
+                    let cypher_block_current = oracle
+                        .encrypt(probe_current)
+                        .unwrap()
+                        .skip_n_as_collection(bytes_to_skip)
+                        .unwrap()
+                        .take_n_as_collection(block_size)
+                        .unwrap();
 
-            // detect plaintext byte by changing last byte of probe
-            for last_byte in 0x00..=0xff {
-                let mut probe_current = probe_padding_and_plain.clone();
-                probe_current.push(last_byte);
+                    if cypher_block_current == cypher_block_padding {
+                        byte_detected = true;
 
-                let cypher_block_current = oracle
-                    .encrypt(probe_current)
-                    .unwrap()
-                    .skip_n_as_collection(bytes_to_skip)
-                    .unwrap()
-                    .take_n_as_collection(block_size)
-                    .unwrap();
+                        acc.push(last_byte);
+                        break;
+                    }
+                }
 
-                if cypher_block_current == cypher_block_padding {
-                    byte_detected = true;
+                if !byte_detected && current_pkcs7_byte.is_none() {
+                    // re-run and try to detect PKCS#7
+                    current_pkcs7_byte = Some(1);
 
-                    acc.push(last_byte);
-                    break;
+                    run_loop = true;
                 }
             }
 
-            if !byte_detected && current_pkcs7_byte.is_none() {
-                // re-run and try to detect PKCS#7
-                current_pkcs7_byte = Some(1);
-
-                run_loop = true;
-            }
-        }
-
-        acc
-    })
+            acc
+        },
+    )
 }
 
 // ================

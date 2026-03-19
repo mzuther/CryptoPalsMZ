@@ -98,7 +98,7 @@ fn challenge_13() {
     let size_max = detected_block_size;
 
     println!();
-    for current in BytesType::new_mover(
+    for current in BytesType::new_auto_probe_mover(
         BytesType::from_unicode_literal("This is going to be fun"),
         BytesType::from_unicode_literal("_X_"),
     ) {

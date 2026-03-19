@@ -233,7 +233,7 @@ where
     Self: Default + Extend<Self::Element> + InternalDataVecMut + LenBytes,
     Self::Element: Clone,
 {
-    fn new(
+    fn new_auto_probe(
         final_probe: Self,
         size_start: usize,
         is_expanding: bool,
@@ -260,7 +260,7 @@ where
 
     // ----------------
 
-    fn new_repeat(
+    fn new_auto_probe_repeat(
         element: Self::Element,
         size_start: usize,
         size_end: usize,
@@ -268,14 +268,14 @@ where
         let size_start_actual = size_start.min(size_end);
         let size_end_actual = size_start.max(size_end);
 
-        Self::new(
+        Self::new_auto_probe(
             Self::new_from(vec![element; size_end_actual]),
             size_start_actual,
             size_start < size_end,
         )
     }
 
-    fn new_mover(
+    fn new_auto_probe_mover(
         original_probe: Self,
         moving_part: Self,
     ) -> iter::FromFn<impl FnMut() -> Option<Self>> {
@@ -323,7 +323,8 @@ pub trait EncryptionOracle<H> {
 
         // exit after 1024 bytes of padding to prevent eternal loop
         for (iteration, current_probe) in
-            BytesType::new_repeat(b'A', pre_padding_size, 1024 + pre_padding_size).enumerate()
+            BytesType::new_auto_probe_repeat(b'A', pre_padding_size, 1024 + pre_padding_size)
+                .enumerate()
         {
             let oracle_response = self.encrypt(current_probe);
 

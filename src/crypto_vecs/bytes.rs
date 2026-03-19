@@ -1476,12 +1476,13 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_bytes_auto_probe_expanding() {
+    fn unit_bytes_new_auto_probe_expanding() {
         let final_probe = BytesType::from_hex_literal("00010203 04050607 08090a0b 0c0d0e0f");
         let size_start = 0;
         let is_expanding = true;
 
-        let mut auto_probe = BytesType::new(final_probe.clone(), size_start, is_expanding);
+        let mut auto_probe =
+            BytesType::new_auto_probe(final_probe.clone(), size_start, is_expanding);
 
         assert_eq!(auto_probe.next(), Some(Default::default()));
 
@@ -1496,12 +1497,13 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_auto_probe_expanding_initial_size() {
+    fn unit_bytes_new_auto_probe_expanding_initial_size() {
         let final_probe = BytesType::from_hex_literal("00010203 04050607 08090a0b 0c0d0e0f");
         let size_start = 2;
         let is_expanding = true;
 
-        let mut auto_probe = BytesType::new(final_probe.clone(), size_start, is_expanding);
+        let mut auto_probe =
+            BytesType::new_auto_probe(final_probe.clone(), size_start, is_expanding);
 
         for current_size in 2..=final_probe.len_bytes() {
             assert_eq!(
@@ -1514,12 +1516,13 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_auto_probe_shrinking() {
+    fn unit_bytes_new_auto_probe_shrinking() {
         let final_probe = BytesType::from_hex_literal("00010203 04050607 08090a0b 0c0d0e0f");
         let size_start = 0;
         let is_expanding = false;
 
-        let mut auto_probe = BytesType::new(final_probe.clone(), size_start, is_expanding);
+        let mut auto_probe =
+            BytesType::new_auto_probe(final_probe.clone(), size_start, is_expanding);
 
         for current_size in (1..=final_probe.len_bytes()).rev() {
             assert_eq!(
@@ -1533,12 +1536,13 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_auto_probe_shrinking_final_size() {
+    fn unit_bytes_new_auto_probe_shrinking_final_size() {
         let final_probe = BytesType::from_hex_literal("00010203 04050607 08090a0b 0c0d0e0f");
         let size_start = 2;
         let is_expanding = false;
 
-        let mut auto_probe = BytesType::new(final_probe.clone(), size_start, is_expanding);
+        let mut auto_probe =
+            BytesType::new_auto_probe(final_probe.clone(), size_start, is_expanding);
 
         for current_size in (size_start..=final_probe.len_bytes()).rev() {
             assert_eq!(
@@ -1551,12 +1555,12 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_auto_probe_repeat_expanding_initial_size() {
+    fn unit_bytes_new_auto_probe_repeat_expanding_initial_size() {
         let element = b'A';
         let size_start = 2;
         let size_end = 16;
 
-        let mut auto_probe = BytesType::new_repeat(element, size_start, size_end);
+        let mut auto_probe = BytesType::new_auto_probe_repeat(element, size_start, size_end);
         let expected_final_probe = BytesType::new_from(vec![element; size_end]);
 
         for current_size in size_start..=size_end {
@@ -1570,12 +1574,12 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_auto_probe_repeat_shrinking_final_size() {
+    fn unit_bytes_new_auto_probe_repeat_shrinking_final_size() {
         let element = b'A';
         let size_start = 16;
         let size_end = 2;
 
-        let mut auto_probe = BytesType::new_repeat(element, size_start, size_end);
+        let mut auto_probe = BytesType::new_auto_probe_repeat(element, size_start, size_end);
         let expected_final_probe = BytesType::new_from(vec![element; size_start]);
 
         for current_size in (size_end..=size_start).rev() {
@@ -1589,11 +1593,11 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_auto_probe_mover_single_byte() {
+    fn unit_bytes_new_auto_probe_mover_single_byte() {
         let original_probe = BytesType::from_hex_literal("00010203");
         let moving_part = BytesType::from_hex_literal("ff");
 
-        let mut auto_probe = BytesType::new_mover(original_probe, moving_part);
+        let mut auto_probe = BytesType::new_auto_probe_mover(original_probe, moving_part);
 
         assert_eq!(
             auto_probe.next(),
@@ -1624,11 +1628,11 @@ mod tests {
     }
 
     #[test]
-    fn unit_bytes_auto_probe_mover_multiple_bytes() {
+    fn unit_bytes_new_auto_probe_mover_multiple_bytes() {
         let original_probe = BytesType::from_hex_literal("00010203");
         let moving_part = BytesType::from_hex_literal("effe");
 
-        let mut auto_probe = BytesType::new_mover(original_probe, moving_part);
+        let mut auto_probe = BytesType::new_auto_probe_mover(original_probe, moving_part);
 
         assert_eq!(
             auto_probe.next(),

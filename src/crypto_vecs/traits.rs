@@ -60,40 +60,50 @@ where
 
     // ----------------
 
-    fn take_n(&self, length: usize) -> Option<&[Self::Element]> {
-        if self.len_bytes() <= length {
+    #[doc(hidden)]
+    fn _take_it(&self, length: usize, reverse: bool) -> Option<&[Self::Element]> {
+        if length == 0 {
+            None
+        } else if length > self.len_bytes() {
             Some(self.as_slice())
         } else {
-            self.chunks(length).next()
+            if reverse {
+                self.rchunks(length).next()
+            } else {
+                self.chunks(length).next()
+            }
         }
+    }
+
+    #[doc(hidden)]
+    fn _leave_it(&self, length: usize, reverse: bool) -> Option<&[Self::Element]> {
+        if length == 0 {
+            Some(self.as_slice())
+        } else if length >= self.len_bytes() {
+            None
+        } else {
+            if reverse {
+                self.chunks(self.len_bytes() - length).next()
+            } else {
+                self.rchunks(self.len_bytes() - length).next()
+            }
+        }
+    }
+
+    fn take_n(&self, length: usize) -> Option<&[Self::Element]> {
+        self._take_it(length, false)
     }
 
     fn skip_n(&self, length: usize) -> Option<&[Self::Element]> {
-        if length == 0 {
-            Some(self.as_slice())
-        } else if length >= self.len_bytes() {
-            None
-        } else {
-            self.rchunks(self.len_bytes() - length).next()
-        }
+        self._leave_it(length, false)
     }
 
     fn rtake_n(&self, length: usize) -> Option<&[Self::Element]> {
-        if self.len_bytes() <= length {
-            Some(self.as_slice())
-        } else {
-            self.rchunks(length).next()
-        }
+        self._take_it(length, true)
     }
 
     fn rskip_n(&self, length: usize) -> Option<&[Self::Element]> {
-        if length == 0 {
-            Some(self.as_slice())
-        } else if length >= self.len_bytes() {
-            None
-        } else {
-            self.chunks(self.len_bytes() - length).next()
-        }
+        self._leave_it(length, true)
     }
 
     // ----------------

@@ -1587,4 +1587,74 @@ mod tests {
 
         assert_eq!(auto_probe.next(), None);
     }
+
+    #[test]
+    fn unit_bytes_auto_probe_mover_single_byte() {
+        let original_probe = BytesType::from_hex_literal("00010203");
+        let moving_part = BytesType::from_hex_literal("ff");
+
+        let mut auto_probe = BytesType::new_mover(original_probe, moving_part);
+
+        assert_eq!(
+            auto_probe.next(),
+            Some(BytesType::from_hex_literal("ff00010203"))
+        );
+
+        assert_eq!(
+            auto_probe.next(),
+            Some(BytesType::from_hex_literal("00ff010203"))
+        );
+
+        assert_eq!(
+            auto_probe.next(),
+            Some(BytesType::from_hex_literal("0001ff0203"))
+        );
+
+        assert_eq!(
+            auto_probe.next(),
+            Some(BytesType::from_hex_literal("000102ff03"))
+        );
+
+        assert_eq!(
+            auto_probe.next(),
+            Some(BytesType::from_hex_literal("00010203ff"))
+        );
+
+        assert_eq!(auto_probe.next(), None);
+    }
+
+    #[test]
+    fn unit_bytes_auto_probe_mover_multiple_bytes() {
+        let original_probe = BytesType::from_hex_literal("00010203");
+        let moving_part = BytesType::from_hex_literal("effe");
+
+        let mut auto_probe = BytesType::new_mover(original_probe, moving_part);
+
+        assert_eq!(
+            auto_probe.next(),
+            Some(BytesType::from_hex_literal("effe00010203"))
+        );
+
+        assert_eq!(
+            auto_probe.next(),
+            Some(BytesType::from_hex_literal("00effe010203"))
+        );
+
+        assert_eq!(
+            auto_probe.next(),
+            Some(BytesType::from_hex_literal("0001effe0203"))
+        );
+
+        assert_eq!(
+            auto_probe.next(),
+            Some(BytesType::from_hex_literal("000102effe03"))
+        );
+
+        assert_eq!(
+            auto_probe.next(),
+            Some(BytesType::from_hex_literal("00010203effe"))
+        );
+
+        assert_eq!(auto_probe.next(), None);
+    }
 }

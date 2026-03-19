@@ -230,7 +230,8 @@ pub trait ToBytes {
 
 pub trait AutoProbe
 where
-    Self: Default + InternalData + InternalDataVec + LenBytes,
+    Self: Default + Extend<Self::Element> + InternalDataVecMut + LenBytes,
+    Self::Element: Clone,
 {
     fn new(
         final_probe: Self,
@@ -272,6 +273,35 @@ where
             size_start_actual,
             size_start < size_end,
         )
+    }
+
+    fn new_mover(
+        original_probe: Self,
+        moving_part: Self,
+    ) -> iter::FromFn<impl FnMut() -> Option<Self>> {
+        assert!(!original_probe.is_empty());
+        assert!(!moving_part.is_empty());
+
+        let mut size_iter = 0..=original_probe.len_bytes();
+
+        std::iter::from_fn(move || {
+            size_iter.next().map(|size_current| {
+                let mut result = original_probe
+                    .take_n_as_collection(size_current)
+                    .unwrap_or_default();
+
+                result.extend(moving_part.to_vec());
+
+                result.extend(
+                    original_probe
+                        .skip_n_as_collection(size_current)
+                        .unwrap_or_default()
+                        .to_vec(),
+                );
+
+                result
+            })
+        })
     }
 }
 

@@ -98,13 +98,11 @@ fn challenge_13() {
     let size_max = detected_block_size;
 
     println!();
-    for current in BytesType::new_repeat(b'A', size_min, size_max) {
-        println!("{}", current);
-    }
-
-    println!();
-    for current in BytesType::new_repeat(b'A', size_max, size_min) {
-        println!("{}", current);
+    for current in BytesType::new_mover(
+        BytesType::from_unicode_literal("This is going to be fun"),
+        BytesType::from_unicode_literal("_X_"),
+    ) {
+        println!("{}", current.to_codepage_1252());
     }
 
     println!();

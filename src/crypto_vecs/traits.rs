@@ -319,28 +319,29 @@ pub trait EncryptionOracle<H> {
     // ----------------
 
     fn bytes_missing_in_last_block(&self, pre_padding_size: usize) -> Result<usize, String> {
-        let mut probe = BytesType::default();
+        let mut original_length = None;
 
-        if pre_padding_size > 0 {
-            probe.extend(vec![b'A'; pre_padding_size]);
-        }
-
-        let original_length = self.encrypt(probe.clone()).unwrap().len_bytes();
-
-        // start from 1 as we immediately append a byte to the probe;
         // exit after 1024 bytes of padding to prevent eternal loop
-        for padding_length in 1..1024 {
-            probe.push(b'A');
+        for (iteration, current_probe) in
+            BytesType::new_repeat(b'A', pre_padding_size, 1024 + pre_padding_size).enumerate()
+        {
+            let oracle_response = self.encrypt(current_probe);
 
-            match self.encrypt(probe.clone()).response() {
-                Ok(cypher_with_padding) => {
-                    // new block was added by encryptor
-                    if cypher_with_padding.len_bytes() > original_length {
-                        return Ok(padding_length);
+            if iteration == 0 {
+                original_length = Some(oracle_response.unwrap().len_bytes())
+            } else {
+                match oracle_response.response() {
+                    Ok(cypher_with_padding) => {
+                        // new block was added by encryptor
+                        if cypher_with_padding.len_bytes()
+                            > original_length.expect("first iteration initializes original length")
+                        {
+                            return Ok(iteration);
+                        }
                     }
-                }
-                Err(e) => return Err(e.clone()),
-            };
+                    Err(e) => return Err(e.clone()),
+                };
+            }
         }
 
         Err("could not detect padding".to_string())

@@ -50,8 +50,6 @@ impl InternalData for Bytes {
 // ----------------
 
 impl InternalDataVec for Bytes {
-    type Element = u8;
-
     fn data(&self) -> &Vec<Self::Element> {
         &self.bytes
     }
@@ -78,8 +76,6 @@ impl InternalDataVec for Bytes {
 // ----------------
 
 impl InternalDataVecMut for Bytes {
-    type Element = u8;
-
     fn data_mut(&mut self) -> &mut Vec<Self::Element> {
         &mut self.bytes
     }

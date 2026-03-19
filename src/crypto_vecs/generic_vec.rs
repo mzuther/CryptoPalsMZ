@@ -63,8 +63,6 @@ where
     C: Elements<Element = E> + InternalDataVec<Element = E>,
     E: Clone,
 {
-    type Element = E;
-
     fn data(&self) -> &Vec<E> {
         self.collection.data()
     }
@@ -93,9 +91,8 @@ where
 impl<C, E> InternalDataVecMut for CryptoVec<C, E>
 where
     C: Elements<Element = E> + InternalDataVec<Element = E> + InternalDataVecMut<Element = E>,
+    E: Clone,
 {
-    type Element = E;
-
     fn data_mut(&mut self) -> &mut Vec<Self::Element> {
         self.collection.data_mut()
     }
@@ -110,6 +107,7 @@ where
 impl<C, E> Elements for CryptoVec<C, E>
 where
     C: InternalDataVec + Elements<Element = E>,
+    E: Clone,
 {
     type Element = E;
 

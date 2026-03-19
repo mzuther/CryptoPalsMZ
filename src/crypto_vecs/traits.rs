@@ -29,13 +29,11 @@ pub trait InternalData {
     }
 }
 
-pub trait InternalDataVec
+pub trait InternalDataVec: Elements
 where
     Self: Sized + InternalData<Collection = Vec<Self::Element>> + LenBytes,
     Self::Element: Clone,
 {
-    type Element;
-
     fn data(&self) -> &Vec<Self::Element>;
     fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, Self::Element>;
     fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, Self::Element>;
@@ -141,9 +139,10 @@ where
     }
 }
 
-pub trait InternalDataVecMut {
-    type Element;
-
+pub trait InternalDataVecMut: InternalDataVec
+where
+    Self::Element: Clone,
+{
     fn data_mut(&mut self) -> &mut Vec<Self::Element>;
 
     fn push(&mut self, value: Self::Element);

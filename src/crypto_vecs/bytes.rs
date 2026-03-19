@@ -456,7 +456,7 @@ impl BytesType {
 
 // ----------------
 
-impl AutoProbe<u8> for BytesType {}
+impl AutoProbe for BytesType {}
 
 // ================
 
@@ -1475,5 +1475,120 @@ mod tests {
         let result = bytes.transpose(keysize);
 
         assert_eq!(result, expected_result);
+    }
+
+    // ----------------
+
+    #[test]
+    fn unit_bytes_auto_probe_expanding() {
+        let final_probe = BytesType::from_hex_literal("00010203 04050607 08090a0b 0c0d0e0f");
+        let size_start = 0;
+        let is_expanding = true;
+
+        let mut auto_probe = BytesType::new(final_probe.clone(), size_start, is_expanding);
+
+        assert_eq!(auto_probe.next(), Some(Default::default()));
+
+        for current_size in 1..=final_probe.len_bytes() {
+            assert_eq!(
+                auto_probe.next(),
+                final_probe.take_n_as_collection(current_size)
+            );
+        }
+
+        assert_eq!(auto_probe.next(), None);
+    }
+
+    #[test]
+    fn unit_bytes_auto_probe_expanding_initial_size() {
+        let final_probe = BytesType::from_hex_literal("00010203 04050607 08090a0b 0c0d0e0f");
+        let size_start = 2;
+        let is_expanding = true;
+
+        let mut auto_probe = BytesType::new(final_probe.clone(), size_start, is_expanding);
+
+        for current_size in 2..=final_probe.len_bytes() {
+            assert_eq!(
+                auto_probe.next(),
+                final_probe.take_n_as_collection(current_size)
+            );
+        }
+
+        assert_eq!(auto_probe.next(), None);
+    }
+
+    #[test]
+    fn unit_bytes_auto_probe_shrinking() {
+        let final_probe = BytesType::from_hex_literal("00010203 04050607 08090a0b 0c0d0e0f");
+        let size_start = 0;
+        let is_expanding = false;
+
+        let mut auto_probe = BytesType::new(final_probe.clone(), size_start, is_expanding);
+
+        for current_size in (1..=final_probe.len_bytes()).rev() {
+            assert_eq!(
+                auto_probe.next(),
+                final_probe.take_n_as_collection(current_size)
+            );
+        }
+
+        assert_eq!(auto_probe.next(), Some(Default::default()));
+        assert_eq!(auto_probe.next(), None);
+    }
+
+    #[test]
+    fn unit_bytes_auto_probe_shrinking_final_size() {
+        let final_probe = BytesType::from_hex_literal("00010203 04050607 08090a0b 0c0d0e0f");
+        let size_start = 2;
+        let is_expanding = false;
+
+        let mut auto_probe = BytesType::new(final_probe.clone(), size_start, is_expanding);
+
+        for current_size in (size_start..=final_probe.len_bytes()).rev() {
+            assert_eq!(
+                auto_probe.next(),
+                final_probe.take_n_as_collection(current_size)
+            );
+        }
+
+        assert_eq!(auto_probe.next(), None);
+    }
+
+    #[test]
+    fn unit_bytes_auto_probe_repeat_expanding_initial_size() {
+        let element = b'A';
+        let size_start = 2;
+        let size_end = 16;
+
+        let mut auto_probe = BytesType::new_repeat(element, size_start, size_end);
+        let expected_final_probe = BytesType::new_from(vec![element; size_end]);
+
+        for current_size in size_start..=size_end {
+            assert_eq!(
+                auto_probe.next(),
+                expected_final_probe.take_n_as_collection(current_size)
+            );
+        }
+
+        assert_eq!(auto_probe.next(), None);
+    }
+
+    #[test]
+    fn unit_bytes_auto_probe_repeat_shrinking_final_size() {
+        let element = b'A';
+        let size_start = 16;
+        let size_end = 2;
+
+        let mut auto_probe = BytesType::new_repeat(element, size_start, size_end);
+        let expected_final_probe = BytesType::new_from(vec![element; size_start]);
+
+        for current_size in (size_end..=size_start).rev() {
+            assert_eq!(
+                auto_probe.next(),
+                expected_final_probe.take_n_as_collection(current_size)
+            );
+        }
+
+        assert_eq!(auto_probe.next(), None);
     }
 }

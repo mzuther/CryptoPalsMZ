@@ -323,7 +323,7 @@ pub fn decypher_aes_ecb_via_oracle(oracle: &oracles::AesEcbSuffix) -> BlockBytes
     assert!(detected_block_size < 256);
 
     // create distinct and recognizable block: 0x00 0x01 0x02 0x03 ...
-    let ecb_probe_block: Vec<_> = (0x00_u8..).into_iter().take(detected_block_size).collect();
+    let ecb_probe_block: Vec<_> = (0x00_u8..).take(detected_block_size).collect();
     let ecb_probe = BytesType::new_from(ecb_probe_block.repeat(3));
     let ecb_probe_blocks = ecb_probe.to_blocks(detected_block_size);
 
@@ -341,7 +341,7 @@ pub fn decypher_aes_ecb_via_oracle(oracle: &oracles::AesEcbSuffix) -> BlockBytes
         BlockBytes::new(detected_block_size),
         |mut acc, current_block_index| {
             acc.push(crate::decypher_aes_ecb_block_via_oracle(
-                &oracle,
+                oracle,
                 &acc,
                 detected_block_size,
                 current_block_index,

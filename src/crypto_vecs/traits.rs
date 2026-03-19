@@ -211,7 +211,7 @@ pub trait ToBytes {
     // ----------------
 
     fn to_bytes(&self) -> BytesType {
-        BytesType::new_from_ref(&self.to_bytes_raw().as_ref())
+        BytesType::new_from_ref(self.to_bytes_raw().as_ref())
     }
 
     fn to_hexadecimal(&self) -> HexadecimalType {
@@ -229,41 +229,50 @@ pub trait ToBytes {
 
 // ================
 
-pub trait AutoProbe<E>
+pub trait AutoProbe
 where
-    Self: InternalDataVec<Element = E>,
+    Self: Default + InternalData + InternalDataVec + LenBytes,
 {
-    fn new_auto_probe(
-        item: E,
+    fn new(
+        final_probe: Self,
         size_start: usize,
-        size_end: usize,
-    ) -> iter::FromFn<impl FnMut() -> Option<Self>>
-    where
-        Self: Sized,
-        E: Clone,
-    {
-        let is_expanding = size_start < size_end;
+        is_expanding: bool,
+    ) -> iter::FromFn<impl FnMut() -> Option<Self>> {
+        let size_end = final_probe.len_bytes();
+        let mut size_iter = either::Either::Left(size_start..=size_end);
 
-        let mut current_counter = size_start.min(size_end);
-        let counter_end = size_start.max(size_end);
+        if !is_expanding {
+            size_iter = either::Either::Right(
+                size_iter
+                    .expect_left("is valid and of type \"either::Left\"")
+                    .rev(),
+            )
+        };
 
         std::iter::from_fn(move || {
-            if current_counter <= counter_end {
-                let result = Some(Self::new_from(vec![
-                    item.clone();
-                    if is_expanding {
-                        current_counter
-                    } else {
-                        counter_end - current_counter
-                    }
-                ]));
-                current_counter += 1;
-
-                result
-            } else {
-                None
-            }
+            size_iter.next().map(|current_size| {
+                final_probe
+                    .take_n_as_collection(current_size)
+                    .unwrap_or_default()
+            })
         })
+    }
+
+    // ----------------
+
+    fn new_repeat(
+        element: Self::Element,
+        size_start: usize,
+        size_end: usize,
+    ) -> iter::FromFn<impl FnMut() -> Option<Self>> {
+        let size_start_actual = size_start.min(size_end);
+        let size_end_actual = size_start.max(size_end);
+
+        Self::new(
+            Self::new_from(vec![element; size_end_actual]),
+            size_start_actual,
+            size_start < size_end,
+        )
     }
 }
 

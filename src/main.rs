@@ -98,12 +98,12 @@ fn challenge_13() {
     let size_max = detected_block_size;
 
     println!();
-    for current in BytesType::new_auto_probe(b'A', size_min, size_max) {
+    for current in BytesType::new_repeat(b'A', size_min, size_max) {
         println!("{}", current);
     }
 
     println!();
-    for current in BytesType::new_auto_probe(b'A', size_max, size_min) {
+    for current in BytesType::new_repeat(b'A', size_max, size_min) {
         println!("{}", current);
     }
 

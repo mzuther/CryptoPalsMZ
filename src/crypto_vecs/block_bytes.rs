@@ -343,7 +343,8 @@ impl self::BlockBytes {
 
         // get padding length from last byte
         let last_block_vec = self.get_last_block().to_vec();
-        let padding_length = *last_block_vec.last().expect("block size is non-zero") as usize;
+        let padding_length =
+            *last_block_vec.last().expect("block size is non-zero") as usize;
 
         // last byte does not designate length of padding
         if padding_length > block_size {
@@ -389,7 +390,8 @@ impl self::BlockBytes {
         match self.is_padded_pkcs7() {
             Ok(_) => padded,
             Err(number_of_missing_bytes) => {
-                let block_padding = vec![number_of_missing_bytes as u8; number_of_missing_bytes];
+                let block_padding =
+                    vec![number_of_missing_bytes as u8; number_of_missing_bytes];
 
                 if number_of_missing_bytes == self.get_block_size() {
                     let new_block = BytesType::from(block_padding);
@@ -456,7 +458,11 @@ impl self::BlockBytes {
         padded_cypher.unpad_pkcs7()
     }
 
-    pub fn aes_cbc_encrypt(&self, key: &BytesType, iv: &BytesType) -> Result<Self, String> {
+    pub fn aes_cbc_encrypt(
+        &self,
+        key: &BytesType,
+        iv: &BytesType,
+    ) -> Result<Self, String> {
         assert!(self.uses_strict_filling());
 
         let block_size_bits = self.get_block_size_bits();
@@ -477,7 +483,8 @@ impl self::BlockBytes {
         for plain_block in padded_plain.iter() {
             let plain_block_xor = plain_block.fixed_xor(&previous_cypher);
 
-            let cypher_block = plain_block_xor.aes_ecb_encrypt_block(key, block_size_bits)?;
+            let cypher_block =
+                plain_block_xor.aes_ecb_encrypt_block(key, block_size_bits)?;
             previous_cypher = cypher_block.clone();
 
             cypher.push(cypher_block);
@@ -486,7 +493,11 @@ impl self::BlockBytes {
         Ok(cypher)
     }
 
-    pub fn aes_cbc_decrypt(&self, key: &BytesType, iv: &BytesType) -> Result<Self, String> {
+    pub fn aes_cbc_decrypt(
+        &self,
+        key: &BytesType,
+        iv: &BytesType,
+    ) -> Result<Self, String> {
         assert!(self.uses_strict_filling());
 
         let block_size_bits = self.get_block_size_bits();
@@ -504,8 +515,10 @@ impl self::BlockBytes {
         let cypher_iter = self.iter();
         let previous_cypher_iter = iter::once(iv).chain(self.iter());
 
-        for (cypher_block, previous_cypher_block) in cypher_iter.zip(previous_cypher_iter) {
-            let plain_block_xor = cypher_block.aes_ecb_decrypt_block(key, block_size_bits)?;
+        for (cypher_block, previous_cypher_block) in cypher_iter.zip(previous_cypher_iter)
+        {
+            let plain_block_xor =
+                cypher_block.aes_ecb_decrypt_block(key, block_size_bits)?;
             let plain_block = plain_block_xor.fixed_xor(previous_cypher_block);
 
             padded_cypher.push(plain_block);
@@ -585,7 +598,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_len_two_blocks() {
         let block_size = 6;
-        let result = BytesType::from_hex_literal("4162f3d3 426f120d ff").to_blocks(block_size);
+        let result =
+            BytesType::from_hex_literal("4162f3d3 426f120d ff").to_blocks(block_size);
 
         assert_eq!(result.number_of_blocks(), 2);
         assert_eq!(result.len_bytes(), 9);
@@ -597,8 +611,9 @@ mod tests {
     fn unit_blockbytes_find_duplicate_blocks_blocksize_1() {
         let block_size = 1;
 
-        let bytes =
-            BytesType::from_hex_literal("3a 1b d4 cb d0 aa 25 f2 66 db b8 fe 16 6e d4 cb 25 f3");
+        let bytes = BytesType::from_hex_literal(
+            "3a 1b d4 cb d0 aa 25 f2 66 db b8 fe 16 6e d4 cb 25 f3",
+        );
         let block_bytes = bytes.to_blocks(block_size);
 
         let mut expected_result = self::BlockBytes::new(block_size);
@@ -634,8 +649,9 @@ mod tests {
     fn unit_blockbytes_find_duplicate_blocks_blocksize_3() {
         let block_size = 3;
 
-        let bytes =
-            BytesType::from_hex_literal("3a1b7e 49d4cb d0aa25 f266db b8fe16 6ed4cb d0aadb 25f266");
+        let bytes = BytesType::from_hex_literal(
+            "3a1b7e 49d4cb d0aa25 f266db b8fe16 6ed4cb d0aadb 25f266",
+        );
         let block_bytes = bytes.to_blocks(block_size);
 
         let expected_result = self::BlockBytes::new(block_size);
@@ -649,8 +665,9 @@ mod tests {
     fn unit_blockbytes_find_duplicate_blocks_blocksize_4() {
         let block_size = 4;
 
-        let bytes =
-            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266");
+        let bytes = BytesType::from_hex_literal(
+            "3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266",
+        );
         let block_bytes = bytes.to_blocks(block_size);
 
         let mut expected_result = self::BlockBytes::new(block_size);
@@ -666,7 +683,9 @@ mod tests {
     fn unit_blockbytes_find_duplicate_blocks_blocksize_4_dangling_end() {
         let block_size = 4;
 
-        let bytes = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db");
+        let bytes = BytesType::from_hex_literal(
+            "3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db",
+        );
         let block_bytes = bytes.to_blocks(block_size);
 
         let mut expected_result = self::BlockBytes::new(block_size);
@@ -682,8 +701,9 @@ mod tests {
     fn unit_blockbytes_find_duplicate_blocks_blocksize_8() {
         let block_size = 8;
 
-        let bytes =
-            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266");
+        let bytes = BytesType::from_hex_literal(
+            "3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db25f266",
+        );
         let block_bytes = bytes.to_blocks(block_size);
 
         let expected_result = self::BlockBytes::new(block_size);
@@ -699,10 +719,12 @@ mod tests {
     fn unit_blockbytes_find_changed_blocks() {
         let block_size = 4;
 
-        let block_bytes = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
-            .to_blocks(block_size);
-        let block_other = BytesType::from_hex_literal("00000000 d4cbd0aa ffffffff 3a1b7e49")
-            .to_blocks(block_size);
+        let block_bytes =
+            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+                .to_blocks(block_size);
+        let block_other =
+            BytesType::from_hex_literal("00000000 d4cbd0aa ffffffff 3a1b7e49")
+                .to_blocks(block_size);
 
         let expected_result = vec![0, 2];
 
@@ -715,10 +737,12 @@ mod tests {
     fn unit_blockbytes_find_changed_blocks_identical() {
         let block_size = 4;
 
-        let block_bytes = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
-            .to_blocks(block_size);
-        let block_other = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
-            .to_blocks(block_size);
+        let block_bytes =
+            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+                .to_blocks(block_size);
+        let block_other =
+            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+                .to_blocks(block_size);
 
         let expected_result = Vec::<usize>::default();
 
@@ -745,10 +769,11 @@ mod tests {
     fn unit_blockbytes_find_changed_blocks_missing_bytes() {
         let block_size = 4;
 
-        let block_bytes = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+        let block_bytes =
+            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+                .to_blocks(block_size);
+        let block_other = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b")
             .to_blocks(block_size);
-        let block_other =
-            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b").to_blocks(block_size);
 
         let expected_result = vec![3];
 
@@ -761,9 +786,11 @@ mod tests {
     fn unit_blockbytes_find_changed_blocks_longer() {
         let block_size = 4;
 
-        let block_bytes = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
-            .to_blocks(block_size);
-        let block_other = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa").to_blocks(block_size);
+        let block_bytes =
+            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+                .to_blocks(block_size);
+        let block_other =
+            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa").to_blocks(block_size);
 
         let expected_result = vec![2, 3];
 
@@ -776,10 +803,11 @@ mod tests {
     fn unit_blockbytes_find_changed_blocks_shorter() {
         let block_size = 4;
 
-        let block_bytes =
-            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db").to_blocks(block_size);
-        let block_other = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+        let block_bytes = BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db")
             .to_blocks(block_size);
+        let block_other =
+            BytesType::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49")
+                .to_blocks(block_size);
 
         let expected_result = vec![3];
 
@@ -921,9 +949,11 @@ mod tests {
     #[test]
     fn unit_blockbytes_pad_pkcs7_single_block() {
         let block_size = 20;
-        let unpadded = BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
+        let unpadded =
+            BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
 
-        let expected_result = BytesType::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04");
+        let expected_result =
+            BytesType::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04");
 
         let result = unpadded.pad_pkcs7().to_bytes();
 
@@ -933,7 +963,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_pad_pkcs7_two_blocks() {
         let block_size = 6;
-        let unpadded = BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
+        let unpadded =
+            BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
 
         let expected_result = BytesType::from_unicode_literal("YELLOW SUBMARINE\x02\x02");
 
@@ -945,10 +976,12 @@ mod tests {
     #[test]
     fn unit_blockbytes_pad_pkcs7_full_block_unpadded() {
         let block_size = 8;
-        let unpadded = BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
+        let unpadded =
+            BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
 
-        let expected_result =
-            BytesType::from_unicode_literal("YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08");
+        let expected_result = BytesType::from_unicode_literal(
+            "YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08",
+        );
 
         let result = unpadded.pad_pkcs7().to_bytes();
 
@@ -958,7 +991,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_pad_pkcs7_full_block_correctly_padded() {
         let block_size = 8;
-        let unpadded = BytesType::from_unicode_literal("YELLOW SUBMARIN\x01").to_blocks(block_size);
+        let unpadded =
+            BytesType::from_unicode_literal("YELLOW SUBMARIN\x01").to_blocks(block_size);
 
         let expected_result = BytesType::from_unicode_literal("YELLOW SUBMARIN\x01");
 
@@ -970,8 +1004,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_pad_pkcs7_full_block_incorrectly_padded() {
         let block_size = 8;
-        let unpadded =
-            BytesType::from_unicode_literal("YELLOW SUBMARI\x01\x02").to_blocks(block_size);
+        let unpadded = BytesType::from_unicode_literal("YELLOW SUBMARI\x01\x02")
+            .to_blocks(block_size);
 
         let expected_result = BytesType::from_unicode_literal(
             "YELLOW SUBMARI\x01\x02\x08\x08\x08\x08\x08\x08\x08\x08",
@@ -999,7 +1033,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_two_blocks_single_byte() {
         let block_size = 8;
-        let padded = BytesType::from_unicode_literal("YELLOW SUBMARIN\x01").to_blocks(block_size);
+        let padded =
+            BytesType::from_unicode_literal("YELLOW SUBMARIN\x01").to_blocks(block_size);
 
         let expected_result =
             Ok(BytesType::from_unicode_literal("YELLOW SUBMARIN").to_blocks(block_size));
@@ -1012,8 +1047,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_two_blocks_padded_two_bytes() {
         let block_size = 6;
-        let padded =
-            BytesType::from_unicode_literal("YELLOW SUBMARINE\x02\x02").to_blocks(block_size);
+        let padded = BytesType::from_unicode_literal("YELLOW SUBMARINE\x02\x02")
+            .to_blocks(block_size);
 
         let expected_result =
             Ok(BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size));
@@ -1026,9 +1061,10 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_full_block_padding() {
         let block_size = 8;
-        let padded =
-            BytesType::from_unicode_literal("YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08")
-                .to_blocks(block_size);
+        let padded = BytesType::from_unicode_literal(
+            "YELLOW SUBMARINE\x08\x08\x08\x08\x08\x08\x08\x08",
+        )
+        .to_blocks(block_size);
 
         let expected_result =
             Ok(BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size));
@@ -1041,7 +1077,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_no_padding() {
         let block_size = 8;
-        let padded = BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
+        let padded =
+            BytesType::from_unicode_literal("YELLOW SUBMARINE").to_blocks(block_size);
 
         let expected_result = Err(String::from("invalid PKCS#7 padding"));
 
@@ -1053,8 +1090,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_incorrect_padding_wrong_byte() {
         let block_size = 8;
-        let padded =
-            BytesType::from_unicode_literal("YELLOW SUBMARI\x01\x02").to_blocks(block_size);
+        let padded = BytesType::from_unicode_literal("YELLOW SUBMARI\x01\x02")
+            .to_blocks(block_size);
 
         let expected_result = Err(String::from("invalid PKCS#7 padding"));
 
@@ -1066,7 +1103,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_incorrect_padding_zero_at_end() {
         let block_size = 8;
-        let padded = BytesType::from_unicode_literal("YELLOW SUBMARIN\x00").to_blocks(block_size);
+        let padded =
+            BytesType::from_unicode_literal("YELLOW SUBMARIN\x00").to_blocks(block_size);
 
         let expected_result = Err(String::from("invalid PKCS#7 padding"));
 
@@ -1078,8 +1116,8 @@ mod tests {
     #[test]
     fn unit_blockbytes_unpad_pkcs7_incorrect_padding_overhanging_bytes() {
         let block_size = 8;
-        let padded =
-            BytesType::from_unicode_literal("YELLOW SUBMARINE\x02\x02").to_blocks(block_size);
+        let padded = BytesType::from_unicode_literal("YELLOW SUBMARINE\x02\x02")
+            .to_blocks(block_size);
 
         let expected_result = Err(String::from("invalid PKCS#7 padding"));
 

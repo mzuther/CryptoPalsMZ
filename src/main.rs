@@ -5,8 +5,8 @@
 use std::fs;
 
 use cryptopals::crypto_vecs::traits::{
-    AutoProbe, DecryptionOracle, EncryptionOracle, FromBytes, InternalData, InternalDataVec,
-    InternalDataVecMut, LenBytes, ToBytes,
+    AutoProbe, DecryptionOracle, EncryptionOracle, FromBytes, InternalData,
+    InternalDataVec, InternalDataVecMut, LenBytes, ToBytes,
 };
 use cryptopals::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, UnicodeType};
 use cryptopals::{constants, oracles};
@@ -74,7 +74,8 @@ fn challenge_13() {
     println!("bytes to new block:  {}", bytes_to_new_block);
     println!("block size:          {}", detected_block_size);
 
-    let email_address = "1234567890admin\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B@bar.com";
+    let email_address =
+        "1234567890admin\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B@bar.com";
     let cypher = oracle
         .encrypt(BytesType::from_unicode_literal(email_address))
         .unwrap()
@@ -121,7 +122,8 @@ fn challenge_06() {
     let cypher = BytesType::from_base64_literal(&base64_string);
 
     let keysize_range = 2..41;
-    let mut scores = cryptopals::guess_keysize_from_hamming_distance(&cypher, &keysize_range, 10);
+    let mut scores =
+        cryptopals::guess_keysize_from_hamming_distance(&cypher, &keysize_range, 10);
 
     // order by score, with lowest score first
     scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -147,7 +149,15 @@ fn challenge_06() {
         println!("[block {}/{}]", index + 1, keysize);
         scores.sort_by(|a, b| a.key.cmp(&b.key));
         for score in &scores {
-            cryptopals::print_histogram(&score.key, &score.plain_text, 0.22, 235.0, true, 0.005, 5);
+            cryptopals::print_histogram(
+                &score.key,
+                &score.plain_text,
+                0.22,
+                235.0,
+                true,
+                0.005,
+                5,
+            );
         }
         println!();
 
@@ -158,8 +168,9 @@ fn challenge_06() {
         proposed_key.extend(score.key.clone());
     }
 
-    let manual_key =
-        BytesType::from_hex_literal("5465726d696e61746f7220583a204272696e6720746865206e6f697365");
+    let manual_key = BytesType::from_hex_literal(
+        "5465726d696e61746f7220583a204272696e6720746865206e6f697365",
+    );
 
     assert_eq!(manual_key, proposed_key);
 
@@ -175,7 +186,8 @@ fn challenge_06() {
 // ----------------
 
 fn play_with_xor() {
-    let plain = BytesType::from_unicode_literal("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");
+    let plain =
+        BytesType::from_unicode_literal("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");
     let key = BytesType::from_unicode_literal("ESWAREINMAL");
 
     let cypher = plain.fixed_xor(&key);

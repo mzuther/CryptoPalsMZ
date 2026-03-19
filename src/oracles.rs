@@ -73,7 +73,10 @@ impl AesEcbDetection {
 // ----------------
 
 impl EncryptionOracle<constants::AesMode> for AesEcbDetection {
-    fn encrypt(&self, plain: BytesType) -> OracleResponse<BlockBytes, constants::AesMode> {
+    fn encrypt(
+        &self,
+        plain: BytesType,
+    ) -> OracleResponse<BlockBytes, constants::AesMode> {
         let mut rng = rand::rng();
 
         let plain_padded_blocks = plain
@@ -90,7 +93,8 @@ impl EncryptionOracle<constants::AesMode> for AesEcbDetection {
             let initialization_vector = BytesType::create_random_key(self.block_size);
 
             OracleResponse {
-                response: plain_padded_blocks.aes_cbc_encrypt(&self.key, &initialization_vector),
+                response: plain_padded_blocks
+                    .aes_cbc_encrypt(&self.key, &initialization_vector),
                 hint: Some(constants::AesMode::NonECB),
             }
         }
@@ -188,7 +192,10 @@ impl AesEcbCookieCutter {
         }
     }
 
-    pub fn parse_key_value_cookie(&self, cookie: &str) -> Result<serde_json::Value, String> {
+    pub fn parse_key_value_cookie(
+        &self,
+        cookie: &str,
+    ) -> Result<serde_json::Value, String> {
         // using "serde_json" to parse the cookie would make much more sense,
         // but the challenge explicitly asks for writing the parsing code
         let json_chunks = cookie

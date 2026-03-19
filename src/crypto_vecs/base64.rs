@@ -2,7 +2,8 @@ use regex::Regex;
 use std::convert;
 
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalData, InternalDataVecMut, LenBytes, Representation, ToBytes,
+    Elements, FromBytes, InternalData, InternalDataVecMut, LenBytes, Representation,
+    ToBytes,
 };
 use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
 
@@ -125,19 +126,19 @@ impl Representation for Base64 {
     fn representation(&self) -> String {
         let block_size = 8;
 
-        let base64_blocks: String =
-            self.elements()
-                .enumerate()
-                .fold(Default::default(), |mut acc, (index, char)| {
-                    acc.push(char);
+        let base64_blocks: String = self.elements().enumerate().fold(
+            Default::default(),
+            |mut acc, (index, char)| {
+                acc.push(char);
 
-                    // separate blocks
-                    if index % block_size == block_size - 1 {
-                        acc.push(' ');
-                    }
+                // separate blocks
+                if index % block_size == block_size - 1 {
+                    acc.push(' ');
+                }
 
-                    acc
-                });
+                acc
+            },
+        );
 
         String::from(base64_blocks.trim_end())
     }
@@ -165,33 +166,37 @@ impl FromBytes for Base64 {
     fn from_bytes(bytes: &BytesType) -> Self {
         let base64_segments = Self::split_bytes_into_segments(bytes, 6);
 
-        let base64_string = base64_segments
-            .iter()
-            .fold(String::default(), |mut acc, &segment| {
-                acc.push(match segment {
-                    // padding character (=)
-                    None => 0x3d,
-                    Some(byte) => {
-                        match byte {
-                            // upper case letter
-                            0..26 => byte + 0x41,
-                            // lower case letter
-                            26..52 => byte + 0x47,
-                            // digit
-                            52..62 => byte - 0x04,
-                            // plus
-                            62 => 0x2b,
-                            // slash
-                            63 => 0x2f,
-                            undefined => {
-                                panic!("base64 bytes must be below 64, found {}", undefined)
+        let base64_string =
+            base64_segments
+                .iter()
+                .fold(String::default(), |mut acc, &segment| {
+                    acc.push(match segment {
+                        // padding character (=)
+                        None => 0x3d,
+                        Some(byte) => {
+                            match byte {
+                                // upper case letter
+                                0..26 => byte + 0x41,
+                                // lower case letter
+                                26..52 => byte + 0x47,
+                                // digit
+                                52..62 => byte - 0x04,
+                                // plus
+                                62 => 0x2b,
+                                // slash
+                                63 => 0x2f,
+                                undefined => {
+                                    panic!(
+                                        "base64 bytes must be below 64, found {}",
+                                        undefined
+                                    )
+                                }
                             }
                         }
-                    }
-                } as char);
+                    } as char);
 
-                acc
-            });
+                    acc
+                });
 
         Self::new_from(base64_string)
     }
@@ -201,35 +206,37 @@ impl FromBytes for Base64 {
 
 impl ToBytes for Base64 {
     fn to_bytes_raw(&self) -> Bytes {
-        let decoded_bytes = self
-            .base64
-            .bytes()
-            .fold(Vec::default(), |mut acc, char_int| {
-                let char_option = match char_int {
-                    // plus
-                    0x2b => Some(62),
-                    // slash
-                    0x2f => Some(63),
-                    // digit
-                    0x30..=0x39 => Some(char_int + 4),
-                    // padding character (=)
-                    0x3d => None,
-                    // upper case letter
-                    0x41..=0x5a => Some(char_int - 65),
-                    // lower case letter
-                    0x61..=0x7a => Some(char_int - 71),
-                    undefined => panic!("0x{} is not a valid base64 character", undefined),
-                };
+        let decoded_bytes =
+            self.base64
+                .bytes()
+                .fold(Vec::default(), |mut acc, char_int| {
+                    let char_option = match char_int {
+                        // plus
+                        0x2b => Some(62),
+                        // slash
+                        0x2f => Some(63),
+                        // digit
+                        0x30..=0x39 => Some(char_int + 4),
+                        // padding character (=)
+                        0x3d => None,
+                        // upper case letter
+                        0x41..=0x5a => Some(char_int - 65),
+                        // lower case letter
+                        0x61..=0x7a => Some(char_int - 71),
+                        undefined => {
+                            panic!("0x{} is not a valid base64 character", undefined)
+                        }
+                    };
 
-                assert!(
-                    char_option.is_none_or(|x| x < 64),
-                    "{:?} is not valid base64",
-                    char_option
-                );
+                    assert!(
+                        char_option.is_none_or(|x| x < 64),
+                        "{:?} is not valid base64",
+                        char_option
+                    );
 
-                acc.push(char_option);
-                acc
-            });
+                    acc.push(char_option);
+                    acc
+                });
 
         Self::assemble_bytes_from_segments(&decoded_bytes, 6)
     }
@@ -254,10 +261,10 @@ impl Base64 {
 
     // plain-text bytes which yield "COMPLETE_ALPHABET"
     pub const COMPLETE_ALPHABET_BYTES: [u8; 48] = [
-        0x00, 0x10, 0x83, 0x10, 0x51, 0x87, 0x20, 0x92, 0x8b, 0x30, 0xd3, 0x8f, 0x41, 0x14, 0x93,
-        0x51, 0x55, 0x97, 0x61, 0x96, 0x9b, 0x71, 0xd7, 0x9f, 0x82, 0x18, 0xa3, 0x92, 0x59, 0xa7,
-        0xa2, 0x9a, 0xab, 0xb2, 0xdb, 0xaf, 0xc3, 0x1c, 0xb3, 0xd3, 0x5d, 0xb7, 0xe3, 0x9e, 0xbb,
-        0xf3, 0xdf, 0xbf,
+        0x00, 0x10, 0x83, 0x10, 0x51, 0x87, 0x20, 0x92, 0x8b, 0x30, 0xd3, 0x8f, 0x41,
+        0x14, 0x93, 0x51, 0x55, 0x97, 0x61, 0x96, 0x9b, 0x71, 0xd7, 0x9f, 0x82, 0x18,
+        0xa3, 0x92, 0x59, 0xa7, 0xa2, 0x9a, 0xab, 0xb2, 0xdb, 0xaf, 0xc3, 0x1c, 0xb3,
+        0xd3, 0x5d, 0xb7, 0xe3, 0x9e, 0xbb, 0xf3, 0xdf, 0xbf,
     ];
 
     // plain-text hexadecimal string which yields "COMPLETE_ALPHABET"
@@ -265,32 +272,38 @@ impl Base64 {
 
     // ----------------
 
-    fn split_bytes_into_segments(bytes: &BytesType, bits_per_segment: u8) -> Vec<Option<u8>> {
+    fn split_bytes_into_segments(
+        bytes: &BytesType,
+        bits_per_segment: u8,
+    ) -> Vec<Option<u8>> {
         let bits_per_byte = 8;
         let mut bits_with_value = 0;
         let mut remainder = 0;
 
-        let mut segments_to_encode = bytes.iter().fold(Vec::default(), |mut acc, &byte| {
-            bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
-            let bits_with_remainder = bits_per_byte - bits_with_value;
-
-            let mask_remainder = (1 << bits_with_remainder) - 1;
-            let mask_value = 0xff - mask_remainder;
-
-            let value = ((byte & mask_value) >> bits_with_remainder) + remainder;
-            remainder = (byte & mask_remainder) << (bits_per_segment - bits_with_remainder);
-
-            acc.push(Some(value));
-
-            if bits_with_value == (bits_per_byte - bits_per_segment) {
+        let mut segments_to_encode =
+            bytes.iter().fold(Vec::default(), |mut acc, &byte| {
                 bits_with_value = (bits_with_value + bits_per_segment) % bits_per_byte;
+                let bits_with_remainder = bits_per_byte - bits_with_value;
 
-                acc.push(Some(remainder));
-                remainder = 0;
-            }
+                let mask_remainder = (1 << bits_with_remainder) - 1;
+                let mask_value = 0xff - mask_remainder;
 
-            acc
-        });
+                let value = ((byte & mask_value) >> bits_with_remainder) + remainder;
+                remainder =
+                    (byte & mask_remainder) << (bits_per_segment - bits_with_remainder);
+
+                acc.push(Some(value));
+
+                if bits_with_value == (bits_per_byte - bits_per_segment) {
+                    bits_with_value =
+                        (bits_with_value + bits_per_segment) % bits_per_byte;
+
+                    acc.push(Some(remainder));
+                    remainder = 0;
+                }
+
+                acc
+            });
 
         // add padding characters
         if bits_with_value > 0 {
@@ -380,7 +393,8 @@ mod tests {
         bytes_raw.push(0x10);
 
         let bytes = BytesType::from(bytes_raw);
-        let expected_result = Base64Type::from(format!("{}EBA=", Base64::COMPLETE_ALPHABET));
+        let expected_result =
+            Base64Type::from(format!("{}EBA=", Base64::COMPLETE_ALPHABET));
 
         let result = bytes.to_base64();
 
@@ -393,7 +407,8 @@ mod tests {
         bytes_raw.push(0x00);
 
         let bytes = BytesType::from(bytes_raw);
-        let expected_result = Base64Type::from(format!("{}AA==", Base64::COMPLETE_ALPHABET));
+        let expected_result =
+            Base64Type::from(format!("{}AA==", Base64::COMPLETE_ALPHABET));
 
         let result = bytes.to_base64();
 
@@ -518,7 +533,8 @@ mod tests {
     #[test]
     fn unit_base64_unicode_to_base64_via_bytes() {
         let unicode = UnicodeType::from("Hi. Servus. Grüezi. 你好.");
-        let expected_result = Base64Type::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
+        let expected_result =
+            Base64Type::from("SGkuIFNlcnZ1cy4gR3LDvGV6aS4g5L2g5aW9Lg==");
 
         let result = unicode.to_base64();
 

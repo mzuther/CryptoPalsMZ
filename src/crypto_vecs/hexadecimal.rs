@@ -105,19 +105,19 @@ impl Representation for Hexadecimal {
     fn representation(&self) -> String {
         let block_size = 4;
 
-        let hex_blocks =
-            self.elements()
-                .enumerate()
-                .fold(String::default(), |mut acc, (index, element)| {
-                    acc.push_str(&element);
+        let hex_blocks = self.elements().enumerate().fold(
+            String::default(),
+            |mut acc, (index, element)| {
+                acc.push_str(&element);
 
-                    // separate blocks
-                    if index % block_size == block_size - 1 {
-                        acc.push(' ');
-                    }
+                // separate blocks
+                if index % block_size == block_size - 1 {
+                    acc.push(' ');
+                }
 
-                    acc
-                });
+                acc
+            },
+        );
 
         String::from(hex_blocks.trim_end())
     }

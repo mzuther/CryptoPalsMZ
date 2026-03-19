@@ -7,8 +7,8 @@ pub mod oracles;
 use std::{cmp, collections::HashMap, ops};
 
 use crate::crypto_vecs::traits::{
-    AutoProbe, EncryptionOracle, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
-    ToBytes,
+    AutoProbe, EncryptionOracle, InternalData, InternalDataVec, InternalDataVecMut,
+    LenBytes, ToBytes,
 };
 use crate::crypto_vecs::{BlockBytes, BytesType};
 
@@ -99,7 +99,8 @@ pub fn print_histogram(
 
         let found_count = important_letters.iter().fold(0, |acc, &letter_char| {
             let letter = letter_char as u8;
-            let percentage_letter = letter_frequencies.get(&letter).copied().unwrap_or(0.0);
+            let percentage_letter =
+                letter_frequencies.get(&letter).copied().unwrap_or(0.0);
 
             if percentage_letter > 0.0 {
                 acc + 1
@@ -128,11 +129,13 @@ pub fn print_histogram(
                 (percentage_found * magnification_factor).round() as i32,
                 max_bin_size,
             );
-            let value_expected = (percentage_expected * magnification_factor).round() as i32;
+            let value_expected =
+                (percentage_expected * magnification_factor).round() as i32;
 
             let bin_bottom = cmp::min(value_found, value_expected);
             let bin_middle = cmp::max(value_expected - value_found, 0);
-            let bin_top = cmp::min(cmp::max(value_found - value_expected, 0), max_bin_size);
+            let bin_top =
+                cmp::min(cmp::max(value_found - value_expected, 0), max_bin_size);
             let bin_fill_to_border = max_bin_size - cmp::max(value_found, value_expected);
 
             if letter == b' ' {
@@ -176,23 +179,23 @@ fn score_letter_frequencies(bytes: &BytesType) -> f64 {
     let english_letter_frequencies = &constants::ENGLISH_LETTER_FREQUENCIES;
 
     // bonus for letters matching expected frequency (lower is better)
-    let total_score =
-        english_letter_frequencies
-            .iter()
-            .fold(0.0, |acc, (letter, percentage_expected)| {
-                let percentage_found = letter_frequencies.get(letter).copied().unwrap_or(0.0);
+    let total_score = english_letter_frequencies.iter().fold(
+        0.0,
+        |acc, (letter, percentage_expected)| {
+            let percentage_found = letter_frequencies.get(letter).copied().unwrap_or(0.0);
 
-                // higher frequencies are just as bad as lower frequencies
-                let score_diff = (percentage_expected - percentage_found).abs();
-                let score_diff = score_diff.powi(4);
+            // higher frequencies are just as bad as lower frequencies
+            let score_diff = (percentage_expected - percentage_found).abs();
+            let score_diff = score_diff.powi(4);
 
-                acc + score_diff
-            });
+            acc + score_diff
+        },
+    );
 
     // malus for non-letters
-    english_letter_frequencies
-        .iter()
-        .fold(total_score, |acc, (&letter, percentage_found)| {
+    english_letter_frequencies.iter().fold(
+        total_score,
+        |acc, (&letter, percentage_found)| {
             match letter {
                 // space, comma and dot are fine
                 0x20 | 0x2c | 0x2e => acc,
@@ -201,7 +204,8 @@ fn score_letter_frequencies(bytes: &BytesType) -> f64 {
                 // add malus
                 _ => acc + 2.0 * percentage_found,
             }
-        })
+        },
+    )
 }
 
 pub fn guess_keysize_from_hamming_distance(
@@ -235,7 +239,10 @@ pub fn transpose_strings_reverse(strings: &[String]) -> Vec<String> {
     self::transpose_strings_internal(strings, true)
 }
 
-fn transpose_strings_internal(strings: &[String], reverse_transposition: bool) -> Vec<String> {
+fn transpose_strings_internal(
+    strings: &[String],
+    reverse_transposition: bool,
+) -> Vec<String> {
     assert!(!strings.is_empty());
 
     let max_width = strings
@@ -265,25 +272,25 @@ fn transpose_strings_internal(strings: &[String], reverse_transposition: bool) -
     let steps_into_vector = 0..step_size;
 
     // transpose lines
-    let transposed_lines =
-        steps_into_vector
-            .into_iter()
-            .fold(Vec::with_capacity(height), |mut acc, chars_to_skip| {
-                let transposed_line = concatenated_lines
-                    .iter()
-                    .skip(chars_to_skip)
-                    .step_by(step_size);
+    let transposed_lines = steps_into_vector.into_iter().fold(
+        Vec::with_capacity(height),
+        |mut acc, chars_to_skip| {
+            let transposed_line = concatenated_lines
+                .iter()
+                .skip(chars_to_skip)
+                .step_by(step_size);
 
-                // rotate transposed string counterclockwise
-                if reverse_transposition {
-                    acc.push(Vec::from_iter(transposed_line));
-                // rotate transposed string clockwise
-                } else {
-                    acc.push(Vec::from_iter(transposed_line.rev()));
-                }
+            // rotate transposed string counterclockwise
+            if reverse_transposition {
+                acc.push(Vec::from_iter(transposed_line));
+            // rotate transposed string clockwise
+            } else {
+                acc.push(Vec::from_iter(transposed_line.rev()));
+            }
 
-                acc
-            });
+            acc
+        },
+    );
 
     let transposed_lines_iter = if reverse_transposition {
         // rotate transposed string counterclockwise

@@ -15,7 +15,8 @@ fn integration_challenge_09() {
     let plain = BytesType::from_unicode_literal("YELLOW SUBMARINE");
     let plain_blocks = plain.to_blocks(block_size);
 
-    let expected_result = BytesType::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04");
+    let expected_result =
+        BytesType::from_unicode_literal("YELLOW SUBMARINE\x04\x04\x04\x04");
 
     let padded_blocks = plain_blocks.pad_pkcs7();
     let result = padded_blocks.to_bytes();
@@ -30,7 +31,8 @@ fn integration_challenge_09() {
 fn integration_challenge_10() {
     let block_size_bits = 128;
 
-    let cypher_string: String = fs::read_to_string("original/10.txt").expect("could not read file");
+    let cypher_string: String =
+        fs::read_to_string("original/10.txt").expect("could not read file");
 
     let cypher = BytesType::from_base64_literal(&cypher_string);
     let cypher_blocks = cypher.to_blocks_bits(block_size_bits);
@@ -71,15 +73,16 @@ fn integration_challenge_11() {
             || String::default(),
             |mut acc, _| {
                 // create oracle with new key for every iteration
-                let oracle_response =
-                    oracles::AesEcbDetection::new_bits(block_size_bits).encrypt(plain.clone());
+                let oracle_response = oracles::AesEcbDetection::new_bits(block_size_bits)
+                    .encrypt(plain.clone());
 
                 let cypher = oracle_response.unwrap();
                 let encryption_mode = oracle_response.unwrap_hint();
                 let detected_mode = cryptopals::detect_aes_mode(&cypher);
 
                 if *encryption_mode != detected_mode {
-                    let error_message = format!("* {} != {}\n", encryption_mode, detected_mode);
+                    let error_message =
+                        format!("* {} != {}\n", encryption_mode, detected_mode);
 
                     acc.push_str(&error_message);
                 }

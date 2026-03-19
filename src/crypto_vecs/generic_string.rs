@@ -1,9 +1,9 @@
 use std::{convert, fmt};
 
-use crate::crypto_vecs::{Bytes, BytesType};
 use crate::crypto_vecs::traits::{
     Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
+use crate::crypto_vecs::{Bytes, BytesType};
 
 // ================
 

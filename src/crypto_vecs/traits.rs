@@ -312,19 +312,28 @@ pub trait EncryptionOracle<H> {
 
     // ----------------
 
-    fn encrypt_blocks(&self, plain: BlockBytes) -> oracles::OracleResponse<BlockBytes, H> {
+    fn encrypt_blocks(
+        &self,
+        plain: BlockBytes,
+    ) -> oracles::OracleResponse<BlockBytes, H> {
         self.encrypt(plain.to_bytes())
     }
 
     // ----------------
 
-    fn bytes_missing_in_last_block(&self, pre_padding_size: usize) -> Result<usize, String> {
+    fn bytes_missing_in_last_block(
+        &self,
+        pre_padding_size: usize,
+    ) -> Result<usize, String> {
         let mut original_length = None;
 
         // exit after 1024 bytes of padding to prevent eternal loop
-        for (iteration, current_probe) in
-            BytesType::new_auto_probe_repeat(b'A', pre_padding_size, 1024 + pre_padding_size)
-                .enumerate()
+        for (iteration, current_probe) in BytesType::new_auto_probe_repeat(
+            b'A',
+            pre_padding_size,
+            1024 + pre_padding_size,
+        )
+        .enumerate()
         {
             let oracle_response = self.encrypt(current_probe);
 
@@ -335,7 +344,8 @@ pub trait EncryptionOracle<H> {
                     Ok(cypher_with_padding) => {
                         // new block was added by encryptor
                         if cypher_with_padding.len_bytes()
-                            > original_length.expect("first iteration initializes original length")
+                            > original_length
+                                .expect("first iteration initializes original length")
                         {
                             return Ok(iteration);
                         }

@@ -90,7 +90,9 @@ where
 
 impl<C, E> InternalDataVecMut for CryptoVec<C, E>
 where
-    C: Elements<Element = E> + InternalDataVec<Element = E> + InternalDataVecMut<Element = E>,
+    C: Elements<Element = E>
+        + InternalDataVec<Element = E>
+        + InternalDataVecMut<Element = E>,
     E: Clone,
 {
     fn data_mut(&mut self) -> &mut Vec<Self::Element> {
@@ -161,7 +163,9 @@ where
 
 impl<C, E> convert::From<Vec<E>> for self::CryptoVec<C, E>
 where
-    C: InternalData<Collection = Vec<E>> + InternalDataVec<Element = E> + Elements<Element = E>,
+    C: InternalData<Collection = Vec<E>>
+        + InternalDataVec<Element = E>
+        + Elements<Element = E>,
     E: Clone,
 {
     fn from(data: Vec<E>) -> Self {
@@ -171,7 +175,9 @@ where
 
 impl<C, E> convert::From<&[E]> for self::CryptoVec<C, E>
 where
-    C: InternalData<Collection = Vec<E>> + InternalDataVec<Element = E> + Elements<Element = E>,
+    C: InternalData<Collection = Vec<E>>
+        + InternalDataVec<Element = E>
+        + Elements<Element = E>,
     E: Clone,
 {
     fn from(data: &[E]) -> Self {
@@ -181,7 +187,9 @@ where
 
 impl<C, E> convert::From<E> for self::CryptoVec<C, E>
 where
-    C: InternalData<Collection = Vec<E>> + InternalDataVec<Element = E> + Elements<Element = E>,
+    C: InternalData<Collection = Vec<E>>
+        + InternalDataVec<Element = E>
+        + Elements<Element = E>,
     E: Clone,
 {
     fn from(element: E) -> Self {

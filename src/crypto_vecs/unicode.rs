@@ -86,7 +86,8 @@ impl convert::AsRef<str> for Unicode {
 
 impl FromBytes for Unicode {
     fn from_bytes(bytes: &BytesType) -> Self {
-        let unicode_string = String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string");
+        let unicode_string =
+            String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string");
 
         Self::new_from(unicode_string)
     }
@@ -210,7 +211,8 @@ mod tests {
     #[test]
     fn unit_unicode_to_string_keep_whitespace() {
         let unicode = UnicodeType::from("\n Hi. Servus. Grüezi. 你好.\t");
-        let expected_result = String::from("Unicode[26] { \n Hi. Servus. Grüezi. 你好.\t }");
+        let expected_result =
+            String::from("Unicode[26] { \n Hi. Servus. Grüezi. 你好.\t }");
 
         let result = unicode.to_string();
 
@@ -274,7 +276,8 @@ mod tests {
     fn unit_unicode_to_elements() {
         let unicode = UnicodeType::from("Grüezi. 你好.".to_string());
 
-        let expected_result = vec!['G', 'r', 'ü', 'e', 'z', 'i', '.', ' ', '你', '好', '.'];
+        let expected_result =
+            vec!['G', 'r', 'ü', 'e', 'z', 'i', '.', ' ', '你', '好', '.'];
 
         let result = unicode.to_elements();
 

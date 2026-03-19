@@ -1,7 +1,9 @@
 use std::{collections::HashMap, fs};
 
 use cryptopals::crypto_vecs::traits::{InternalDataVec, ToBytes};
-use cryptopals::crypto_vecs::{Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType};
+use cryptopals::crypto_vecs::{
+    Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType,
+};
 
 // ================
 
@@ -12,8 +14,9 @@ fn integration_challenge_01() {
         "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d",
     );
 
-    let expected_result =
-        Base64Type::from("SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t");
+    let expected_result = Base64Type::from(
+        "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t",
+    );
 
     let result = hexadecimal.to_base64();
 
@@ -61,7 +64,8 @@ fn integration_challenge_03() {
         "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736",
     );
 
-    let expected_result = BytesType::from_unicode_literal("Cooking MC's like a pound of bacon");
+    let expected_result =
+        BytesType::from_unicode_literal("Cooking MC's like a pound of bacon");
 
     let mut scores = cryptopals::find_lowest_score_xor(&cypher);
 
@@ -82,7 +86,8 @@ fn integration_challenge_04() {
     let all_strings_hex: String =
         fs::read_to_string("original/4.txt").expect("could not read file");
 
-    let expected_result = BytesType::from_unicode_literal("Now that the party is jumping\n");
+    let expected_result =
+        BytesType::from_unicode_literal("Now that the party is jumping\n");
 
     let initial_score = cryptopals::ScoreXOR {
         score: 1000.0,
@@ -90,23 +95,25 @@ fn integration_challenge_04() {
         plain_text: Default::default(),
     };
 
-    let best_score = all_strings_hex
-        .lines()
-        .fold(initial_score, |best_score, string_hex| {
-            let cypher = BytesType::from_hex_literal(string_hex);
-            let mut scores = cryptopals::find_lowest_score_xor(&cypher);
+    let best_score =
+        all_strings_hex
+            .lines()
+            .fold(initial_score, |best_score, string_hex| {
+                let cypher = BytesType::from_hex_literal(string_hex);
+                let mut scores = cryptopals::find_lowest_score_xor(&cypher);
 
-            // sort by score, resulting in highest score first (to get lowest score with "pop()")
-            scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
+                // sort by score, resulting in highest score first (to get lowest score with "pop()")
+                scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
 
-            let current_score = scores.pop().expect("there should always be one element");
+                let current_score =
+                    scores.pop().expect("there should always be one element");
 
-            if current_score < best_score {
-                current_score
-            } else {
-                best_score
-            }
-        });
+                if current_score < best_score {
+                    current_score
+                } else {
+                    best_score
+                }
+            });
 
     let result = best_score.plain_text;
 
@@ -146,7 +153,8 @@ fn integration_challenge_06() {
 
     let cypher = BytesType::from_base64_literal(&base64_string);
 
-    let expected_result = BytesType::from_unicode_literal("Terminator X: Bring the noise");
+    let expected_result =
+        BytesType::from_unicode_literal("Terminator X: Bring the noise");
 
     let keysize_range = 2..41;
     let samples_hamming_distance = 10;
@@ -166,21 +174,22 @@ fn integration_challenge_06() {
 
     let transposed_blocks = cypher.transpose(best_edit_size.keysize);
 
-    let result_key = transposed_blocks
-        .iter()
-        .fold(BytesType::default(), |mut acc, block| {
-            let mut block_scores = cryptopals::find_lowest_score_xor(block);
+    let result_key =
+        transposed_blocks
+            .iter()
+            .fold(BytesType::default(), |mut acc, block| {
+                let mut block_scores = cryptopals::find_lowest_score_xor(block);
 
-            // sort by score, resulting in highest score first (to get lowest score with "pop()")
-            block_scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
+                // sort by score, resulting in highest score first (to get lowest score with "pop()")
+                block_scores.sort_by(|a, b| b.partial_cmp(&a).unwrap());
 
-            let best_block_score = block_scores
-                .pop()
-                .expect("there should always be one element");
+                let best_block_score = block_scores
+                    .pop()
+                    .expect("there should always be one element");
 
-            acc.extend(best_block_score.key);
-            acc
-        });
+                acc.extend(best_block_score.key);
+                acc
+            });
 
     assert_eq!(result_key, expected_result);
 }
@@ -191,7 +200,8 @@ fn integration_challenge_06() {
 #[test]
 fn integration_challenge_07() {
     let block_size_bits = 128;
-    let cypher_string: String = fs::read_to_string("original/7.txt").expect("could not read file");
+    let cypher_string: String =
+        fs::read_to_string("original/7.txt").expect("could not read file");
 
     let cypher = BytesType::from_base64_literal(&cypher_string);
     let cypher_blocks = cypher.to_blocks_bits(block_size_bits);

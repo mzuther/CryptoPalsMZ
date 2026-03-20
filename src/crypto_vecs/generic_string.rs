@@ -105,24 +105,6 @@ where
 
 // ----------------
 
-impl<C> convert::From<String> for CryptoString<C>
-where
-    C: InternalData<Collection = String>,
-{
-    fn from(data: String) -> Self {
-        Self::new_from(data)
-    }
-}
-
-impl<C> convert::From<&str> for CryptoString<C>
-where
-    C: InternalData<Collection = String>,
-{
-    fn from(data: &str) -> Self {
-        Self::new_from(data.to_string())
-    }
-}
-
 impl<C> convert::From<&BytesType> for CryptoString<C>
 where
     C: InternalData + FromBytes,

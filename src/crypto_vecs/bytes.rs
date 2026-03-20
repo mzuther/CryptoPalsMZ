@@ -234,7 +234,7 @@ impl BytesType {
         self.data().chunks(block_size).fold(
             BlockBytes::new(block_size),
             |mut acc, block| {
-                acc.push(Self::from(block));
+                acc.push(Self::new_from_ref(block));
                 acc
             },
         )
@@ -465,7 +465,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_default() {
-        let expected_result = BytesType::from(Vec::default());
+        let expected_result = BytesType::new_from(Vec::default());
 
         let result = BytesType::default();
 
@@ -538,9 +538,9 @@ mod tests {
         let mut expected_result_vec = Vec::default();
         expected_result_vec.push(0xd3);
 
-        let expected_result = BytesType::from(expected_result_vec);
+        let expected_result = BytesType::new_from(expected_result_vec);
 
-        let result = BytesType::from(0xd3);
+        let result = BytesType::new_from(vec![0xd3]);
 
         assert_eq!(result, expected_result);
     }
@@ -553,9 +553,9 @@ mod tests {
         expected_result_vec.push(0x62);
         expected_result_vec.push(0x33);
 
-        let expected_result = BytesType::from(expected_result_vec);
+        let expected_result = BytesType::new_from(expected_result_vec);
 
-        let result = BytesType::from(vec![0x41, 0x62, 0x33]);
+        let result = BytesType::new_from(vec![0x41, 0x62, 0x33]);
 
         assert_eq!(result, expected_result);
     }
@@ -564,7 +564,8 @@ mod tests {
 
     #[test]
     fn unit_bytes_from_hex_literal() {
-        let expected_result = BytesType::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let expected_result =
+            BytesType::new_from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
         let result = BytesType::from_hex_literal("41c3bce4bda0");
 
@@ -573,7 +574,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_from_base64_literal() {
-        let expected_result = BytesType::from(Base64::COMPLETE_ALPHABET_BYTES.to_vec());
+        let expected_result = BytesType::new_from_ref(&Base64::COMPLETE_ALPHABET_BYTES);
 
         let result = BytesType::from_base64_literal(Base64::COMPLETE_ALPHABET);
 
@@ -582,7 +583,8 @@ mod tests {
 
     #[test]
     fn unit_bytes_from_unicode_literal() {
-        let expected_result = BytesType::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let expected_result =
+            BytesType::new_from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
         let result = BytesType::from_unicode_literal("Aü你");
 
@@ -593,7 +595,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_to_codepage_1252_ascii() {
-        let bytes = BytesType::from(vec![0x41, 0x62, 0x33]);
+        let bytes = BytesType::new_from(vec![0x41, 0x62, 0x33]);
         let expected_result = String::from("Ab3");
 
         let result = bytes.to_codepage_1252();
@@ -603,8 +605,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_to_codepage_1252_unicode() {
-        let bytes =
-            BytesType::from(vec![0x46, 0x72, 0xc3, 0xbc, 0x68, 0x6a, 0x61, 0x68, 0x72]);
+        let bytes = BytesType::new_from(vec![
+            0x46, 0x72, 0xc3, 0xbc, 0x68, 0x6a, 0x61, 0x68, 0x72,
+        ]);
         let expected_result = String::from("FrÃ¼hjahr");
 
         let result = bytes.to_codepage_1252();
@@ -614,7 +617,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_to_codepage_1252_unicode_string() {
-        let unicode = UnicodeType::from("\n Hi. Servus. Grüezi. 你好.\t");
+        let unicode = UnicodeType::from_literal("\n Hi. Servus. Grüezi. 你好.\t");
         let bytes = unicode.to_bytes();
 
         let expected_result = String::from("␊ Hi. Servus. GrÃ¼ezi. ä½�å¥½.␉");
@@ -639,7 +642,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_len_bytes_single_byte() {
-        let bytes = BytesType::from(0xd3);
+        let bytes = BytesType::new_from(vec![0xd3]);
 
         let expected_result = 1;
 
@@ -650,7 +653,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_len_bytes_several_bytes() {
-        let bytes = BytesType::from(vec![0x41, 0x62, 0x33]);
+        let bytes = BytesType::new_from(vec![0x41, 0x62, 0x33]);
 
         let expected_result = 3;
 
@@ -661,8 +664,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_chunks() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff,
+        ]);
 
         let mut expected_result = Vec::default();
         expected_result.push(vec![0x41, 0x62, 0xf3]);
@@ -678,7 +682,8 @@ mod tests {
 
     #[test]
     fn unit_bytes_chunks_remainder() {
-        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+        let bytes =
+            BytesType::new_from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
         let mut expected_result = Vec::default();
         expected_result.push(vec![0x41, 0x62, 0xf3]);
@@ -694,13 +699,14 @@ mod tests {
 
     #[test]
     fn unit_bytes_chunks_as_collection() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff,
+        ]);
 
         let mut expected_result = Vec::default();
-        expected_result.push(BytesType::from(vec![0x41, 0x62, 0xf3]));
-        expected_result.push(BytesType::from(vec![0xd3, 0x42, 0x6f]));
-        expected_result.push(BytesType::from(vec![0x12, 0x0d, 0xff]));
+        expected_result.push(BytesType::new_from(vec![0x41, 0x62, 0xf3]));
+        expected_result.push(BytesType::new_from(vec![0xd3, 0x42, 0x6f]));
+        expected_result.push(BytesType::new_from(vec![0x12, 0x0d, 0xff]));
 
         let result = bytes.chunks_as_collection(3);
 
@@ -711,12 +717,13 @@ mod tests {
 
     #[test]
     fn unit_bytes_chunks_remainder_as_collection() {
-        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+        let bytes =
+            BytesType::new_from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
         let mut expected_result = Vec::default();
-        expected_result.push(BytesType::from(vec![0x41, 0x62, 0xf3]));
-        expected_result.push(BytesType::from(vec![0xd3, 0x42, 0x6f]));
-        expected_result.push(BytesType::from(vec![0x12, 0x0d]));
+        expected_result.push(BytesType::new_from(vec![0x41, 0x62, 0xf3]));
+        expected_result.push(BytesType::new_from(vec![0xd3, 0x42, 0x6f]));
+        expected_result.push(BytesType::new_from(vec![0x12, 0x0d]));
 
         let result = bytes.chunks_as_collection(3);
 
@@ -787,8 +794,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_rchunks() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff,
+        ]);
 
         let mut expected_result = Vec::default();
         expected_result.push(vec![0x12, 0x0d, 0xff]);
@@ -804,7 +812,8 @@ mod tests {
 
     #[test]
     fn unit_bytes_rchunks_remainder() {
-        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+        let bytes =
+            BytesType::new_from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
         let mut expected_result = Vec::default();
         expected_result.push(vec![0x6f, 0x12, 0x0d]);
@@ -820,13 +829,14 @@ mod tests {
 
     #[test]
     fn unit_bytes_rchunks_as_collection() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0xff,
+        ]);
 
         let mut expected_result = Vec::default();
-        expected_result.push(BytesType::from(vec![0x12, 0x0d, 0xff]));
-        expected_result.push(BytesType::from(vec![0xd3, 0x42, 0x6f]));
-        expected_result.push(BytesType::from(vec![0x41, 0x62, 0xf3]));
+        expected_result.push(BytesType::new_from(vec![0x12, 0x0d, 0xff]));
+        expected_result.push(BytesType::new_from(vec![0xd3, 0x42, 0x6f]));
+        expected_result.push(BytesType::new_from(vec![0x41, 0x62, 0xf3]));
 
         let result = bytes.rchunks_as_collection(3);
 
@@ -837,12 +847,13 @@ mod tests {
 
     #[test]
     fn unit_bytes_rchunks_remainder_as_collection() {
-        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+        let bytes =
+            BytesType::new_from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
         let mut expected_result = Vec::default();
-        expected_result.push(BytesType::from(vec![0x6f, 0x12, 0x0d]));
-        expected_result.push(BytesType::from(vec![0xf3, 0xd3, 0x42]));
-        expected_result.push(BytesType::from(vec![0x41, 0x62]));
+        expected_result.push(BytesType::new_from(vec![0x6f, 0x12, 0x0d]));
+        expected_result.push(BytesType::new_from(vec![0xf3, 0xd3, 0x42]));
+        expected_result.push(BytesType::new_from(vec![0x41, 0x62]));
 
         let result = bytes.rchunks_as_collection(3);
 
@@ -853,8 +864,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_take_n() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
         let expected_result = vec![0x41, 0x62, 0xf3];
 
         let result = bytes.take_n(3).unwrap();
@@ -864,8 +876,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_take_n_longer_than_original() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
         let expected_result = vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e];
 
         let result = bytes.take_n(12).unwrap();
@@ -875,9 +888,10 @@ mod tests {
 
     #[test]
     fn unit_bytes_take_n_as_collection() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
-        let expected_result = BytesType::from(vec![0x41, 0x62, 0xf3]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
+        let expected_result = BytesType::new_from(vec![0x41, 0x62, 0xf3]);
 
         let result = bytes.take_n_as_collection(3).unwrap();
 
@@ -886,10 +900,12 @@ mod tests {
 
     #[test]
     fn unit_bytes_take_n_as_collection_longer_than_original() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
-        let expected_result =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
+        let expected_result = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
 
         let result = bytes.take_n_as_collection(12).unwrap();
 
@@ -898,8 +914,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_skip_n() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
         let expected_result = vec![0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e];
 
         let result = bytes.skip_n(3).unwrap();
@@ -909,8 +926,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_skip_n_longer_than_original() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
 
         let expected_result = None;
 
@@ -921,9 +939,11 @@ mod tests {
 
     #[test]
     fn unit_bytes_skip_n_as_collection() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
-        let expected_result = BytesType::from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
+        let expected_result =
+            BytesType::new_from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
 
         let result = bytes.skip_n_as_collection(3).unwrap();
 
@@ -932,8 +952,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_skip_n_as_collection_longer_than_original() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
         let expected_result = None;
 
         let result = bytes.skip_n_as_collection(12);
@@ -943,8 +964,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_rtake_n() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
         let expected_result = vec![0x12, 0x0d, 0x1e];
 
         let result = bytes.rtake_n(3).unwrap();
@@ -954,8 +976,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_rtake_n_longer_than_original() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
         let expected_result = vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e];
 
         let result = bytes.rtake_n(12).unwrap();
@@ -965,9 +988,10 @@ mod tests {
 
     #[test]
     fn unit_bytes_rtake_n_as_collection() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
-        let expected_result = BytesType::from(vec![0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
+        let expected_result = BytesType::new_from(vec![0x12, 0x0d, 0x1e]);
 
         let result = bytes.rtake_n_as_collection(3).unwrap();
 
@@ -976,10 +1000,12 @@ mod tests {
 
     #[test]
     fn unit_bytes_rtake_n_as_collection_longer_than_original() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
-        let expected_result =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
+        let expected_result = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
 
         let result = bytes.rtake_n_as_collection(12).unwrap();
 
@@ -988,8 +1014,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_rskip_n() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
         let expected_result = vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f];
 
         let result = bytes.rskip_n(3).unwrap();
@@ -999,8 +1026,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_rskip_n_longer_than_original() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
         let expected_result = None;
 
         let result = bytes.rskip_n(12);
@@ -1010,9 +1038,11 @@ mod tests {
 
     #[test]
     fn unit_bytes_rskip_n_as_collection() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
-        let expected_result = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
+        let expected_result =
+            BytesType::new_from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f]);
 
         let result = bytes.rskip_n_as_collection(3).unwrap();
 
@@ -1021,8 +1051,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_rskip_n_as_collection_longer_than_original() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
         let expected_result = None;
 
         let result = bytes.rskip_n_as_collection(12);
@@ -1034,7 +1065,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_push_to_default() {
-        let expected_result = BytesType::from(vec![0xd3, 0x42, 0x6f]);
+        let expected_result = BytesType::new_from(vec![0xd3, 0x42, 0x6f]);
 
         let mut result = BytesType::default();
         result.push(0xd3);
@@ -1046,9 +1077,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_push_to_existing() {
-        let expected_result = BytesType::from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+        let expected_result = BytesType::new_from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
-        let mut result = BytesType::from(vec![0xd3, 0x42, 0x6f]);
+        let mut result = BytesType::new_from(vec![0xd3, 0x42, 0x6f]);
         result.push(0x12);
         result.push(0x0d);
 
@@ -1057,7 +1088,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_extend_to_default() {
-        let expected_result = BytesType::from(vec![0xd3, 0x42, 0x6f]);
+        let expected_result = BytesType::new_from(vec![0xd3, 0x42, 0x6f]);
 
         let mut result = BytesType::default();
         result.extend(vec![0xd3, 0x42, 0x6f]);
@@ -1067,9 +1098,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_extend_to_existing() {
-        let expected_result = BytesType::from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+        let expected_result = BytesType::new_from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
-        let mut result = BytesType::from(vec![0xd3, 0x42, 0x6f]);
+        let mut result = BytesType::new_from(vec![0xd3, 0x42, 0x6f]);
         result.extend(vec![0x12, 0x0d]);
 
         assert_eq!(result, expected_result);
@@ -1079,7 +1110,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_iter() {
-        let bytes = BytesType::from(vec![0xd3, 0x42, 0x6f]);
+        let bytes = BytesType::new_from(vec![0xd3, 0x42, 0x6f]);
         let mut bytes_iter = bytes.iter();
 
         assert_eq!(bytes_iter.next(), Some(&0xd3));
@@ -1090,7 +1121,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_into_iter() {
-        let bytes = BytesType::from(vec![0xd3, 0x42, 0x6f]);
+        let bytes = BytesType::new_from(vec![0xd3, 0x42, 0x6f]);
         let mut bytes_iter = bytes.into_iter();
 
         assert_eq!(bytes_iter.next(), Some(0xd3));
@@ -1101,9 +1132,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_as_mut_to_switch_byte() {
-        let expected_result = BytesType::from(vec![0xd3, 0xff, 0x6f]);
+        let expected_result = BytesType::new_from(vec![0xd3, 0xff, 0x6f]);
 
-        let mut result = BytesType::from(vec![0xd3, 0x42, 0x6f]);
+        let mut result = BytesType::new_from(vec![0xd3, 0x42, 0x6f]);
         let result_mut = result.as_mut();
         result_mut[1] = 0xff;
 
@@ -1112,9 +1143,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_as_mut_to_extend() {
-        let expected_result = BytesType::from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+        let expected_result = BytesType::new_from(vec![0xd3, 0x42, 0x6f, 0x12, 0x0d]);
 
-        let mut result = BytesType::from(vec![0xd3, 0x42, 0x6f]);
+        let mut result = BytesType::new_from(vec![0xd3, 0x42, 0x6f]);
         let result_mut = result.as_mut();
         result_mut.extend_from_slice(&vec![0x12, 0x0d]);
 
@@ -1123,9 +1154,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_as_mut_slice_to_switch_byte() {
-        let expected_result = BytesType::from(vec![0xd3, 0xff, 0x6f]);
+        let expected_result = BytesType::new_from(vec![0xd3, 0xff, 0x6f]);
 
-        let mut result = BytesType::from(vec![0xd3, 0x42, 0x6f]);
+        let mut result = BytesType::new_from(vec![0xd3, 0x42, 0x6f]);
         let result_mut = result.as_mut_slice();
         result_mut[1] = 0xff;
 
@@ -1136,7 +1167,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_to_string_single_byte() {
-        let bytes = BytesType::from(0xaf);
+        let bytes = BytesType::new_from(vec![0xaf]);
         let expected_result = String::from("Bytes[01] { af }");
 
         let result = bytes.to_string();
@@ -1146,7 +1177,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_to_string_byte_vector() {
-        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3]);
+        let bytes = BytesType::new_from(vec![0x41, 0x62, 0xf3]);
         let expected_result = String::from("Bytes[03] { 4162f3 }");
 
         let result = bytes.to_string();
@@ -1156,8 +1187,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_to_string_three_blocks() {
-        let bytes =
-            BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e]);
+        let bytes = BytesType::new_from(vec![
+            0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d, 0x1e,
+        ]);
         let expected_result = String::from("Bytes[09] { 4162f3d3 426f120d 1e }");
 
         let result = bytes.to_string();
@@ -1167,7 +1199,8 @@ mod tests {
 
     #[test]
     fn unit_bytes_to_string_no_space_at_end() {
-        let bytes = BytesType::from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
+        let bytes =
+            BytesType::new_from(vec![0x41, 0x62, 0xf3, 0xd3, 0x42, 0x6f, 0x12, 0x0d]);
         let expected_result = String::from("Bytes[08] { 4162f3d3 426f120d }");
 
         let result = bytes.to_string();
@@ -1179,9 +1212,9 @@ mod tests {
 
     #[test]
     fn unit_bytes_fixed_xor_single_byte() {
-        let plain = BytesType::from(0x1c);
-        let key = BytesType::from(0x74);
-        let expected_result = BytesType::from(0x68);
+        let plain = BytesType::new_from(vec![0x1c]);
+        let key = BytesType::new_from(vec![0x74]);
+        let expected_result = BytesType::new_from(vec![0x68]);
 
         let result = plain.fixed_xor(&key);
 
@@ -1190,11 +1223,11 @@ mod tests {
 
     #[test]
     fn unit_bytes_fixed_xor_single_byte_key() {
-        let plain = BytesType::from(vec![
+        let plain = BytesType::new_from(vec![
             0x1c, 0x01, 0x11, 0x00, 0x1f, 0xa2, 0x4b, 0x53, 0x98, 0xc5,
         ]);
-        let key = BytesType::from(0x74);
-        let expected_result = BytesType::from(vec![
+        let key = BytesType::new_from(vec![0x74]);
+        let expected_result = BytesType::new_from(vec![
             0x68, 0x75, 0x65, 0x74, 0x6b, 0xd6, 0x3f, 0x27, 0xec, 0xb1,
         ]);
 
@@ -1205,15 +1238,15 @@ mod tests {
 
     #[test]
     fn unit_bytes_fixed_xor_full_length_key() {
-        let plain = BytesType::from(vec![
+        let plain = BytesType::new_from(vec![
             0x1c, 0x01, 0x11, 0x00, 0x1f, 0x01, 0x01, 0x00, 0x06, 0x1a, 0x02, 0x4b, 0x53,
             0x53, 0x50, 0x09, 0x18, 0x1c,
         ]);
-        let key = BytesType::from(vec![
+        let key = BytesType::new_from(vec![
             0x68, 0x69, 0x74, 0x20, 0x74, 0x68, 0x65, 0x20, 0x62, 0x75, 0x6c, 0x6c, 0x27,
             0x73, 0x20, 0x65, 0x79, 0x65,
         ]);
-        let expected_result = BytesType::from(vec![
+        let expected_result = BytesType::new_from(vec![
             0x74, 0x68, 0x65, 0x20, 0x6b, 0x69, 0x64, 0x20, 0x64, 0x6f, 0x6e, 0x27, 0x74,
             0x20, 0x70, 0x6c, 0x61, 0x79,
         ]);
@@ -1225,9 +1258,10 @@ mod tests {
 
     #[test]
     fn unit_bytes_fixed_xor_key_too_long() {
-        let plain = BytesType::from(vec![0x1c, 0x01, 0x11, 0x00]);
-        let key = BytesType::from(vec![0x68, 0x69, 0x74, 0x20, 0x74, 0x68, 0x65, 0x20]);
-        let expected_result = BytesType::from(vec![0x74, 0x68, 0x65, 0x20]);
+        let plain = BytesType::new_from(vec![0x1c, 0x01, 0x11, 0x00]);
+        let key =
+            BytesType::new_from(vec![0x68, 0x69, 0x74, 0x20, 0x74, 0x68, 0x65, 0x20]);
+        let expected_result = BytesType::new_from(vec![0x74, 0x68, 0x65, 0x20]);
 
         let result = plain.fixed_xor(&key);
 
@@ -1238,10 +1272,8 @@ mod tests {
 
     #[test]
     fn unit_bytes_hamming_distance_single_byte() {
-        // from u8
-        let bytes = BytesType::from(0x02);
-        // from Vec<u8>
-        let other = BytesType::from(vec![0xa0]);
+        let bytes = BytesType::new_from(vec![0x02]);
+        let other = BytesType::new_from(vec![0xa0]);
 
         let expected_result = 3;
         let expected_result_normalized = 0.375;
@@ -1383,7 +1415,7 @@ mod tests {
     fn unit_bytes_affix_garbage() {
         let prefix_size = 2;
         let suffix_size = 9;
-        let bytes = BytesType::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        let bytes = BytesType::new_from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
         let result = bytes.affix_garbage(prefix_size, suffix_size);
 
@@ -1405,7 +1437,7 @@ mod tests {
     #[test]
     fn unit_bytes_affix_garbage_prefix() {
         let prefix_size = 5;
-        let bytes = BytesType::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        let bytes = BytesType::new_from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
         let result = bytes.affix_garbage(prefix_size, 0);
 
@@ -1416,7 +1448,7 @@ mod tests {
     #[test]
     fn unit_bytes_affix_garbage_suffix() {
         let suffix_size = 4;
-        let bytes = BytesType::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        let bytes = BytesType::new_from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
         let result = bytes.affix_garbage(0, suffix_size);
 
@@ -1426,7 +1458,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_affix_garbag_different() {
-        let bytes = BytesType::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        let bytes = BytesType::new_from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
         let affixed_1 = bytes.affix_garbage(3, 6);
         let affixed_2 = bytes.affix_garbage(3, 6);
@@ -1439,7 +1471,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_transpose_no_transposition() {
-        let bytes = BytesType::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        let bytes = BytesType::new_from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 1;
 
         let mut expected_result = BlockBytes::new_with_lax_filling(10);
@@ -1452,12 +1484,12 @@ mod tests {
 
     #[test]
     fn unit_bytes_transpose_equal_distribution() {
-        let bytes = BytesType::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        let bytes = BytesType::new_from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 2;
 
         let mut expected_result = BlockBytes::new_with_lax_filling(5);
-        expected_result.push(BytesType::from(vec![1, 3, 5, 7, 9]));
-        expected_result.push(BytesType::from(vec![2, 4, 6, 8, 10]));
+        expected_result.push(BytesType::new_from(vec![1, 3, 5, 7, 9]));
+        expected_result.push(BytesType::new_from(vec![2, 4, 6, 8, 10]));
 
         let result = bytes.transpose(keysize);
 
@@ -1466,13 +1498,13 @@ mod tests {
 
     #[test]
     fn unit_bytes_transpose_unequal_distribution() {
-        let bytes = BytesType::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        let bytes = BytesType::new_from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 3;
 
         let mut expected_result = BlockBytes::new_with_lax_filling(4);
-        expected_result.push(BytesType::from(vec![1, 4, 7, 10]));
-        expected_result.push(BytesType::from(vec![2, 5, 8]));
-        expected_result.push(BytesType::from(vec![3, 6, 9]));
+        expected_result.push(BytesType::new_from(vec![1, 4, 7, 10]));
+        expected_result.push(BytesType::new_from(vec![2, 5, 8]));
+        expected_result.push(BytesType::new_from(vec![3, 6, 9]));
 
         let result = bytes.transpose(keysize);
 
@@ -1481,13 +1513,13 @@ mod tests {
 
     #[test]
     fn unit_bytes_transpose_not_enough_elements() {
-        let bytes = BytesType::from(vec![1, 2, 3]);
+        let bytes = BytesType::new_from(vec![1, 2, 3]);
         let keysize = 4;
 
         let mut expected_result = BlockBytes::new_with_lax_filling(1);
-        expected_result.push(BytesType::from(1));
-        expected_result.push(BytesType::from(2));
-        expected_result.push(BytesType::from(3));
+        expected_result.push(BytesType::new_from(vec![1]));
+        expected_result.push(BytesType::new_from(vec![2]));
+        expected_result.push(BytesType::new_from(vec![3]));
         expected_result.push(BytesType::default());
 
         let result = bytes.transpose(keysize);

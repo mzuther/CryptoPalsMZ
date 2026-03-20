@@ -24,7 +24,7 @@ pub trait InternalData {
 
     fn elements(&self) -> impl Iterator<Item = Self::Element>;
 
-    // ----------------
+    // ================
 
     fn with_capacity_bits(capacity_bits: usize) -> Self
     where
@@ -65,7 +65,7 @@ where
 
     fn get(&self, index: usize) -> Option<&Self::Element>;
 
-    // ----------------
+    // ================
 
     fn new_from_ref(data: &[Self::Element]) -> Self {
         Self::new_from(data.to_vec())
@@ -174,7 +174,7 @@ where
 
     fn push(&mut self, value: Self::Element);
 
-    // ----------------
+    // ================
 
     fn as_mut_slice(&mut self) -> &mut [Self::Element] {
         self.data_mut().as_mut_slice()
@@ -193,7 +193,7 @@ pub trait Representation {
 pub trait LenBytes {
     fn len_bytes(&self) -> usize;
 
-    // ----------------
+    // ================
 
     fn len_bits(&self) -> usize {
         self.len_bytes() * 8
@@ -211,7 +211,7 @@ pub trait FromBytes {
 pub trait ToBytes {
     fn to_bytes_raw(&self) -> Bytes;
 
-    // ----------------
+    // ================
 
     fn to_bytes(&self) -> BytesType {
         BytesType::new_from_ref(self.to_bytes_raw().as_ref())
@@ -314,7 +314,7 @@ where
 pub trait EncryptionOracle<H> {
     fn encrypt(&self, plain: BytesType) -> oracles::OracleResponse<BlockBytes, H>;
 
-    // ----------------
+    // ================
 
     fn encrypt_blocks(
         &self,

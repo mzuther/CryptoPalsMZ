@@ -152,38 +152,6 @@ where
 
 // ----------------
 
-impl<C, E> convert::From<Vec<E>> for self::CryptoVec<C, E>
-where
-    C: InternalDataVec<Element = E, Collection = Vec<E>>,
-    E: Clone,
-{
-    fn from(data: Vec<E>) -> Self {
-        Self::new_from(data)
-    }
-}
-
-impl<C, E> convert::From<&[E]> for self::CryptoVec<C, E>
-where
-    C: InternalDataVec<Element = E, Collection = Vec<E>>,
-    E: Clone,
-{
-    fn from(data: &[E]) -> Self {
-        Self::new_from_ref(data)
-    }
-}
-
-impl<C, E> convert::From<E> for self::CryptoVec<C, E>
-where
-    C: InternalDataVec<Element = E, Collection = Vec<E>>,
-    E: Clone,
-{
-    fn from(element: E) -> Self {
-        Self::new_from(vec![element])
-    }
-}
-
-// ----------------
-
 impl<C, E> FromBytes for CryptoVec<C, E>
 where
     C: InternalData<Element = E, Collection = Vec<E>> + FromBytes,

@@ -1,7 +1,9 @@
 use rayon::prelude::*;
 use std::fs;
 
-use cryptopals::crypto_vecs::traits::{EncryptionOracle, InternalDataVec, ToBytes};
+use cryptopals::crypto_vecs::traits::{
+    EncryptionOracle, InternalData, InternalDataVec, ToBytes,
+};
 use cryptopals::crypto_vecs::{BytesType, UnicodeType};
 use cryptopals::oracles;
 
@@ -37,7 +39,7 @@ fn integration_challenge_10() {
     let cypher = BytesType::from_base64_literal(&cypher_string);
     let cypher_blocks = cypher.to_blocks_bits(block_size_bits);
     let key = BytesType::from_unicode_literal("YELLOW SUBMARINE");
-    let initialization_vector = BytesType::from(vec![0x00; 16]);
+    let initialization_vector = BytesType::new_from(vec![0x00; 16]);
 
     let plain_blocks = cypher_blocks
         .aes_cbc_decrypt(&key, &initialization_vector)
@@ -64,7 +66,7 @@ fn integration_challenge_11() {
     let iterations = 1_000;
 
     let block_size_bits = 128;
-    let plain_unicode = UnicodeType::from("Detector".repeat(6));
+    let plain_unicode = UnicodeType::from_literal(&"Detector".repeat(6));
     let plain = plain_unicode.to_bytes();
 
     let result = (1..=iterations)

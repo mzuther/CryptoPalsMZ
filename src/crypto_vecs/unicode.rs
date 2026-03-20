@@ -136,29 +136,9 @@ mod tests {
     // ----------------
 
     #[test]
-    fn unit_unicode_from_bytes_ascii() {
-        let bytes = BytesType::from(vec![0x41, 0x62, 0x33]);
-        let expected_result = UnicodeType::from("Ab3");
-
-        let result = UnicodeType::from(&bytes);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
-    fn unit_unicode_from_bytes_unicode() {
-        let bytes = BytesType::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
-        let expected_result = UnicodeType::from("Aü你");
-
-        let result = UnicodeType::from(&bytes);
-
-        assert_eq!(result, expected_result);
-    }
-
-    #[test]
     fn unit_unicode_to_unicode_ascii() {
-        let bytes = BytesType::from(vec![0x41, 0x62, 0x33]);
-        let expected_result = UnicodeType::from("Ab3");
+        let bytes = BytesType::new_from(vec![0x41, 0x62, 0x33]);
+        let expected_result = UnicodeType::from_literal("Ab3");
 
         let result = bytes.to_unicode();
 
@@ -167,8 +147,8 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_unicode_unicode() {
-        let bytes = BytesType::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
-        let expected_result = UnicodeType::from("Aü你");
+        let bytes = BytesType::new_from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let expected_result = UnicodeType::from_literal("Aü你");
 
         let result = bytes.to_unicode();
 
@@ -177,8 +157,8 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_bytes_ascii() {
-        let unicode = UnicodeType::from("Ab3");
-        let expected_result = BytesType::from(vec![0x41, 0x62, 0x33]);
+        let unicode = UnicodeType::from_literal("Ab3");
+        let expected_result = BytesType::new_from(vec![0x41, 0x62, 0x33]);
 
         let result = unicode.to_bytes();
 
@@ -187,8 +167,9 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_bytes_unicode() {
-        let unicode = UnicodeType::from("Aü你");
-        let expected_result = BytesType::from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let unicode = UnicodeType::from_literal("Aü你");
+        let expected_result =
+            BytesType::new_from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
         let result = unicode.to_bytes();
 
@@ -197,7 +178,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_string() {
-        let unicode = UnicodeType::from("Hi. Servus. Grüezi. 你好.");
+        let unicode = UnicodeType::from_literal("Hi. Servus. Grüezi. 你好.");
         let expected_result = String::from("Unicode[23] { Hi. Servus. Grüezi. 你好. }");
 
         let result = unicode.to_string();
@@ -207,7 +188,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_string_keep_whitespace() {
-        let unicode = UnicodeType::from("\n Hi. Servus. Grüezi. 你好.\t");
+        let unicode = UnicodeType::from_literal("\n Hi. Servus. Grüezi. 你好.\t");
         let expected_result =
             String::from("Unicode[26] { \n Hi. Servus. Grüezi. 你好.\t }");
 
@@ -220,7 +201,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_len_ascii() {
-        let unicode = UnicodeType::from("Hi. Servus. Moin.");
+        let unicode = UnicodeType::from_literal("Hi. Servus. Moin.");
 
         let expected_result = 17;
 
@@ -231,7 +212,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_len_unicode() {
-        let unicode = UnicodeType::from("Hi. Servus. Grüezi. 你好.");
+        let unicode = UnicodeType::from_literal("Hi. Servus. Grüezi. 你好.");
 
         let expected_result = 23;
 
@@ -242,7 +223,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_len_bytes_ascii() {
-        let unicode = UnicodeType::from("Hi. Servus. Moin.");
+        let unicode = UnicodeType::from_literal("Hi. Servus. Moin.");
 
         let expected_result = 17;
 
@@ -253,7 +234,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_len_bytes_unicode() {
-        let unicode = UnicodeType::from("Hi. Servus. Grüezi. 你好.");
+        let unicode = UnicodeType::from_literal("Hi. Servus. Grüezi. 你好.");
 
         // single-byte characters: ASCII
         let mut expected_result = 20;
@@ -271,7 +252,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_elements() {
-        let unicode = UnicodeType::from("Grüezi. 你好.".to_string());
+        let unicode = UnicodeType::from_literal("Grüezi. 你好.");
 
         let expected_result =
             vec!['G', 'r', 'ü', 'e', 'z', 'i', '.', ' ', '你', '好', '.'];

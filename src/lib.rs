@@ -33,7 +33,7 @@ pub fn find_lowest_score_xor(bytes: &BytesType) -> Vec<ScoreXOR> {
     let key_range = 0x00..0xff;
 
     let all_keys = key_range.fold(Vec::default(), |mut acc, key_byte| {
-        acc.push(BytesType::from(key_byte));
+        acc.push(BytesType::new_from(vec![key_byte]));
         acc
     });
 
@@ -456,7 +456,7 @@ mod tests {
         let plain = BytesType::from_unicode_literal("Cooking MCs");
         let key = BytesType::from_unicode_literal("X");
 
-        let expected_result = BytesType::from(vec![
+        let expected_result = BytesType::new_from(vec![
             0x1b, 0x37, 0x37, 0x33, 0x31, 0x36, 0x3f, 0x78, 0x15, 0x1b, 0x2b,
         ]);
 

@@ -1,6 +1,6 @@
 use std::{convert, fmt, iter, slice, vec};
 
-use crate::crypto_vecs::traits::{InternalDataVec, LenBytes, ToBytes};
+use crate::crypto_vecs::traits::{InternalData, InternalDataVec, LenBytes, ToBytes};
 use crate::crypto_vecs::{self, Bytes, BytesType};
 
 // ================
@@ -394,7 +394,7 @@ impl self::BlockBytes {
                     vec![number_of_missing_bytes as u8; number_of_missing_bytes];
 
                 if number_of_missing_bytes == self.get_block_size() {
-                    let new_block = BytesType::from(block_padding);
+                    let new_block = BytesType::new_from(block_padding);
                     padded.push(new_block);
                 } else {
                     padded.extend_last_block(block_padding);

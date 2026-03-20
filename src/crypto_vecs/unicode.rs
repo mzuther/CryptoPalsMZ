@@ -1,8 +1,6 @@
 use std::convert;
 
-use crate::crypto_vecs::traits::{
-    FromBytes, InternalData, InternalDataVec, LenBytes, ToBytes,
-};
+use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, ToBytes};
 use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
 
 // ================
@@ -54,7 +52,11 @@ impl InternalData for Unicode {
         self.unicode.chars()
     }
 
-    fn data(&self) -> &Self::Collection {
+    fn collection(&self) -> Self::Collection {
+        self.unicode.clone()
+    }
+
+    fn collection_as_ref(&self) -> &Self::Collection {
         &self.unicode
     }
 
@@ -90,7 +92,7 @@ impl convert::AsRef<str> for Unicode {
 impl FromBytes for Unicode {
     fn from_bytes(bytes: &BytesType) -> Self {
         let unicode_string =
-            String::from_utf8(bytes.to_vec()).expect("invalid UTF-8 string");
+            String::from_utf8(bytes.collection()).expect("invalid UTF-8 string");
 
         Self::new_from(unicode_string)
     }

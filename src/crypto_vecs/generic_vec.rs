@@ -67,8 +67,12 @@ where
         self.collection.elements()
     }
 
-    fn data(&self) -> &Self::Collection {
-        self.collection.data()
+    fn collection(&self) -> Self::Collection {
+        self.collection.collection()
+    }
+
+    fn collection_as_ref(&self) -> &Self::Collection {
+        self.collection.collection_as_ref()
     }
 
     // ----------------
@@ -284,7 +288,7 @@ where
 {
     pub fn iter(&self) -> self::CryptoVecIter<'_, E> {
         self::CryptoVecIter {
-            vec_ref: self.collection.data(),
+            vec_ref: self.collection.collection_as_ref(),
             current_index: 0,
         }
     }

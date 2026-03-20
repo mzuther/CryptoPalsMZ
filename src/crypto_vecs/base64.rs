@@ -115,7 +115,11 @@ impl InternalData for Base64 {
         self.base64.chars()
     }
 
-    fn data(&self) -> &Self::Collection {
+    fn collection(&self) -> Self::Collection {
+        self.base64.clone()
+    }
+
+    fn collection_as_ref(&self) -> &Self::Collection {
         &self.base64
     }
 

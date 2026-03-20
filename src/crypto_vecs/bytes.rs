@@ -58,7 +58,11 @@ impl InternalData for Bytes {
         self.bytes.iter().copied()
     }
 
-    fn data(&self) -> &Self::Collection {
+    fn collection(&self) -> Self::Collection {
+        self.bytes.to_vec()
+    }
+
+    fn collection_as_ref(&self) -> &Self::Collection {
         &self.bytes
     }
 
@@ -112,7 +116,7 @@ impl InternalDataVecMut for Bytes {
 impl FromBytes for Bytes {
     fn from_bytes(bytes: &BytesType) -> Self {
         Self {
-            bytes: bytes.data().clone(),
+            bytes: bytes.collection(),
         }
     }
 }
@@ -227,7 +231,7 @@ impl BytesType {
     pub fn to_blocks(&self, block_size: usize) -> BlockBytes {
         assert!(block_size > 0, "block size must be non-zero");
 
-        self.data().chunks(block_size).fold(
+        self.collection_as_ref().chunks(block_size).fold(
             BlockBytes::new(block_size),
             |mut acc, block| {
                 acc.push(Self::new_from_elements(block));
@@ -348,7 +352,7 @@ impl BytesType {
 
         let encryptor_status = cipher_context.encrypt_init(
             Some(cipher::Cipher::aes_128_ecb()),
-            Some(key.as_slice()),
+            Some(key.collection_as_ref()),
             Some(Default::default()),
         );
 
@@ -381,7 +385,7 @@ impl BytesType {
 
         let decryptor_status = cipher_context.decrypt_init(
             Some(cipher::Cipher::aes_128_ecb()),
-            Some(key.as_slice()),
+            Some(key.collection_as_ref()),
             Some(Default::default()),
         );
 
@@ -409,7 +413,7 @@ impl BytesType {
 
         let mut buffer = Self::default();
         let processing_state =
-            cipher_context.cipher_update_vec(self.as_slice(), buffer.as_mut());
+            cipher_context.cipher_update_vec(self.collection_as_ref(), buffer.as_mut());
 
         if let Err(error_stack) = processing_state {
             return Err(error_stack.to_string());

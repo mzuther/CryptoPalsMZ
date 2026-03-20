@@ -342,7 +342,7 @@ impl self::BlockBytes {
         }
 
         // get padding length from last byte
-        let last_block_vec = self.get_last_block().to_vec();
+        let last_block_vec = self.get_last_block().collection();
         let padding_length =
             *last_block_vec.last().expect("block size is non-zero") as usize;
 

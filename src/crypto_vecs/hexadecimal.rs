@@ -93,7 +93,11 @@ impl InternalData for Hexadecimal {
         self.hexadecimal.chars().count() / 2
     }
 
-    fn data(&self) -> &Self::Collection {
+    fn collection(&self) -> Self::Collection {
+        self.hexadecimal.clone()
+    }
+
+    fn collection_as_ref(&self) -> &Self::Collection {
         &self.hexadecimal
     }
 

@@ -30,7 +30,12 @@ where
     // ----------------
 
     fn elements(&self) -> impl Iterator<Item = Self::Element>;
-    fn data(&self) -> &Self::Collection;
+
+    // clone of underlying collection
+    fn collection(&self) -> Self::Collection;
+
+    // reference to underlying collection
+    fn collection_as_ref(&self) -> &Self::Collection;
 
     // ----------------
 
@@ -84,24 +89,12 @@ where
 
     // ================
 
-    // clone of underlying collection
-    fn to_vec(&self) -> Vec<Self::Element> {
-        self.data().to_vec()
-    }
-
-    // reference to underlying collection
-    fn as_slice(&self) -> &[Self::Element] {
-        self.data().as_slice()
-    }
-
-    // ----------------
-
     #[doc(hidden)]
     fn _take_it(&self, length: usize, reverse: bool) -> Option<&[Self::Element]> {
         if length == 0 {
             None
         } else if length > self.len_bytes() {
-            Some(self.as_slice())
+            Some(self.collection_as_ref())
         } else {
             if reverse {
                 self.rchunks(length).next()
@@ -114,7 +107,7 @@ where
     #[doc(hidden)]
     fn _leave_it(&self, length: usize, reverse: bool) -> Option<&[Self::Element]> {
         if length == 0 {
-            Some(self.as_slice())
+            Some(self.collection_as_ref())
         } else if length >= self.len_bytes() {
             None
         } else {
@@ -220,7 +213,7 @@ pub trait ToBytes {
     // ================
 
     fn to_bytes(&self) -> BytesType {
-        BytesType::new_from(self.to_bytes_raw().to_vec())
+        BytesType::new_from(self.to_bytes_raw().collection())
     }
 
     fn to_hexadecimal(&self) -> HexadecimalType {
@@ -300,13 +293,13 @@ where
                     .take_n_as_collection(size_current)
                     .unwrap_or_default();
 
-                result.extend(moving_part.to_vec());
+                result.extend(moving_part.collection());
 
                 result.extend(
                     original_probe
                         .skip_n_as_collection(size_current)
                         .unwrap_or_default()
-                        .to_vec(),
+                        .collection(),
                 );
 
                 result

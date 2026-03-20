@@ -29,6 +29,12 @@ where
         }
     }
 
+    fn new_from_elements(elements: &[Self::Element]) -> Self {
+        Self {
+            collection: C::new_from_elements(elements),
+        }
+    }
+
     fn from_literal(string_literal: &str) -> Self {
         Self {
             collection: C::from_literal(string_literal),
@@ -59,6 +65,12 @@ where
     fn len(&self) -> usize {
         self.collection.len()
     }
+
+    fn data(&self) -> &Self::Collection {
+        self.collection.data()
+    }
+
+    // ----------------
 
     fn representation_name(&self) -> &str {
         self.collection.representation_name()

@@ -16,7 +16,11 @@ where
     // collection holding logical elements (e.g. Vec, String)
     type Collection;
 
+    // ----------------
+
     fn new_from(data: Self::Collection) -> Self;
+    fn new_from_elements(elements: &[Self::Element]) -> Self;
+
     fn from_literal(string_literal: &str) -> Self;
     fn with_capacity(capacity: usize) -> Self;
 
@@ -26,6 +30,9 @@ where
     // ----------------
 
     fn elements(&self) -> impl Iterator<Item = Self::Element>;
+    fn data(&self) -> &Self::Collection;
+
+    // ----------------
 
     fn representation_name(&self) -> &str;
     fn representation(&self) -> String;
@@ -54,6 +61,13 @@ where
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    // ----------------
+
+    // get nth logical element
+    fn get(&self, index: usize) -> Option<Self::Element> {
+        self.elements().nth(index)
+    }
 }
 
 // ----------------
@@ -65,17 +79,10 @@ where
         + LenBytes,
     Self::Element: Clone,
 {
-    fn data(&self) -> &Vec<Self::Element>;
     fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, Self::Element>;
     fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, Self::Element>;
 
-    fn get(&self, index: usize) -> Option<&Self::Element>;
-
     // ================
-
-    fn new_from_ref(data: &[Self::Element]) -> Self {
-        Self::new_from(data.to_vec())
-    }
 
     // clone of underlying collection
     fn to_vec(&self) -> Vec<Self::Element> {
@@ -139,34 +146,34 @@ where
 
     fn chunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
         self.chunks(chunk_size)
-            .map(|chunk| Self::new_from_ref(chunk))
+            .map(|chunk| Self::new_from_elements(chunk))
             .collect()
     }
 
     fn rchunks_as_collection(&self, chunk_size: usize) -> Vec<Self> {
         self.rchunks(chunk_size)
-            .map(|chunk| Self::new_from_ref(chunk))
+            .map(|chunk| Self::new_from_elements(chunk))
             .collect()
     }
 
     fn take_n_as_collection(&self, length: usize) -> Option<Self> {
         self.take_n(length)
-            .map(|element| Self::new_from_ref(element))
+            .map(|element| Self::new_from_elements(element))
     }
 
     fn skip_n_as_collection(&self, length: usize) -> Option<Self> {
         self.skip_n(length)
-            .map(|element| Self::new_from_ref(element))
+            .map(|element| Self::new_from_elements(element))
     }
 
     fn rtake_n_as_collection(&self, length: usize) -> Option<Self> {
         self.rtake_n(length)
-            .map(|element| Self::new_from_ref(element))
+            .map(|element| Self::new_from_elements(element))
     }
 
     fn rskip_n_as_collection(&self, length: usize) -> Option<Self> {
         self.rskip_n(length)
-            .map(|element| Self::new_from_ref(element))
+            .map(|element| Self::new_from_elements(element))
     }
 }
 
@@ -213,7 +220,7 @@ pub trait ToBytes {
     // ================
 
     fn to_bytes(&self) -> BytesType {
-        BytesType::new_from_ref(self.to_bytes_raw().as_ref())
+        BytesType::new_from(self.to_bytes_raw().to_vec())
     }
 
     fn to_hexadecimal(&self) -> HexadecimalType {
@@ -272,7 +279,7 @@ where
         let size_end_actual = size_start.max(size_end);
 
         Self::new_auto_probe(
-            Self::new_from(vec![element; size_end_actual]),
+            Self::new_from_elements(&vec![element; size_end_actual]),
             size_start_actual,
             size_start < size_end,
         )

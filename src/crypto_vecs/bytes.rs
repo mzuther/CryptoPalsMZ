@@ -31,6 +31,10 @@ impl InternalData for Bytes {
         }
     }
 
+    fn new_from_elements(elements: &[Self::Element]) -> Self {
+        Self::new_from(elements.to_vec())
+    }
+
     fn from_literal(string_literal: &str) -> Self {
         Hexadecimal::from_literal(string_literal).to_bytes_raw()
     }
@@ -54,6 +58,12 @@ impl InternalData for Bytes {
         self.bytes.iter().copied()
     }
 
+    fn data(&self) -> &Self::Collection {
+        &self.bytes
+    }
+
+    // ----------------
+
     fn representation_name(&self) -> &str {
         "Bytes"
     }
@@ -66,10 +76,6 @@ impl InternalData for Bytes {
 // ----------------
 
 impl InternalDataVec for Bytes {
-    fn data(&self) -> &Vec<<Self as InternalData>::Element> {
-        &self.bytes
-    }
-
     fn chunks(
         &self,
         chunk_size: usize,
@@ -86,12 +92,6 @@ impl InternalDataVec for Bytes {
         assert!(chunk_size > 0, "chunk size must be non-zero");
 
         self.bytes.rchunks(chunk_size)
-    }
-
-    // ----------------
-
-    fn get(&self, index: usize) -> Option<&<Self as InternalData>::Element> {
-        self.bytes.get(index)
     }
 }
 
@@ -126,7 +126,7 @@ impl ToBytes for Bytes {
 
     // performance (prevent round trip via trait)
     fn to_bytes(&self) -> BytesType {
-        BytesType::new_from_ref(&self.bytes)
+        BytesType::new_from(self.bytes.to_vec())
     }
 }
 
@@ -230,7 +230,7 @@ impl BytesType {
         self.data().chunks(block_size).fold(
             BlockBytes::new(block_size),
             |mut acc, block| {
-                acc.push(Self::new_from_ref(block));
+                acc.push(Self::new_from_elements(block));
                 acc
             },
         )
@@ -570,7 +570,8 @@ mod tests {
 
     #[test]
     fn unit_bytes_from_base64_literal() {
-        let expected_result = BytesType::new_from_ref(&Base64::COMPLETE_ALPHABET_BYTES);
+        let expected_result =
+            BytesType::new_from_elements(&Base64::COMPLETE_ALPHABET_BYTES);
 
         let result = BytesType::from_base64_literal(Base64::COMPLETE_ALPHABET);
 

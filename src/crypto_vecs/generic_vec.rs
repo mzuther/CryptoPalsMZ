@@ -37,6 +37,12 @@ where
         }
     }
 
+    fn new_from_elements(elements: &[Self::Element]) -> Self {
+        Self {
+            collection: C::new_from_elements(elements),
+        }
+    }
+
     fn from_literal(string_literal: &str) -> Self {
         Self {
             collection: C::from_literal(string_literal),
@@ -61,6 +67,12 @@ where
         self.collection.elements()
     }
 
+    fn data(&self) -> &Self::Collection {
+        self.collection.data()
+    }
+
+    // ----------------
+
     fn representation_name(&self) -> &str {
         self.collection.representation_name()
     }
@@ -77,10 +89,6 @@ where
     C: InternalDataVec<Element = E>,
     E: Clone,
 {
-    fn data(&self) -> &Vec<E> {
-        self.collection.data()
-    }
-
     fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, E> {
         assert!(chunk_size > 0, "chunk size must be non-zero");
 
@@ -91,12 +99,6 @@ where
         assert!(chunk_size > 0, "chunk size must be non-zero");
 
         self.collection.rchunks(chunk_size)
-    }
-
-    // ----------------
-
-    fn get(&self, index: usize) -> Option<&E> {
-        self.collection.get(index)
     }
 }
 

@@ -26,6 +26,10 @@ impl InternalData for Hexadecimal {
         }
     }
 
+    fn new_from_elements(elements: &[Self::Element]) -> Self {
+        Self::new_from(elements.join(""))
+    }
+
     fn from_literal(string_literal: &str) -> Self {
         Self::new_from(string_literal.to_string())
     }
@@ -88,6 +92,12 @@ impl InternalData for Hexadecimal {
     fn len(&self) -> usize {
         self.hexadecimal.chars().count() / 2
     }
+
+    fn data(&self) -> &Self::Collection {
+        &self.hexadecimal
+    }
+
+    // ----------------
 
     fn representation_name(&self) -> &str {
         "Hexadecimal"

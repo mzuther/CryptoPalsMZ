@@ -28,6 +28,10 @@ impl InternalData for Base64 {
         }
     }
 
+    fn new_from_elements(elements: &[Self::Element]) -> Self {
+        Self::new_from(elements.iter().collect())
+    }
+
     fn from_literal(string_literal: &str) -> Self {
         Self::new_from(string_literal.to_string())
     }
@@ -110,6 +114,12 @@ impl InternalData for Base64 {
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
         self.base64.chars()
     }
+
+    fn data(&self) -> &Self::Collection {
+        &self.base64
+    }
+
+    // ----------------
 
     fn representation_name(&self) -> &str {
         "Base64"
@@ -354,13 +364,13 @@ impl Base64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::crypto_vecs::{HexadecimalType, UnicodeType, traits::InternalDataVec};
+    use crate::crypto_vecs::{HexadecimalType, UnicodeType};
 
     // ----------------
 
     #[test]
     fn unit_base64_to_base64() {
-        let bytes = BytesType::new_from_ref(&Base64::COMPLETE_ALPHABET_BYTES);
+        let bytes = BytesType::new_from_elements(&Base64::COMPLETE_ALPHABET_BYTES);
         let expected_result = Base64Type::from_literal(Base64::COMPLETE_ALPHABET);
 
         let result = bytes.to_base64();
@@ -430,7 +440,8 @@ mod tests {
     #[test]
     fn unit_base64_to_bytes() {
         let base64 = Base64Type::from_literal(Base64::COMPLETE_ALPHABET);
-        let expected_result = BytesType::new_from_ref(&Base64::COMPLETE_ALPHABET_BYTES);
+        let expected_result =
+            BytesType::new_from_elements(&Base64::COMPLETE_ALPHABET_BYTES);
 
         let result = base64.to_bytes();
 

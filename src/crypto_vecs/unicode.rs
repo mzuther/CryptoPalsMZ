@@ -27,6 +27,10 @@ impl InternalData for Unicode {
         }
     }
 
+    fn new_from_elements(elements: &[Self::Element]) -> Self {
+        Self::new_from(elements.iter().collect())
+    }
+
     fn from_literal(string_literal: &str) -> Self {
         Self::new_from(string_literal.to_string())
     }
@@ -49,6 +53,12 @@ impl InternalData for Unicode {
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
         self.unicode.chars()
     }
+
+    fn data(&self) -> &Self::Collection {
+        &self.unicode
+    }
+
+    // ----------------
 
     fn representation_name(&self) -> &str {
         "Unicode"

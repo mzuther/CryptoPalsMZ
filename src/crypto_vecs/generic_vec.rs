@@ -26,7 +26,7 @@ pub struct CryptoVecIter<'a, E> {
 
 impl<C, E> InternalData for CryptoVec<C, E>
 where
-    C: Elements<Element = E> + InternalData<Collection = Vec<E>>,
+    C: InternalDataVec<Element = E, Collection = Vec<E>>,
     E: Clone,
 {
     type Collection = Vec<E>;
@@ -60,7 +60,7 @@ where
 
 impl<C, E> InternalDataVec for CryptoVec<C, E>
 where
-    C: Elements<Element = E> + InternalDataVec<Element = E>,
+    C: InternalDataVec<Element = E>,
     E: Clone,
 {
     fn data(&self) -> &Vec<E> {
@@ -90,9 +90,7 @@ where
 
 impl<C, E> InternalDataVecMut for CryptoVec<C, E>
 where
-    C: Elements<Element = E>
-        + InternalDataVec<Element = E>
-        + InternalDataVecMut<Element = E>,
+    C: InternalDataVecMut<Element = E>,
     E: Clone,
 {
     fn data_mut(&mut self) -> &mut Vec<Self::Element> {
@@ -108,7 +106,7 @@ where
 
 impl<C, E> Elements for CryptoVec<C, E>
 where
-    C: InternalDataVec + Elements<Element = E>,
+    C: InternalDataVec<Element = E>,
     E: Clone,
 {
     type Element = E;
@@ -122,7 +120,7 @@ where
 
 impl<C, E> Representation for CryptoVec<C, E>
 where
-    C: Representation + Elements<Element = E>,
+    C: Elements<Element = E> + Representation,
 {
     fn representation_name(&self) -> &str {
         self.collection.representation_name()
@@ -137,7 +135,7 @@ where
 
 impl<C, E> fmt::Display for CryptoVec<C, E>
 where
-    C: Representation + Elements<Element = E>,
+    C: Elements<Element = E> + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -163,9 +161,7 @@ where
 
 impl<C, E> convert::From<Vec<E>> for self::CryptoVec<C, E>
 where
-    C: InternalData<Collection = Vec<E>>
-        + InternalDataVec<Element = E>
-        + Elements<Element = E>,
+    C: InternalDataVec<Element = E, Collection = Vec<E>>,
     E: Clone,
 {
     fn from(data: Vec<E>) -> Self {
@@ -175,9 +171,7 @@ where
 
 impl<C, E> convert::From<&[E]> for self::CryptoVec<C, E>
 where
-    C: InternalData<Collection = Vec<E>>
-        + InternalDataVec<Element = E>
-        + Elements<Element = E>,
+    C: InternalDataVec<Element = E, Collection = Vec<E>>,
     E: Clone,
 {
     fn from(data: &[E]) -> Self {
@@ -187,24 +181,13 @@ where
 
 impl<C, E> convert::From<E> for self::CryptoVec<C, E>
 where
-    C: InternalData<Collection = Vec<E>>
-        + InternalDataVec<Element = E>
-        + Elements<Element = E>,
+    C: InternalDataVec<Element = E, Collection = Vec<E>>,
     E: Clone,
 {
     fn from(element: E) -> Self {
         Self::new_from(vec![element])
     }
 }
-
-// impl<C, E> convert::From<&BytesType> for CryptoVec<C, E>
-// where
-//     C: Elements<Element = E> + FromBytes,
-// {
-//     fn from(bytes: &BytesType) -> Self {
-//         Self::from_bytes(bytes)
-//     }
-// }
 
 // ----------------
 
@@ -336,10 +319,7 @@ where
 
 impl<C, E> self::CryptoVec<C, E>
 where
-    C: Clone
-        + Elements<Element = E>
-        + InternalDataVec<Element = E>
-        + InternalDataVecMut<Element = E>,
+    C: Clone + InternalDataVecMut<Element = E>,
     E: Clone,
 {
     pub fn iter(&self) -> self::CryptoVecIter<'_, E> {

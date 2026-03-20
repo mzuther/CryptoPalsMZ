@@ -7,7 +7,30 @@ use crate::oracles;
 
 // ================
 
-pub trait InternalData {
+// iterate over / count logical elements (String or char)
+pub trait Elements {
+    type Element;
+
+    fn elements(&self) -> impl Iterator<Item = Self::Element>;
+
+    // ----------------
+
+    fn to_elements(&self) -> Vec<Self::Element> {
+        self.elements().collect::<Vec<Self::Element>>()
+    }
+
+    fn len(&self) -> usize {
+        self.elements().count()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+// ----------------
+
+pub trait InternalData: Elements {
     type Collection;
 
     fn new_from(data: Self::Collection) -> Self;
@@ -29,9 +52,11 @@ pub trait InternalData {
     }
 }
 
-pub trait InternalDataVec: Elements
+// ----------------
+
+pub trait InternalDataVec: InternalData
 where
-    Self: Sized + InternalData<Collection = Vec<Self::Element>> + LenBytes,
+    Self: Sized + InternalData<Collection = Vec<<Self as Elements>::Element>> + LenBytes,
     Self::Element: Clone,
 {
     fn data(&self) -> &Vec<Self::Element>;
@@ -139,6 +164,8 @@ where
     }
 }
 
+// ----------------
+
 pub trait InternalDataVecMut: InternalDataVec
 where
     Self::Element: Clone,
@@ -151,29 +178,6 @@ where
 
     fn as_mut_slice(&mut self) -> &mut [Self::Element] {
         self.data_mut().as_mut_slice()
-    }
-}
-
-// ----------------
-
-// iterate over / count logical elements (String or char)
-pub trait Elements {
-    type Element;
-
-    fn elements(&self) -> impl Iterator<Item = Self::Element>;
-
-    // ----------------
-
-    fn to_elements(&self) -> Vec<Self::Element> {
-        self.elements().collect::<Vec<Self::Element>>()
-    }
-
-    fn len(&self) -> usize {
-        self.elements().count()
-    }
-
-    fn is_empty(&self) -> bool {
-        self.len() == 0
     }
 }
 

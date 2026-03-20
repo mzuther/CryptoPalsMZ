@@ -54,7 +54,7 @@ where
 
 impl<C, E> Elements for CryptoString<C>
 where
-    C: InternalData + Elements<Element = E>,
+    C: InternalData<Element = E>,
 {
     type Element = E;
 
@@ -87,7 +87,7 @@ where
 
 impl<C> fmt::Display for CryptoString<C>
 where
-    C: InternalData + Elements + Representation,
+    C: InternalData + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -102,7 +102,7 @@ where
 
 impl<C> fmt::Debug for CryptoString<C>
 where
-    C: InternalData + Elements + Representation,
+    C: InternalData + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)

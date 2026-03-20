@@ -7,11 +7,33 @@ use crate::oracles;
 
 // ================
 
-// iterate over / count logical elements (String or char)
-pub trait Elements {
+pub trait InternalData {
+    // iterate over / count logical elements (e.g. String, char)
     type Element;
+    // collection holding logical elements (e.g. Vec, String)
+    type Collection;
+
+    fn new_from(data: Self::Collection) -> Self;
+    fn from_literal(string_literal: &str) -> Self;
+    fn with_capacity(capacity: usize) -> Self;
+
+    fn capacity(&self) -> usize;
+    fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String>;
+
+    // ----------------
 
     fn elements(&self) -> impl Iterator<Item = Self::Element>;
+
+    // ----------------
+
+    fn with_capacity_bits(capacity_bits: usize) -> Self
+    where
+        Self: Sized,
+    {
+        let capacity = crypto_vecs::bits_to_bytes(capacity_bits);
+
+        Self::with_capacity(capacity)
+    }
 
     // ----------------
 
@@ -30,33 +52,11 @@ pub trait Elements {
 
 // ----------------
 
-pub trait InternalData: Elements {
-    type Collection;
-
-    fn new_from(data: Self::Collection) -> Self;
-    fn from_literal(string_literal: &str) -> Self;
-    fn with_capacity(capacity: usize) -> Self;
-
-    fn capacity(&self) -> usize;
-    fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String>;
-
-    // ----------------
-
-    fn with_capacity_bits(capacity_bits: usize) -> Self
-    where
-        Self: Sized,
-    {
-        let capacity = crypto_vecs::bits_to_bytes(capacity_bits);
-
-        Self::with_capacity(capacity)
-    }
-}
-
-// ----------------
-
 pub trait InternalDataVec: InternalData
 where
-    Self: Sized + InternalData<Collection = Vec<<Self as Elements>::Element>> + LenBytes,
+    Self: Sized
+        + InternalData<Collection = Vec<<Self as InternalData>::Element>>
+        + LenBytes,
     Self::Element: Clone,
 {
     fn data(&self) -> &Vec<Self::Element>;

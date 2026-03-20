@@ -1,7 +1,7 @@
 use std::convert;
 
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalData, InternalDataVec, LenBytes, Representation, ToBytes,
+    FromBytes, InternalData, InternalDataVec, LenBytes, Representation, ToBytes,
 };
 use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
 
@@ -17,6 +17,7 @@ pub type UnicodeType = CryptoString<self::Unicode>;
 // ================
 
 impl InternalData for Unicode {
+    type Element = char;
     type Collection = String;
 
     fn new_from(data: Self::Collection) -> Self {
@@ -41,14 +42,10 @@ impl InternalData for Unicode {
     fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
         Ok(data.clone())
     }
-}
 
-// ----------------
+    // ----------------
 
-// iterate over single characters (graphemes)
-impl Elements for Unicode {
-    type Element = char;
-
+    // iterate over single characters (graphemes)
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
         self.unicode.chars()
     }

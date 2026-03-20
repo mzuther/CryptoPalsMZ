@@ -2,7 +2,7 @@ use hex;
 use std::convert;
 
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+    FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
 use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
 
@@ -18,6 +18,7 @@ pub type HexadecimalType = CryptoString<self::Hexadecimal>;
 // ================
 
 impl InternalData for Hexadecimal {
+    type Element = String;
     type Collection = String;
 
     fn new_from(data: Self::Collection) -> Self {
@@ -64,14 +65,10 @@ impl InternalData for Hexadecimal {
             ))
         }
     }
-}
 
-// ----------------
+    // ----------------
 
-// iterate over bytes (Strings of two characters)
-impl Elements for Hexadecimal {
-    type Element = String;
-
+    // iterate over bytes (Strings of two characters)
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
         let mut chars_iter = self.hexadecimal.chars();
 

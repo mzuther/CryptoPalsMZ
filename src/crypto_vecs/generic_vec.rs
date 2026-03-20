@@ -1,7 +1,7 @@
 use std::{convert, fmt, slice, vec};
 
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
+    FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
     Representation, ToBytes,
 };
 use crate::crypto_vecs::{Bytes, BytesType};
@@ -11,7 +11,7 @@ use crate::crypto_vecs::{Bytes, BytesType};
 #[derive(Clone, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct CryptoVec<C, E>
 where
-    C: Elements<Element = E>,
+    C: InternalData<Element = E, Collection = Vec<E>>,
 {
     collection: C,
 }
@@ -29,6 +29,7 @@ where
     C: InternalDataVec<Element = E, Collection = Vec<E>>,
     E: Clone,
 {
+    type Element = E;
     type Collection = Vec<E>;
 
     fn new_from(data: Self::Collection) -> Self {
@@ -53,6 +54,12 @@ where
 
     fn clean_and_validate(data: Vec<E>) -> Result<Vec<E>, String> {
         C::clean_and_validate(data)
+    }
+
+    // ----------------
+
+    fn elements(&self) -> impl Iterator<Item = Self::Element> {
+        self.collection.elements()
     }
 }
 
@@ -104,23 +111,9 @@ where
 
 // ----------------
 
-impl<C, E> Elements for CryptoVec<C, E>
-where
-    C: InternalDataVec<Element = E>,
-    E: Clone,
-{
-    type Element = E;
-
-    fn elements(&self) -> impl Iterator<Item = Self::Element> {
-        self.collection.elements()
-    }
-}
-
-// ----------------
-
 impl<C, E> Representation for CryptoVec<C, E>
 where
-    C: Elements<Element = E> + Representation,
+    C: InternalData<Element = E, Collection = Vec<E>> + Representation,
 {
     fn representation_name(&self) -> &str {
         self.collection.representation_name()
@@ -135,7 +128,7 @@ where
 
 impl<C, E> fmt::Display for CryptoVec<C, E>
 where
-    C: Elements<Element = E> + Representation,
+    C: InternalData<Element = E, Collection = Vec<E>> + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -150,7 +143,7 @@ where
 
 impl<C, E> fmt::Debug for CryptoVec<C, E>
 where
-    C: Elements<Element = E> + Representation,
+    C: InternalData<Element = E, Collection = Vec<E>> + Representation,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)
@@ -193,7 +186,7 @@ where
 
 impl<C, E> FromBytes for CryptoVec<C, E>
 where
-    C: Elements<Element = E> + FromBytes,
+    C: InternalData<Element = E, Collection = Vec<E>> + FromBytes,
 {
     fn from_bytes(bytes: &BytesType) -> Self {
         Self {
@@ -204,7 +197,7 @@ where
 
 impl<C, E> ToBytes for CryptoVec<C, E>
 where
-    C: Elements<Element = E> + ToBytes,
+    C: InternalData<Element = E, Collection = Vec<E>> + ToBytes,
 {
     fn to_bytes_raw(&self) -> Bytes {
         self.collection.to_bytes_raw()
@@ -215,7 +208,8 @@ where
 
 impl<C, E> IntoIterator for self::CryptoVec<C, E>
 where
-    C: IntoIterator<IntoIter = std::vec::IntoIter<E>> + Elements<Element = E>,
+    C: IntoIterator<IntoIter = std::vec::IntoIter<E>>
+        + InternalData<Element = E, Collection = Vec<E>>,
 {
     type Item = E;
     type IntoIter = vec::IntoIter<Self::Item>;
@@ -227,7 +221,9 @@ where
 
 impl<C, E> IntoIterator for &self::CryptoVec<C, E>
 where
-    C: Clone + IntoIterator<IntoIter = std::vec::IntoIter<E>> + Elements<Element = E>,
+    C: Clone
+        + IntoIterator<IntoIter = std::vec::IntoIter<E>>
+        + InternalData<Element = E, Collection = Vec<E>>,
 {
     type Item = E;
     type IntoIter = vec::IntoIter<Self::Item>;
@@ -261,7 +257,7 @@ impl<'a, E> ExactSizeIterator for self::CryptoVecIter<'a, E> {
 
 impl<C, E> LenBytes for CryptoVec<C, E>
 where
-    C: Elements<Element = E>,
+    C: InternalData<Element = E, Collection = Vec<E>>,
 {
     fn len_bytes(&self) -> usize {
         self.collection.len()
@@ -272,7 +268,7 @@ where
 
 impl<C, E> convert::AsMut<Vec<E>> for CryptoVec<C, E>
 where
-    C: AsMut<Vec<E>> + Elements<Element = E>,
+    C: AsMut<Vec<E>> + InternalData<Element = E, Collection = Vec<E>>,
 {
     fn as_mut(&mut self) -> &mut Vec<E> {
         self.collection.as_mut()
@@ -281,7 +277,7 @@ where
 
 impl<C, E> convert::AsRef<Vec<E>> for CryptoVec<C, E>
 where
-    C: AsRef<Vec<E>> + Elements<Element = E>,
+    C: AsRef<Vec<E>> + InternalData<Element = E, Collection = Vec<E>>,
 {
     fn as_ref(&self) -> &Vec<E> {
         self.collection.as_ref()
@@ -292,7 +288,7 @@ where
 
 impl<C, E> Extend<E> for CryptoVec<C, E>
 where
-    C: Extend<E> + Elements<Element = E>,
+    C: Extend<E> + InternalData<Element = E, Collection = Vec<E>>,
 {
     fn extend<T>(&mut self, iter: T)
     where
@@ -304,7 +300,7 @@ where
 
 impl<'a, C, E> Extend<&'a E> for CryptoVec<C, E>
 where
-    C: Extend<E> + Elements<Element = E>,
+    C: Extend<E> + InternalData<Element = E, Collection = Vec<E>>,
     E: Copy,
 {
     fn extend<T>(&mut self, iter: T)

@@ -4,8 +4,8 @@ use std::{convert, slice, sync, vec};
 
 use crate::crypto_vecs::hexadecimal::Hexadecimal;
 use crate::crypto_vecs::traits::{
-    AutoProbe, Elements, FromBytes, InternalData, InternalDataVec, InternalDataVecMut,
-    LenBytes, Representation, ToBytes,
+    AutoProbe, FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
+    Representation, ToBytes,
 };
 use crate::crypto_vecs::{self, Base64Type, BlockBytes, HexadecimalType, UnicodeType};
 
@@ -21,6 +21,7 @@ pub type BytesType = crypto_vecs::CryptoVec<Bytes, u8>;
 // ================
 
 impl InternalData for Bytes {
+    type Element = u8;
     type Collection = Vec<u8>;
 
     fn new_from(data: Self::Collection) -> Self {
@@ -45,22 +46,35 @@ impl InternalData for Bytes {
     fn clean_and_validate(data: Self::Collection) -> Result<Self::Collection, String> {
         Ok(data)
     }
+
+    // ----------------
+
+    // iterate over bytes
+    fn elements(&self) -> impl Iterator<Item = Self::Element> {
+        self.bytes.iter().copied()
+    }
 }
 
 // ----------------
 
 impl InternalDataVec for Bytes {
-    fn data(&self) -> &Vec<Self::Element> {
+    fn data(&self) -> &Vec<<Self as InternalData>::Element> {
         &self.bytes
     }
 
-    fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, Self::Element> {
+    fn chunks(
+        &self,
+        chunk_size: usize,
+    ) -> slice::Chunks<'_, <Self as InternalData>::Element> {
         assert!(chunk_size > 0, "chunk size must be non-zero");
 
         self.bytes.chunks(chunk_size)
     }
 
-    fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, Self::Element> {
+    fn rchunks(
+        &self,
+        chunk_size: usize,
+    ) -> slice::RChunks<'_, <Self as InternalData>::Element> {
         assert!(chunk_size > 0, "chunk size must be non-zero");
 
         self.bytes.rchunks(chunk_size)
@@ -68,7 +82,7 @@ impl InternalDataVec for Bytes {
 
     // ----------------
 
-    fn get(&self, index: usize) -> Option<&Self::Element> {
+    fn get(&self, index: usize) -> Option<&<Self as InternalData>::Element> {
         self.bytes.get(index)
     }
 }
@@ -76,32 +90,12 @@ impl InternalDataVec for Bytes {
 // ----------------
 
 impl InternalDataVecMut for Bytes {
-    fn data_mut(&mut self) -> &mut Vec<Self::Element> {
+    fn data_mut(&mut self) -> &mut Vec<<Self as InternalData>::Element> {
         &mut self.bytes
     }
 
-    fn push(&mut self, value: Self::Element) {
+    fn push(&mut self, value: <Self as InternalData>::Element) {
         self.bytes.push(value)
-    }
-}
-
-// ----------------
-
-// iterate over bytes
-impl Elements for Bytes {
-    type Element = u8;
-
-    fn elements(&self) -> impl Iterator<Item = Self::Element> {
-        self.bytes.iter().copied()
-    }
-}
-
-// iterate over bytes (by reference)
-impl<'a> Elements for &'a Bytes {
-    type Element = &'a u8;
-
-    fn elements(&self) -> impl Iterator<Item = Self::Element> {
-        self.bytes.iter()
     }
 }
 

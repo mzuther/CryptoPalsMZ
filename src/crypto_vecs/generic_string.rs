@@ -1,7 +1,7 @@
 use std::{convert, fmt};
 
 use crate::crypto_vecs::traits::{
-    Elements, FromBytes, InternalData, LenBytes, Representation, ToBytes,
+    FromBytes, InternalData, LenBytes, Representation, ToBytes,
 };
 use crate::crypto_vecs::{Bytes, BytesType};
 
@@ -17,10 +17,11 @@ where
 
 // ================
 
-impl<C> InternalData for CryptoString<C>
+impl<C, E> InternalData for CryptoString<C>
 where
-    C: InternalData<Collection = String>,
+    C: InternalData<Element = E, Collection = String>,
 {
+    type Element = E;
     type Collection = String;
 
     fn new_from(data: String) -> Self {
@@ -48,21 +49,14 @@ where
     fn clean_and_validate(data: String) -> Result<String, String> {
         C::clean_and_validate(data)
     }
-}
 
-// ----------------
-
-impl<C, E> Elements for CryptoString<C>
-where
-    C: InternalData<Element = E>,
-{
-    type Element = E;
+    // ----------------
 
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
         self.collection.elements()
     }
 
-    // implemented for "Hexadecimal"
+    // implementation for "Hexadecimal" exists
     fn len(&self) -> usize {
         self.collection.len()
     }

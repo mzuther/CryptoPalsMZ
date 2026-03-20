@@ -2,7 +2,7 @@ use regex::Regex;
 use std::convert;
 
 use crate::crypto_vecs::traits::{
-    FromBytes, InternalData, InternalDataVecMut, LenBytes, Representation, ToBytes,
+    FromBytes, InternalData, InternalDataVecMut, LenBytes, ToBytes,
 };
 use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
 
@@ -110,11 +110,7 @@ impl InternalData for Base64 {
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
         self.base64.chars()
     }
-}
 
-// ----------------
-
-impl Representation for Base64 {
     fn representation_name(&self) -> &str {
         "Base64"
     }

@@ -1,7 +1,7 @@
 use std::convert;
 
 use crate::crypto_vecs::traits::{
-    FromBytes, InternalData, InternalDataVec, LenBytes, Representation, ToBytes,
+    FromBytes, InternalData, InternalDataVec, LenBytes, ToBytes,
 };
 use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
 
@@ -49,11 +49,7 @@ impl InternalData for Unicode {
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
         self.unicode.chars()
     }
-}
 
-// ----------------
-
-impl Representation for Unicode {
     fn representation_name(&self) -> &str {
         "Unicode"
     }

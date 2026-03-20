@@ -7,7 +7,10 @@ use crate::oracles;
 
 // ================
 
-pub trait InternalData {
+pub trait InternalData
+where
+    Self::Element: Clone,
+{
     // iterate over / count logical elements (e.g. String, char)
     type Element;
     // collection holding logical elements (e.g. Vec, String)
@@ -23,6 +26,9 @@ pub trait InternalData {
     // ----------------
 
     fn elements(&self) -> impl Iterator<Item = Self::Element>;
+
+    fn representation_name(&self) -> &str;
+    fn representation(&self) -> String;
 
     // ================
 
@@ -179,13 +185,6 @@ where
     fn as_mut_slice(&mut self) -> &mut [Self::Element] {
         self.data_mut().as_mut_slice()
     }
-}
-
-// ----------------
-
-pub trait Representation {
-    fn representation_name(&self) -> &str;
-    fn representation(&self) -> String;
 }
 
 // ----------------

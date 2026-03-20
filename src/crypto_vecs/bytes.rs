@@ -5,7 +5,7 @@ use std::{convert, slice, sync, vec};
 use crate::crypto_vecs::hexadecimal::Hexadecimal;
 use crate::crypto_vecs::traits::{
     AutoProbe, FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
-    Representation, ToBytes,
+    ToBytes,
 };
 use crate::crypto_vecs::{self, Base64Type, BlockBytes, HexadecimalType, UnicodeType};
 
@@ -53,6 +53,14 @@ impl InternalData for Bytes {
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
         self.bytes.iter().copied()
     }
+
+    fn representation_name(&self) -> &str {
+        "Bytes"
+    }
+
+    fn representation(&self) -> String {
+        self.to_hexadecimal().representation()
+    }
 }
 
 // ----------------
@@ -96,18 +104,6 @@ impl InternalDataVecMut for Bytes {
 
     fn push(&mut self, value: <Self as InternalData>::Element) {
         self.bytes.push(value)
-    }
-}
-
-// ----------------
-
-impl Representation for Bytes {
-    fn representation_name(&self) -> &str {
-        "Bytes"
-    }
-
-    fn representation(&self) -> String {
-        self.to_hexadecimal().representation()
     }
 }
 

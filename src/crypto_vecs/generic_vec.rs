@@ -1,8 +1,7 @@
 use std::{convert, fmt, slice, vec};
 
 use crate::crypto_vecs::traits::{
-    FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
-    Representation, ToBytes,
+    FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes, ToBytes,
 };
 use crate::crypto_vecs::{Bytes, BytesType};
 
@@ -61,6 +60,14 @@ where
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
         self.collection.elements()
     }
+
+    fn representation_name(&self) -> &str {
+        self.collection.representation_name()
+    }
+
+    fn representation(&self) -> String {
+        self.collection.representation()
+    }
 }
 
 // ----------------
@@ -111,24 +118,10 @@ where
 
 // ----------------
 
-impl<C, E> Representation for CryptoVec<C, E>
-where
-    C: InternalData<Element = E, Collection = Vec<E>> + Representation,
-{
-    fn representation_name(&self) -> &str {
-        self.collection.representation_name()
-    }
-
-    fn representation(&self) -> String {
-        self.collection.representation()
-    }
-}
-
-// ----------------
-
 impl<C, E> fmt::Display for CryptoVec<C, E>
 where
-    C: InternalData<Element = E, Collection = Vec<E>> + Representation,
+    C: InternalData<Element = E, Collection = Vec<E>> + InternalDataVec,
+    E: Clone,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -143,7 +136,8 @@ where
 
 impl<C, E> fmt::Debug for CryptoVec<C, E>
 where
-    C: InternalData<Element = E, Collection = Vec<E>> + Representation,
+    C: InternalData<Element = E, Collection = Vec<E>> + InternalDataVec,
+    E: Clone,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)

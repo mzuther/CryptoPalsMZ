@@ -1,8 +1,6 @@
 use std::{convert, fmt};
 
-use crate::crypto_vecs::traits::{
-    FromBytes, InternalData, LenBytes, Representation, ToBytes,
-};
+use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, ToBytes};
 use crate::crypto_vecs::{Bytes, BytesType};
 
 // ================
@@ -20,6 +18,7 @@ where
 impl<C, E> InternalData for CryptoString<C>
 where
     C: InternalData<Element = E, Collection = String>,
+    E: Clone,
 {
     type Element = E;
     type Collection = String;
@@ -60,14 +59,7 @@ where
     fn len(&self) -> usize {
         self.collection.len()
     }
-}
 
-// ----------------
-
-impl<C> Representation for CryptoString<C>
-where
-    C: InternalData + Representation,
-{
     fn representation_name(&self) -> &str {
         self.collection.representation_name()
     }
@@ -81,7 +73,7 @@ where
 
 impl<C> fmt::Display for CryptoString<C>
 where
-    C: InternalData + Representation,
+    C: InternalData<Collection = String>,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -96,7 +88,7 @@ where
 
 impl<C> fmt::Debug for CryptoString<C>
 where
-    C: InternalData + Representation,
+    C: InternalData<Collection = String>,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)

@@ -1,9 +1,7 @@
 use std::{collections::HashMap, fs};
 
 use cryptopals::crypto_vecs::traits::{InternalData, ToBytes};
-use cryptopals::crypto_vecs::{
-    Base64Type, BlockBytes, BytesType, HexadecimalType, UnicodeType,
-};
+use cryptopals::crypto_vecs::{Base64, BlockBytes, BytesType, Hexadecimal, Unicode};
 
 // ================
 
@@ -14,7 +12,7 @@ fn integration_challenge_01() {
         "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d",
     );
 
-    let expected_result = Base64Type::from_literal(
+    let expected_result = Base64::from_literal(
         "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t",
     );
 
@@ -30,7 +28,7 @@ fn integration_challenge_01_reverse() {
         "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t",
     );
 
-    let expected_result = HexadecimalType::from_literal(
+    let expected_result = Hexadecimal::from_literal(
         "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d",
     );
 
@@ -48,7 +46,7 @@ fn integration_challenge_02() {
     let key = BytesType::from_hex_literal("686974207468652062756c6c277320657965");
 
     let expected_result =
-        HexadecimalType::from_literal("746865206b696420646f6e277420706c6179");
+        Hexadecimal::from_literal("746865206b696420646f6e277420706c6179");
 
     let bytes_xor = plain.fixed_xor(&key);
     let result = bytes_xor.to_hexadecimal();
@@ -131,7 +129,7 @@ fn integration_challenge_05() {
     );
     let key = BytesType::from_unicode_literal("ICE");
 
-    let expected_result = HexadecimalType::from_literal(
+    let expected_result = Hexadecimal::from_literal(
         "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f",
     );
 
@@ -150,7 +148,7 @@ fn integration_challenge_06() {
         fs::read_to_string("original/6.txt").expect("could not read file");
 
     // fix incorrect last character before padding
-    base64_string = UnicodeType::replace_suffix(&base64_string, "M=\n", "A=");
+    base64_string = Unicode::replace_suffix(&base64_string, "M=\n", "A=");
 
     let cypher = BytesType::from_base64_literal(&base64_string);
 

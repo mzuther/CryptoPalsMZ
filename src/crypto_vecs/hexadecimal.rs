@@ -1,8 +1,8 @@
 use hex;
-use std::convert;
+use std::{convert, fmt};
 
-use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, ToBytes};
-use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
+use crate::crypto_vecs::traits::{InternalData, LenBytes, ToBytes};
+use crate::crypto_vecs::{Bytes, BytesType};
 
 // ================
 
@@ -11,8 +11,6 @@ pub struct Hexadecimal {
     hexadecimal: String,
     element_cache: Vec<String>,
 }
-
-pub type HexadecimalType = CryptoString<self::Hexadecimal>;
 
 // ================
 
@@ -149,6 +147,19 @@ impl LenBytes for Hexadecimal {
 }
 
 // ----------------
+impl fmt::Display for Hexadecimal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}[{:02}] {{ {} }}",
+            self.representation_name(),
+            self.element_cache.len(),
+            self.representation()
+        )
+    }
+}
+
+// ----------------
 
 impl convert::AsRef<str> for Hexadecimal {
     fn as_ref(&self) -> &str {
@@ -158,8 +169,8 @@ impl convert::AsRef<str> for Hexadecimal {
 
 // ----------------
 
-impl FromBytes for Hexadecimal {
-    fn from_bytes(bytes: &BytesType) -> Self {
+impl convert::From<&BytesType> for Hexadecimal {
+    fn from(bytes: &BytesType) -> Self {
         Self::new_from(hex::encode(bytes.as_ref()))
     }
 }
@@ -192,7 +203,7 @@ mod tests {
     #[test]
     fn unit_hexadecimal_to_hexadecimal() {
         let bytes = BytesType::new_from(vec![0x3b, 0x44, 0x2c, 0x4e, 0xcc, 0x0f]);
-        let expected_result = HexadecimalType::from_literal("3b442c4ecc0f");
+        let expected_result = Hexadecimal::from_literal("3b442c4ecc0f");
 
         let result = bytes.to_hexadecimal();
 
@@ -202,12 +213,12 @@ mod tests {
     #[test]
     #[should_panic(expected = "found invalid hexadecimal characters: !!g")]
     fn unit_hexadecimal_hex_from_invalid_string() {
-        let _ = HexadecimalType::from_literal("4A!f3!c6g1D298");
+        let _ = Hexadecimal::from_literal("4A!f3!c6g1D298");
     }
 
     #[test]
     fn unit_hexadecimal_to_bytes_lowercase() {
-        let hexadecimal = HexadecimalType::from_literal("41c3bce4bda0");
+        let hexadecimal = Hexadecimal::from_literal("41c3bce4bda0");
         let expected_result =
             BytesType::new_from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
@@ -218,7 +229,7 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_to_bytes_uppercase() {
-        let hexadecimal = HexadecimalType::from_literal("21A3DCF4DBA1");
+        let hexadecimal = Hexadecimal::from_literal("21A3DCF4DBA1");
         let expected_result =
             BytesType::new_from(vec![0x21, 0xa3, 0xdc, 0xf4, 0xdb, 0xa1]);
 
@@ -229,7 +240,7 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_to_string() {
-        let hexadecimal = HexadecimalType::from_literal("41c3bc");
+        let hexadecimal = Hexadecimal::from_literal("41c3bc");
         let expected_result = String::from("Hexadecimal[03] { 41c3bc }");
 
         let result = hexadecimal.to_string();
@@ -239,7 +250,7 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_to_string_two_blocks() {
-        let hexadecimal = HexadecimalType::from_literal("21a3dcf4 dba1");
+        let hexadecimal = Hexadecimal::from_literal("21a3dcf4 dba1");
         let expected_result = String::from("Hexadecimal[06] { 21a3dcf4 dba1 }");
 
         let result = hexadecimal.to_string();
@@ -249,7 +260,7 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_to_string_odd_length() {
-        let hexadecimal = HexadecimalType::from_literal(" 1a3dcf4 dba1");
+        let hexadecimal = Hexadecimal::from_literal(" 1a3dcf4 dba1");
         let expected_result = String::from("Hexadecimal[06] { 01a3dcf4 dba1 }");
 
         let result = hexadecimal.to_string();
@@ -259,7 +270,7 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_to_string_no_space_at_end() {
-        let hexadecimal = HexadecimalType::from_literal("21a3dcf4dba1bddb");
+        let hexadecimal = Hexadecimal::from_literal("21a3dcf4dba1bddb");
         let expected_result = String::from("Hexadecimal[08] { 21a3dcf4 dba1bddb }");
 
         let result = hexadecimal.to_string();
@@ -269,8 +280,7 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_to_string_trim_whitespace() {
-        let hexadecimal =
-            HexadecimalType::from_literal("\t41\n  c3b\n\tce4b\n da\r\n 0\n\n");
+        let hexadecimal = Hexadecimal::from_literal("\t41\n  c3b\n\tce4b\n da\r\n 0\n\n");
         let expected_result = String::from("Hexadecimal[06] { 41c3bce4 bda0 }");
 
         let result = hexadecimal.to_string();
@@ -282,7 +292,7 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_len_bytes_single_byte() {
-        let hexadecimal = HexadecimalType::from_literal("d3");
+        let hexadecimal = Hexadecimal::from_literal("d3");
         let expected_result = 1;
 
         let result = hexadecimal.len_bytes();
@@ -292,7 +302,7 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_len_bytes_several_bytes() {
-        let hexadecimal = HexadecimalType::from_literal("41c3bce4 bda0");
+        let hexadecimal = Hexadecimal::from_literal("41c3bce4 bda0");
         let expected_result = 6;
 
         let result = hexadecimal.len_bytes();
@@ -304,7 +314,7 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_to_elements() {
-        let hexadecimal = HexadecimalType::from_literal("41c3bce4 bda0");
+        let hexadecimal = Hexadecimal::from_literal("41c3bce4 bda0");
 
         let expected_result = vec!["41", "c3", "bc", "e4", "bd", "a0"];
 
@@ -315,7 +325,7 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_to_elements_odd_length() {
-        let hexadecimal = HexadecimalType::from_literal(" 1c3bce4 bda0");
+        let hexadecimal = Hexadecimal::from_literal(" 1c3bce4 bda0");
 
         let expected_result = vec!["01", "c3", "bc", "e4", "bd", "a0"];
 

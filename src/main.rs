@@ -8,7 +8,7 @@ use cryptopals::crypto_vecs::traits::{
     AutoProbe, DecryptionOracle, EncryptionOracle, FromBytes, InternalData,
     InternalDataVecMut, LenBytes, ToBytes,
 };
-use cryptopals::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, UnicodeType};
+use cryptopals::crypto_vecs::{self, Base64, BlockBytes, BytesType, Unicode};
 use cryptopals::{constants, oracles};
 use rand::rand_core::block;
 use rayon::str::Bytes;
@@ -117,7 +117,7 @@ fn challenge_06() {
         fs::read_to_string("original/6.txt").expect("could not read file");
 
     // fix incorrect last character before padding
-    base64_string = UnicodeType::replace_suffix(&base64_string, "M=\n", "A=");
+    base64_string = Unicode::replace_suffix(&base64_string, "M=\n", "A=");
 
     let cypher = BytesType::from_base64_literal(&base64_string);
 

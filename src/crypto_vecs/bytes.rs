@@ -2,11 +2,10 @@ use openssl::{cipher, cipher_ctx};
 use rand::prelude::*;
 use std::{convert, slice, sync, vec};
 
-use crate::crypto_vecs::hexadecimal::Hexadecimal;
 use crate::crypto_vecs::traits::{
     AutoProbe, FromBytes, InternalData, InternalDataVecMut, LenBytes, ToBytes,
 };
-use crate::crypto_vecs::{self, Base64Type, BlockBytes, HexadecimalType, UnicodeType};
+use crate::crypto_vecs::{self, Base64, BlockBytes, Hexadecimal, Unicode};
 
 // ================
 
@@ -204,19 +203,19 @@ impl BytesType {
     // ----------------
 
     pub fn from_hex_literal(string_literal: &str) -> Self {
-        let hexadecimal = HexadecimalType::from_literal(string_literal);
+        let hexadecimal = Hexadecimal::from_literal(string_literal);
 
         hexadecimal.to_bytes()
     }
 
     pub fn from_base64_literal(string_literal: &str) -> Self {
-        let base64 = Base64Type::from_literal(string_literal);
+        let base64 = Base64::from_literal(string_literal);
 
         base64.to_bytes()
     }
 
     pub fn from_unicode_literal(string_literal: &str) -> Self {
-        let unicode = UnicodeType::from_literal(string_literal);
+        let unicode = Unicode::from_literal(string_literal);
 
         unicode.to_bytes()
     }
@@ -613,7 +612,7 @@ mod tests {
 
     #[test]
     fn unit_bytes_to_codepage_1252_unicode_string() {
-        let unicode = UnicodeType::from_literal("\n Hi. Servus. Grüezi. 你好.\t");
+        let unicode = Unicode::from_literal("\n Hi. Servus. Grüezi. 你好.\t");
         let bytes = unicode.to_bytes();
 
         let expected_result = String::from("␊ Hi. Servus. GrÃ¼ezi. ä½�å¥½.␉");

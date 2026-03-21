@@ -2,7 +2,7 @@ use rayon::prelude::*;
 use std::fs;
 
 use cryptopals::crypto_vecs::traits::{EncryptionOracle, InternalData, ToBytes};
-use cryptopals::crypto_vecs::{BytesType, UnicodeType};
+use cryptopals::crypto_vecs::{BytesType, Unicode};
 use cryptopals::oracles;
 
 // ================
@@ -64,7 +64,7 @@ fn integration_challenge_11() {
     let iterations = 1_000;
 
     let block_size_bits = 128;
-    let plain_unicode = UnicodeType::from_literal(&"Detector".repeat(6));
+    let plain_unicode = Unicode::from_literal(&"Detector".repeat(6));
     let plain = plain_unicode.to_bytes();
 
     let result = (1..=iterations)

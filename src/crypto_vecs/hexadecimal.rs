@@ -9,6 +9,7 @@ use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
 #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Hexadecimal {
     hexadecimal: String,
+    element_cache: Vec<String>,
 }
 
 pub type HexadecimalType = CryptoString<self::Hexadecimal>;
@@ -21,7 +22,24 @@ impl InternalData for Hexadecimal {
 
     fn new_from(data: Self::Collection) -> Self {
         match Self::clean_and_validate(data) {
-            Ok(data) => Self { hexadecimal: data },
+            Ok(data) => Self {
+                element_cache: {
+                    assert!(data.len().is_multiple_of(2));
+
+                    let odd_chars = data.chars().step_by(2);
+                    let even_chars = data.chars().skip(1).step_by(2);
+
+                    odd_chars.zip(even_chars).fold(
+                        Vec::default(),
+                        |mut acc, (first_char, second_char)| {
+                            acc.push(format!("{}{}", first_char, second_char));
+
+                            acc
+                        },
+                    )
+                },
+                hexadecimal: data,
+            },
             Err(error) => panic!("{}", error),
         }
     }
@@ -72,20 +90,7 @@ impl InternalData for Hexadecimal {
 
     // iterate over bytes (Strings of two characters)
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
-        let mut chars_iter = self.hexadecimal.chars();
-
-        std::iter::from_fn(move || {
-            let mut current = String::from(chars_iter.next()?);
-
-            match chars_iter.next() {
-                Some(ch) => {
-                    current.push(ch);
-
-                    Some(current)
-                }
-                None => None,
-            }
-        })
+        self.element_cache.iter().cloned()
     }
 
     // performance
@@ -99,6 +104,18 @@ impl InternalData for Hexadecimal {
 
     fn collection_as_ref(&self) -> &Self::Collection {
         &self.hexadecimal
+    }
+
+    fn chunks(&self, chunk_size: usize) -> std::slice::Chunks<'_, Self::Element> {
+        assert!(chunk_size > 0, "chunk size must be non-zero");
+
+        self.element_cache.chunks(chunk_size)
+    }
+
+    fn rchunks(&self, chunk_size: usize) -> std::slice::RChunks<'_, Self::Element> {
+        assert!(chunk_size > 0, "chunk size must be non-zero");
+
+        self.element_cache.rchunks(chunk_size)
     }
 
     // ----------------

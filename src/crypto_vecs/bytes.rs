@@ -66,20 +66,6 @@ impl InternalData for Bytes {
         &self.bytes
     }
 
-    // ----------------
-
-    fn representation_name(&self) -> &str {
-        "Bytes"
-    }
-
-    fn representation(&self) -> String {
-        self.to_hexadecimal().representation()
-    }
-}
-
-// ----------------
-
-impl InternalDataVec for Bytes {
     fn chunks(
         &self,
         chunk_size: usize,
@@ -97,7 +83,21 @@ impl InternalDataVec for Bytes {
 
         self.bytes.rchunks(chunk_size)
     }
+
+    // ----------------
+
+    fn representation_name(&self) -> &str {
+        "Bytes"
+    }
+
+    fn representation(&self) -> String {
+        self.to_hexadecimal().representation()
+    }
 }
+
+// ----------------
+
+impl InternalDataVec for Bytes {}
 
 // ----------------
 

@@ -11,6 +11,7 @@ use crate::crypto_vecs::{Bytes, BytesType, CryptoString};
 #[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Base64 {
     base64: String,
+    element_cache: Vec<char>,
 }
 
 pub type Base64Type = CryptoString<Base64>;
@@ -23,7 +24,10 @@ impl InternalData for Base64 {
 
     fn new_from(data: Self::Collection) -> Self {
         match Self::clean_and_validate(data) {
-            Ok(data) => Self { base64: data },
+            Ok(data) => Self {
+                element_cache: data.chars().collect(),
+                base64: data,
+            },
             Err(error) => panic!("{}", error),
         }
     }
@@ -112,7 +116,7 @@ impl InternalData for Base64 {
 
     // iterate over single characters (6 bits each)
     fn elements(&self) -> impl Iterator<Item = Self::Element> {
-        self.base64.chars()
+        self.element_cache.iter().cloned()
     }
 
     fn collection(&self) -> Self::Collection {
@@ -121,6 +125,18 @@ impl InternalData for Base64 {
 
     fn collection_as_ref(&self) -> &Self::Collection {
         &self.base64
+    }
+
+    fn chunks(&self, chunk_size: usize) -> std::slice::Chunks<'_, Self::Element> {
+        assert!(chunk_size > 0, "chunk size must be non-zero");
+
+        self.element_cache.chunks(chunk_size)
+    }
+
+    fn rchunks(&self, chunk_size: usize) -> std::slice::RChunks<'_, Self::Element> {
+        assert!(chunk_size > 0, "chunk size must be non-zero");
+
+        self.element_cache.rchunks(chunk_size)
     }
 
     // ----------------

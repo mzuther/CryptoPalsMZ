@@ -75,6 +75,14 @@ where
         self.collection.collection_as_ref()
     }
 
+    fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, E> {
+        self.collection.chunks(chunk_size)
+    }
+
+    fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, E> {
+        self.collection.rchunks(chunk_size)
+    }
+
     // ----------------
 
     fn representation_name(&self) -> &str {
@@ -93,17 +101,6 @@ where
     C: InternalDataVec<Element = E>,
     E: Clone,
 {
-    fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, E> {
-        assert!(chunk_size > 0, "chunk size must be non-zero");
-
-        self.collection.chunks(chunk_size)
-    }
-
-    fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, E> {
-        assert!(chunk_size > 0, "chunk size must be non-zero");
-
-        self.collection.rchunks(chunk_size)
-    }
 }
 
 // ----------------

@@ -1,4 +1,4 @@
-use std::{convert, fmt};
+use std::{convert, fmt, slice};
 
 use crate::crypto_vecs::traits::{FromBytes, InternalData, LenBytes, ToBytes};
 use crate::crypto_vecs::{Bytes, BytesType};
@@ -72,6 +72,14 @@ where
 
     fn collection_as_ref(&self) -> &Self::Collection {
         self.collection.collection_as_ref()
+    }
+
+    fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, E> {
+        self.collection.chunks(chunk_size)
+    }
+
+    fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, E> {
+        self.collection.rchunks(chunk_size)
     }
 
     // ----------------

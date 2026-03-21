@@ -37,6 +37,9 @@ where
     // reference to underlying collection
     fn collection_as_ref(&self) -> &Self::Collection;
 
+    fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, Self::Element>;
+    fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, Self::Element>;
+
     // ----------------
 
     fn representation_name(&self) -> &str;
@@ -84,11 +87,6 @@ where
         + LenBytes,
     Self::Element: Clone,
 {
-    fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, Self::Element>;
-    fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, Self::Element>;
-
-    // ================
-
     #[doc(hidden)]
     fn _take_it(&self, length: usize, reverse: bool) -> Option<&[Self::Element]> {
         if length == 0 {

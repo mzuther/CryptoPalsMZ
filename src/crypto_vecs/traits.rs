@@ -9,6 +9,7 @@ use crate::oracles;
 
 pub trait InternalData
 where
+    Self: LenBytes + Sized,
     Self::Element: Clone,
 {
     // iterate over / count logical elements (e.g. String, char)
@@ -37,6 +38,7 @@ where
     // reference to underlying collection
     fn collection_as_ref(&self) -> &Self::Collection;
 
+    // chunks of logical elements (e.g. String, char)
     fn chunks(&self, chunk_size: usize) -> slice::Chunks<'_, Self::Element>;
     fn rchunks(&self, chunk_size: usize) -> slice::RChunks<'_, Self::Element>;
 
@@ -76,23 +78,13 @@ where
     fn get(&self, index: usize) -> Option<&Self::Element> {
         self.elements().nth(index)
     }
-}
 
-// ----------------
+    // ----------------
 
-pub trait InternalDataVec: InternalData
-where
-    Self: Sized
-        + InternalData<Collection = Vec<<Self as InternalData>::Element>>
-        + LenBytes,
-    Self::Element: Clone,
-{
     #[doc(hidden)]
     fn _take_it(&self, length: usize, reverse: bool) -> Option<&[Self::Element]> {
         if length == 0 {
             None
-        } else if length > self.len_bytes() {
-            Some(self.collection_as_ref())
         } else {
             if reverse {
                 self.rchunks(length).next()
@@ -104,9 +96,7 @@ where
 
     #[doc(hidden)]
     fn _leave_it(&self, length: usize, reverse: bool) -> Option<&[Self::Element]> {
-        if length == 0 {
-            Some(self.collection_as_ref())
-        } else if length >= self.len_bytes() {
+        if length >= self.len_bytes() {
             None
         } else {
             if reverse {
@@ -170,8 +160,9 @@ where
 
 // ----------------
 
-pub trait InternalDataVecMut: InternalDataVec
+pub trait InternalDataVecMut: InternalData
 where
+    Self: InternalData<Collection = Vec<<Self as InternalData>::Element>>,
     Self::Element: Clone,
 {
     fn data_mut(&mut self) -> &mut Vec<Self::Element>;

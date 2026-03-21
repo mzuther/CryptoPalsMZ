@@ -6,7 +6,7 @@ use std::fs;
 
 use cryptopals::crypto_vecs::traits::{
     AutoProbe, DecryptionOracle, EncryptionOracle, FromBytes, InternalData,
-    InternalDataVec, InternalDataVecMut, LenBytes, ToBytes,
+    InternalDataVecMut, LenBytes, ToBytes,
 };
 use cryptopals::crypto_vecs::{self, Base64Type, BlockBytes, BytesType, UnicodeType};
 use cryptopals::{constants, oracles};

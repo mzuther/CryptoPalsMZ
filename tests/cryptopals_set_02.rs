@@ -1,9 +1,7 @@
 use rayon::prelude::*;
 use std::fs;
 
-use cryptopals::crypto_vecs::traits::{
-    EncryptionOracle, InternalData, InternalDataVec, ToBytes,
-};
+use cryptopals::crypto_vecs::traits::{EncryptionOracle, InternalData, ToBytes};
 use cryptopals::crypto_vecs::{BytesType, UnicodeType};
 use cryptopals::oracles;
 

@@ -4,8 +4,7 @@ use std::{convert, slice, sync, vec};
 
 use crate::crypto_vecs::hexadecimal::Hexadecimal;
 use crate::crypto_vecs::traits::{
-    AutoProbe, FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes,
-    ToBytes,
+    AutoProbe, FromBytes, InternalData, InternalDataVecMut, LenBytes, ToBytes,
 };
 use crate::crypto_vecs::{self, Base64Type, BlockBytes, HexadecimalType, UnicodeType};
 
@@ -94,10 +93,6 @@ impl InternalData for Bytes {
         self.to_hexadecimal().representation()
     }
 }
-
-// ----------------
-
-impl InternalDataVec for Bytes {}
 
 // ----------------
 

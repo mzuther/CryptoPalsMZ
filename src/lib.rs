@@ -7,8 +7,7 @@ pub mod oracles;
 use std::{cmp, collections::HashMap, ops};
 
 use crate::crypto_vecs::traits::{
-    AutoProbe, EncryptionOracle, InternalData, InternalDataVec, InternalDataVecMut,
-    LenBytes, ToBytes,
+    AutoProbe, EncryptionOracle, InternalData, InternalDataVecMut, LenBytes, ToBytes,
 };
 use crate::crypto_vecs::{BlockBytes, BytesType};
 

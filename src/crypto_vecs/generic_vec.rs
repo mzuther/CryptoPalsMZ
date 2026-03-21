@@ -1,7 +1,7 @@
 use std::{convert, fmt, slice, vec};
 
 use crate::crypto_vecs::traits::{
-    FromBytes, InternalData, InternalDataVec, InternalDataVecMut, LenBytes, ToBytes,
+    FromBytes, InternalData, InternalDataVecMut, LenBytes, ToBytes,
 };
 use crate::crypto_vecs::{Bytes, BytesType};
 
@@ -25,7 +25,7 @@ pub struct CryptoVecIter<'a, E> {
 
 impl<C, E> InternalData for CryptoVec<C, E>
 where
-    C: InternalDataVec<Element = E, Collection = Vec<E>>,
+    C: InternalData<Element = E, Collection = Vec<E>>,
     E: Clone,
 {
     type Element = E;
@@ -96,15 +96,6 @@ where
 
 // ----------------
 
-impl<C, E> InternalDataVec for CryptoVec<C, E>
-where
-    C: InternalDataVec<Element = E>,
-    E: Clone,
-{
-}
-
-// ----------------
-
 impl<C, E> InternalDataVecMut for CryptoVec<C, E>
 where
     C: InternalDataVecMut<Element = E>,
@@ -123,7 +114,7 @@ where
 
 impl<C, E> fmt::Display for CryptoVec<C, E>
 where
-    C: InternalData<Element = E, Collection = Vec<E>> + InternalDataVec,
+    C: InternalData<Element = E, Collection = Vec<E>>,
     E: Clone,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -139,7 +130,7 @@ where
 
 impl<C, E> fmt::Debug for CryptoVec<C, E>
 where
-    C: InternalData<Element = E, Collection = Vec<E>> + InternalDataVec,
+    C: InternalData<Element = E, Collection = Vec<E>>,
     E: Clone,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

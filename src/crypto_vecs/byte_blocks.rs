@@ -6,7 +6,7 @@ use crate::crypto_vecs::{self, Bytes};
 // ================
 
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub struct BlockBytes {
+pub struct ByteBlocks {
     blocks: Vec<Bytes>,
     block_size: usize,
     strict_filling: bool,
@@ -14,7 +14,7 @@ pub struct BlockBytes {
 
 // ================
 
-impl fmt::Display for self::BlockBytes {
+impl fmt::Display for self::ByteBlocks {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let formatted_blocks: Vec<String> = self.iter().map(|x| x.to_string()).collect();
 
@@ -32,7 +32,7 @@ impl fmt::Display for self::BlockBytes {
     }
 }
 
-impl fmt::Debug for self::BlockBytes {
+impl fmt::Debug for self::ByteBlocks {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self)
     }
@@ -41,7 +41,7 @@ impl fmt::Debug for self::BlockBytes {
 // ----------------
 
 // uses lax filling to maximize usefulness
-impl convert::From<Vec<Bytes>> for self::BlockBytes {
+impl convert::From<Vec<Bytes>> for self::ByteBlocks {
     fn from(blocks: Vec<Bytes>) -> Self {
         assert!(!blocks.is_empty());
 
@@ -56,7 +56,7 @@ impl convert::From<Vec<Bytes>> for self::BlockBytes {
     }
 }
 
-impl ToBytes for self::BlockBytes {
+impl ToBytes for self::ByteBlocks {
     fn to_bytes_raw(&self) -> Bytes {
         self.iter().fold(Default::default(), |mut acc, block| {
             acc.extend(block);
@@ -65,7 +65,7 @@ impl ToBytes for self::BlockBytes {
     }
 }
 
-impl LenBytes for self::BlockBytes {
+impl LenBytes for self::ByteBlocks {
     // total number of bytes in all blocks
     fn len_bytes(&self) -> usize {
         self.iter().fold(0, |acc, buffer| acc + buffer.len_bytes())
@@ -74,7 +74,7 @@ impl LenBytes for self::BlockBytes {
 
 // ----------------
 
-impl self::BlockBytes {
+impl self::ByteBlocks {
     pub fn new(block_size: usize) -> Self {
         assert!(block_size > 0);
 
@@ -430,7 +430,7 @@ impl self::BlockBytes {
 
         let block_size_bits = self.get_block_size_bits();
 
-        let mut cypher = self::BlockBytes::new_bits(block_size_bits);
+        let mut cypher = self::ByteBlocks::new_bits(block_size_bits);
         let padded_plain = self.pad_pkcs7();
 
         for plain_block in padded_plain.iter() {
@@ -447,7 +447,7 @@ impl self::BlockBytes {
 
         let block_size_bits = self.get_block_size_bits();
 
-        let mut padded_cypher = self::BlockBytes::new_bits(block_size_bits);
+        let mut padded_cypher = self::ByteBlocks::new_bits(block_size_bits);
 
         for cypher_block in self.iter() {
             let plain_block = cypher_block.aes_ecb_decrypt_block(key, block_size_bits)?;
@@ -473,7 +473,7 @@ impl self::BlockBytes {
 
         let padded_plain = self.pad_pkcs7();
 
-        let mut cypher = self::BlockBytes::new_bits(block_size_bits);
+        let mut cypher = self::ByteBlocks::new_bits(block_size_bits);
         let mut previous_cypher = iv.clone();
 
         for plain_block in padded_plain.iter() {
@@ -502,7 +502,7 @@ impl self::BlockBytes {
             block_size_bits,
         );
 
-        let mut padded_cypher = self::BlockBytes::new_bits(block_size_bits);
+        let mut padded_cypher = self::ByteBlocks::new_bits(block_size_bits);
 
         let cypher_iter = self.iter();
         let previous_cypher_iter = iter::once(iv).chain(self.iter());
@@ -533,7 +533,7 @@ mod tests {
         let block_size = 123;
         let block_size_bits = block_size * 8;
 
-        let result = self::BlockBytes::new(block_size);
+        let result = self::ByteBlocks::new(block_size);
 
         assert_eq!(result.get_block_size(), block_size);
         assert_eq!(result.get_block_size_bits(), block_size_bits);
@@ -545,7 +545,7 @@ mod tests {
         let block_size = 321;
         let block_size_bits = block_size * 8;
 
-        let result = self::BlockBytes::new_with_lax_filling(block_size);
+        let result = self::ByteBlocks::new_with_lax_filling(block_size);
 
         assert_eq!(result.get_block_size(), block_size);
         assert_eq!(result.get_block_size_bits(), block_size_bits);
@@ -557,7 +557,7 @@ mod tests {
         let block_size = 13;
         let block_size_bits = block_size * 8;
 
-        let result = self::BlockBytes::new_bits(block_size_bits);
+        let result = self::ByteBlocks::new_bits(block_size_bits);
 
         assert_eq!(result.get_block_size(), block_size);
         assert_eq!(result.get_block_size_bits(), block_size_bits);
@@ -569,7 +569,7 @@ mod tests {
         let block_size = 42;
         let block_size_bits = block_size * 8;
 
-        let result = self::BlockBytes::new_with_lax_filling_bits(block_size_bits);
+        let result = self::ByteBlocks::new_with_lax_filling_bits(block_size_bits);
 
         assert_eq!(result.get_block_size(), block_size);
         assert_eq!(result.get_block_size_bits(), block_size_bits);
@@ -608,7 +608,7 @@ mod tests {
         );
         let block_bytes = bytes.to_blocks(block_size);
 
-        let mut expected_result = self::BlockBytes::new(block_size);
+        let mut expected_result = self::ByteBlocks::new(block_size);
         expected_result.push(Bytes::from_hex_literal("25"));
         expected_result.push(Bytes::from_hex_literal("cb"));
         expected_result.push(Bytes::from_hex_literal("d4"));
@@ -627,7 +627,7 @@ mod tests {
         );
         let block_bytes = bytes.to_blocks(block_size);
 
-        let mut expected_result = self::BlockBytes::new(block_size);
+        let mut expected_result = self::ByteBlocks::new(block_size);
         expected_result.push(Bytes::from_hex_literal("7e49"));
         expected_result.push(Bytes::from_hex_literal("d4cb"));
         expected_result.push(Bytes::from_hex_literal("d4cb"));
@@ -646,7 +646,7 @@ mod tests {
         );
         let block_bytes = bytes.to_blocks(block_size);
 
-        let expected_result = self::BlockBytes::new(block_size);
+        let expected_result = self::ByteBlocks::new(block_size);
 
         let result = block_bytes.find_duplicate_blocks();
 
@@ -662,7 +662,7 @@ mod tests {
         );
         let block_bytes = bytes.to_blocks(block_size);
 
-        let mut expected_result = self::BlockBytes::new(block_size);
+        let mut expected_result = self::ByteBlocks::new(block_size);
         expected_result.push(Bytes::from_hex_literal("3a1b7e49"));
         expected_result.push(Bytes::from_hex_literal("d4cbd0aa"));
 
@@ -679,7 +679,7 @@ mod tests {
             Bytes::from_hex_literal("3a1b7e49 d4cbd0aa 25f266db 3a1b7e49 d4cbd0aa db");
         let block_bytes = bytes.to_blocks(block_size);
 
-        let mut expected_result = self::BlockBytes::new(block_size);
+        let mut expected_result = self::ByteBlocks::new(block_size);
         expected_result.push(Bytes::from_hex_literal("3a1b7e49"));
         expected_result.push(Bytes::from_hex_literal("d4cbd0aa"));
 
@@ -697,7 +697,7 @@ mod tests {
         );
         let block_bytes = bytes.to_blocks(block_size);
 
-        let expected_result = self::BlockBytes::new(block_size);
+        let expected_result = self::ByteBlocks::new(block_size);
 
         let result = block_bytes.find_duplicate_blocks();
 

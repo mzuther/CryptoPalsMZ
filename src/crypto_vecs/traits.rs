@@ -1,6 +1,6 @@
 use std::{iter, slice};
 
-use crate::crypto_vecs::{self, Base64, BlockBytes, Bytes, Hexadecimal, Unicode};
+use crate::crypto_vecs::{self, Base64, ByteBlocks, Bytes, Hexadecimal, Unicode};
 use crate::oracles;
 
 // ================
@@ -292,14 +292,14 @@ where
 // ================
 
 pub trait EncryptionOracle<H> {
-    fn encrypt(&self, plain: Bytes) -> oracles::OracleResponse<BlockBytes, H>;
+    fn encrypt(&self, plain: Bytes) -> oracles::OracleResponse<ByteBlocks, H>;
 
     // ================
 
     fn encrypt_blocks(
         &self,
-        plain: BlockBytes,
-    ) -> oracles::OracleResponse<BlockBytes, H> {
+        plain: ByteBlocks,
+    ) -> oracles::OracleResponse<ByteBlocks, H> {
         self.encrypt(plain.to_bytes())
     }
 

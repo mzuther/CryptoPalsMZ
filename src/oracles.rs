@@ -1,6 +1,6 @@
 use crate::constants;
 use crate::crypto_vecs::traits::{DecryptionOracle, EncryptionOracle, LenBytes, ToBytes};
-use crate::crypto_vecs::{self, BlockBytes, Bytes};
+use crate::crypto_vecs::{self, ByteBlocks, Bytes};
 
 // ----------------
 
@@ -73,7 +73,7 @@ impl AesEcbDetection {
 // ----------------
 
 impl EncryptionOracle<constants::AesMode> for AesEcbDetection {
-    fn encrypt(&self, plain: Bytes) -> OracleResponse<BlockBytes, constants::AesMode> {
+    fn encrypt(&self, plain: Bytes) -> OracleResponse<ByteBlocks, constants::AesMode> {
         let mut rng = rand::rng();
 
         let plain_padded_blocks = plain
@@ -134,7 +134,7 @@ impl AesEcbSuffix {
 // ----------------
 
 impl EncryptionOracle<()> for AesEcbSuffix {
-    fn encrypt(&self, mut plain: Bytes) -> OracleResponse<BlockBytes, ()> {
+    fn encrypt(&self, mut plain: Bytes) -> OracleResponse<ByteBlocks, ()> {
         plain.extend(&self.plain_suffix);
 
         OracleResponse {
@@ -226,7 +226,7 @@ impl AesEcbCookieCutter {
 // ----------------
 
 impl EncryptionOracle<()> for AesEcbCookieCutter {
-    fn encrypt(&self, email_address: Bytes) -> OracleResponse<BlockBytes, ()> {
+    fn encrypt(&self, email_address: Bytes) -> OracleResponse<ByteBlocks, ()> {
         let email_address_string = self.profile_for(email_address.to_unicode().as_ref());
 
         OracleResponse {
@@ -234,7 +234,7 @@ impl EncryptionOracle<()> for AesEcbCookieCutter {
                 Some(x) => Bytes::from_unicode_literal(&x)
                     .to_blocks(self.block_size)
                     .aes_ecb_encrypt(&self.key),
-                None => Ok(BlockBytes::new(self.block_size)),
+                None => Ok(ByteBlocks::new(self.block_size)),
             },
             hint: None,
         }
@@ -243,14 +243,14 @@ impl EncryptionOracle<()> for AesEcbCookieCutter {
 
 // ----------------
 
-impl DecryptionOracle<BlockBytes, ()> for AesEcbCookieCutter {
-    fn decrypt(&self, cypher: &Bytes) -> self::OracleResponse<BlockBytes, ()> {
+impl DecryptionOracle<ByteBlocks, ()> for AesEcbCookieCutter {
+    fn decrypt(&self, cypher: &Bytes) -> self::OracleResponse<ByteBlocks, ()> {
         let plain = cypher.to_blocks(self.block_size).aes_ecb_decrypt(&self.key);
 
         OracleResponse {
             response: match plain {
                 Ok(x) => Ok(x),
-                Err(_) => Ok(BlockBytes::new(self.block_size)),
+                Err(_) => Ok(ByteBlocks::new(self.block_size)),
             },
 
             hint: None,

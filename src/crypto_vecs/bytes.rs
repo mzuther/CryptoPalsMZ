@@ -3,7 +3,7 @@ use rand::prelude::*;
 use std::{convert, fmt, slice, sync, vec};
 
 use crate::crypto_vecs::traits::{AutoProbe, CryptoVec, CryptoVecMut, LenBytes, ToBytes};
-use crate::crypto_vecs::{self, Base64, BlockBytes, Hexadecimal, Unicode};
+use crate::crypto_vecs::{self, Base64, ByteBlocks, Hexadecimal, Unicode};
 
 // ================
 
@@ -268,11 +268,11 @@ impl Bytes {
         }
     }
 
-    pub fn to_blocks(&self, block_size: usize) -> BlockBytes {
+    pub fn to_blocks(&self, block_size: usize) -> ByteBlocks {
         assert!(block_size > 0, "block size must be non-zero");
 
         self.collection_as_ref().chunks(block_size).fold(
-            BlockBytes::new(block_size),
+            ByteBlocks::new(block_size),
             |mut acc, block| {
                 acc.push(Self::new_from_elements(block));
                 acc
@@ -280,7 +280,7 @@ impl Bytes {
         )
     }
 
-    pub fn to_blocks_bits(&self, block_size_bits: usize) -> BlockBytes {
+    pub fn to_blocks_bits(&self, block_size_bits: usize) -> ByteBlocks {
         let block_size = crypto_vecs::bits_to_bytes(block_size_bits);
 
         self.to_blocks(block_size)
@@ -469,7 +469,7 @@ impl Bytes {
 
     // ----------------
 
-    pub fn transpose(&self, number_of_blocks: usize) -> BlockBytes {
+    pub fn transpose(&self, number_of_blocks: usize) -> ByteBlocks {
         assert!(number_of_blocks > 0);
 
         let block_size = self.len_bytes().div_ceil(number_of_blocks);
@@ -486,7 +486,7 @@ impl Bytes {
                     acc
                 });
 
-        BlockBytes::from(transposed_blocks)
+        ByteBlocks::from(transposed_blocks)
     }
 }
 
@@ -770,7 +770,7 @@ mod tests {
         let bytes = Bytes::from_hex_literal("4162f3 d3426f 120dff");
         let block_size = 3;
 
-        let mut expected_result = BlockBytes::new(block_size);
+        let mut expected_result = ByteBlocks::new(block_size);
         expected_result.push(Bytes::from_hex_literal("4162f3"));
         expected_result.push(Bytes::from_hex_literal("d3426f"));
         expected_result.push(Bytes::from_hex_literal("120dff"));
@@ -785,7 +785,7 @@ mod tests {
         let bytes = Bytes::from_hex_literal("4162f3 d3426f 120d");
         let block_size = 3;
 
-        let mut expected_result = BlockBytes::new(block_size);
+        let mut expected_result = ByteBlocks::new(block_size);
         expected_result.push(Bytes::from_hex_literal("4162f3"));
         expected_result.push(Bytes::from_hex_literal("d3426f"));
         expected_result.push(Bytes::from_hex_literal("120d"));
@@ -800,7 +800,7 @@ mod tests {
         let bytes = Bytes::from_hex_literal("4162f3 d3426f 120dff");
         let block_size_bits = 24;
 
-        let mut expected_result = BlockBytes::new_bits(block_size_bits);
+        let mut expected_result = ByteBlocks::new_bits(block_size_bits);
         expected_result.push(Bytes::from_hex_literal("4162f3"));
         expected_result.push(Bytes::from_hex_literal("d3426f"));
         expected_result.push(Bytes::from_hex_literal("120dff"));
@@ -815,7 +815,7 @@ mod tests {
         let bytes = Bytes::from_hex_literal("4162f3 d3426f 120d");
         let block_size_bits = 24;
 
-        let mut expected_result = BlockBytes::new_bits(block_size_bits);
+        let mut expected_result = ByteBlocks::new_bits(block_size_bits);
         expected_result.push(Bytes::from_hex_literal("4162f3"));
         expected_result.push(Bytes::from_hex_literal("d3426f"));
         expected_result.push(Bytes::from_hex_literal("120d"));
@@ -1480,7 +1480,7 @@ mod tests {
         let bytes = Bytes::new_from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 1;
 
-        let mut expected_result = BlockBytes::new_with_lax_filling(10);
+        let mut expected_result = ByteBlocks::new_with_lax_filling(10);
         expected_result.push(bytes.clone());
 
         let result = bytes.transpose(keysize);
@@ -1493,7 +1493,7 @@ mod tests {
         let bytes = Bytes::new_from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 2;
 
-        let mut expected_result = BlockBytes::new_with_lax_filling(5);
+        let mut expected_result = ByteBlocks::new_with_lax_filling(5);
         expected_result.push(Bytes::new_from(vec![1, 3, 5, 7, 9]));
         expected_result.push(Bytes::new_from(vec![2, 4, 6, 8, 10]));
 
@@ -1507,7 +1507,7 @@ mod tests {
         let bytes = Bytes::new_from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         let keysize = 3;
 
-        let mut expected_result = BlockBytes::new_with_lax_filling(4);
+        let mut expected_result = ByteBlocks::new_with_lax_filling(4);
         expected_result.push(Bytes::new_from(vec![1, 4, 7, 10]));
         expected_result.push(Bytes::new_from(vec![2, 5, 8]));
         expected_result.push(Bytes::new_from(vec![3, 6, 9]));
@@ -1522,7 +1522,7 @@ mod tests {
         let bytes = Bytes::new_from(vec![1, 2, 3]);
         let keysize = 4;
 
-        let mut expected_result = BlockBytes::new_with_lax_filling(1);
+        let mut expected_result = ByteBlocks::new_with_lax_filling(1);
         expected_result.push(Bytes::new_from(vec![1]));
         expected_result.push(Bytes::new_from(vec![2]));
         expected_result.push(Bytes::new_from(vec![3]));

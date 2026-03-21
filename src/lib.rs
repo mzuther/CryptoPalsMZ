@@ -9,7 +9,7 @@ use std::{cmp, collections::HashMap, ops};
 use crate::crypto_vecs::traits::{
     AutoProbe, CryptoVec, CryptoVecMut, EncryptionOracle, LenBytes, ToBytes,
 };
-use crate::crypto_vecs::{BlockBytes, Bytes};
+use crate::crypto_vecs::{ByteBlocks, Bytes};
 
 // ================
 
@@ -307,7 +307,7 @@ fn transpose_strings_internal(
 
 // ----------------
 
-pub fn detect_aes_mode(cypher_blocks: &BlockBytes) -> constants::AesMode {
+pub fn detect_aes_mode(cypher_blocks: &ByteBlocks) -> constants::AesMode {
     let block_size = cypher_blocks.get_block_size();
 
     // remove padding of any possible length before detection
@@ -323,7 +323,7 @@ pub fn detect_aes_mode(cypher_blocks: &BlockBytes) -> constants::AesMode {
     constants::AesMode::NonECB
 }
 
-pub fn decypher_aes_ecb_via_oracle(oracle: &oracles::AesEcbSuffix) -> BlockBytes {
+pub fn decypher_aes_ecb_via_oracle(oracle: &oracles::AesEcbSuffix) -> ByteBlocks {
     let (_, detected_block_size) = oracle.detect_block_size().unwrap();
 
     // prevent overflow of ECB probe
@@ -345,7 +345,7 @@ pub fn decypher_aes_ecb_via_oracle(oracle: &oracles::AesEcbSuffix) -> BlockBytes
 
     // decypher block by block
     (0..blocks_in_cypher).fold(
-        BlockBytes::new(detected_block_size),
+        ByteBlocks::new(detected_block_size),
         |mut acc, current_block_index| {
             acc.push(crate::decypher_aes_ecb_block_via_oracle(
                 oracle,
@@ -361,7 +361,7 @@ pub fn decypher_aes_ecb_via_oracle(oracle: &oracles::AesEcbSuffix) -> BlockBytes
 
 fn decypher_aes_ecb_block_via_oracle(
     oracle: &oracles::AesEcbSuffix,
-    plain_part: &BlockBytes,
+    plain_part: &ByteBlocks,
     block_size: usize,
     current_block_index: usize,
 ) -> Bytes {

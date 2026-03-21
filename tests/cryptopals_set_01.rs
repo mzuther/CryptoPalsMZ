@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fs};
 
 use cryptopals::crypto_vecs::traits::{CryptoVec, ToBytes};
-use cryptopals::crypto_vecs::{Base64, BlockBytes, Bytes, Hexadecimal, Unicode};
+use cryptopals::crypto_vecs::{Base64, ByteBlocks, Bytes, Hexadecimal, Unicode};
 
 // ================
 
@@ -227,7 +227,7 @@ fn integration_challenge_08() {
         fs::read_to_string("original/8.txt").expect("could not read file");
 
     let block_size_bits = 128;
-    let mut expected_duplicates = BlockBytes::new_bits(block_size_bits);
+    let mut expected_duplicates = ByteBlocks::new_bits(block_size_bits);
 
     let duplicate_block = Bytes::from_hex_literal("08649af70dc06f4fd5d2d69c744cd283");
     expected_duplicates.push(duplicate_block.clone());

@@ -93,11 +93,6 @@ impl InternalData for Hexadecimal {
         self.element_cache.iter()
     }
 
-    // performance
-    fn len(&self) -> usize {
-        self.hexadecimal.chars().count() / 2
-    }
-
     fn collection(&self) -> Self::Collection {
         self.hexadecimal.clone()
     }

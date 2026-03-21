@@ -61,11 +61,6 @@ where
         self.collection.elements()
     }
 
-    // implementation for "Hexadecimal" exists
-    fn len(&self) -> usize {
-        self.collection.len()
-    }
-
     fn collection(&self) -> Self::Collection {
         self.collection.collection()
     }

@@ -1,8 +1,6 @@
 use std::{iter, slice};
 
-use crate::crypto_vecs::{
-    self, Base64, BlockBytes, Bytes, BytesType, Hexadecimal, Unicode,
-};
+use crate::crypto_vecs::{self, Base64, BlockBytes, Bytes, Hexadecimal, Unicode};
 use crate::oracles;
 
 // ================
@@ -190,19 +188,13 @@ pub trait LenBytes {
 
 // ----------------
 
-pub trait FromBytes {
-    fn from_bytes(bytes: &BytesType) -> Self;
-}
-
-// ----------------
-
 pub trait ToBytes {
     fn to_bytes_raw(&self) -> Bytes;
 
     // ================
 
-    fn to_bytes(&self) -> BytesType {
-        BytesType::new_from(self.to_bytes_raw().collection())
+    fn to_bytes(&self) -> Bytes {
+        Bytes::new_from(self.to_bytes_raw().collection())
     }
 
     fn to_hexadecimal(&self) -> Hexadecimal {
@@ -300,7 +292,7 @@ where
 // ================
 
 pub trait EncryptionOracle<H> {
-    fn encrypt(&self, plain: BytesType) -> oracles::OracleResponse<BlockBytes, H>;
+    fn encrypt(&self, plain: Bytes) -> oracles::OracleResponse<BlockBytes, H>;
 
     // ================
 
@@ -320,12 +312,9 @@ pub trait EncryptionOracle<H> {
         let mut original_length = None;
 
         // exit after 1024 bytes of padding to prevent eternal loop
-        for (iteration, current_probe) in BytesType::new_auto_probe_repeat(
-            b'A',
-            pre_padding_size,
-            1024 + pre_padding_size,
-        )
-        .enumerate()
+        for (iteration, current_probe) in
+            Bytes::new_auto_probe_repeat(b'A', pre_padding_size, 1024 + pre_padding_size)
+                .enumerate()
         {
             let oracle_response = self.encrypt(current_probe);
 
@@ -363,5 +352,5 @@ pub trait EncryptionOracle<H> {
 // ----------------
 
 pub trait DecryptionOracle<R, H> {
-    fn decrypt(&self, cypher: &BytesType) -> oracles::OracleResponse<R, H>;
+    fn decrypt(&self, cypher: &Bytes) -> oracles::OracleResponse<R, H>;
 }

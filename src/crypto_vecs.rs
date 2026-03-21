@@ -2,8 +2,6 @@ pub mod traits;
 
 // ----------------
 
-mod generic_vec;
-
 mod base64;
 mod block_bytes;
 mod blocks;
@@ -13,12 +11,10 @@ mod unicode;
 
 // ----------------
 
-pub use crate::crypto_vecs::generic_vec::CryptoVec;
-
 pub use crate::crypto_vecs::base64::Base64;
 pub use crate::crypto_vecs::block_bytes::BlockBytes;
 pub use crate::crypto_vecs::blocks::Blocks;
-pub use crate::crypto_vecs::bytes::{Bytes, BytesType};
+pub use crate::crypto_vecs::bytes::Bytes;
 pub use crate::crypto_vecs::hexadecimal::Hexadecimal;
 pub use crate::crypto_vecs::unicode::Unicode;
 

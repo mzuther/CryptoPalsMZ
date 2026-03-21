@@ -1,7 +1,7 @@
 use std::{convert, fmt};
 
+use crate::crypto_vecs::Bytes;
 use crate::crypto_vecs::traits::{InternalData, LenBytes, ToBytes};
-use crate::crypto_vecs::{Bytes, BytesType};
 
 // ================
 
@@ -117,8 +117,8 @@ impl convert::AsRef<str> for Unicode {
 
 // ----------------
 
-impl convert::From<&BytesType> for Unicode {
-    fn from(bytes: &BytesType) -> Self {
+impl convert::From<&Bytes> for Unicode {
+    fn from(bytes: &Bytes) -> Self {
         let unicode_string =
             String::from_utf8(bytes.collection()).expect("invalid UTF-8 string");
 
@@ -173,7 +173,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_unicode_ascii() {
-        let bytes = BytesType::new_from(vec![0x41, 0x62, 0x33]);
+        let bytes = Bytes::new_from(vec![0x41, 0x62, 0x33]);
         let expected_result = Unicode::from_literal("Ab3");
 
         let result = bytes.to_unicode();
@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn unit_unicode_to_unicode_unicode() {
-        let bytes = BytesType::new_from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let bytes = Bytes::new_from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
         let expected_result = Unicode::from_literal("Aü你");
 
         let result = bytes.to_unicode();
@@ -194,7 +194,7 @@ mod tests {
     #[test]
     fn unit_unicode_to_bytes_ascii() {
         let unicode = Unicode::from_literal("Ab3");
-        let expected_result = BytesType::new_from(vec![0x41, 0x62, 0x33]);
+        let expected_result = Bytes::new_from(vec![0x41, 0x62, 0x33]);
 
         let result = unicode.to_bytes();
 
@@ -204,8 +204,7 @@ mod tests {
     #[test]
     fn unit_unicode_to_bytes_unicode() {
         let unicode = Unicode::from_literal("Aü你");
-        let expected_result =
-            BytesType::new_from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let expected_result = Bytes::new_from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
         let result = unicode.to_bytes();
 

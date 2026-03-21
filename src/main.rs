@@ -5,13 +5,12 @@
 use std::fs;
 
 use cryptopals::crypto_vecs::traits::{
-    AutoProbe, DecryptionOracle, EncryptionOracle, FromBytes, InternalData,
-    InternalDataVecMut, LenBytes, ToBytes,
+    AutoProbe, DecryptionOracle, EncryptionOracle, InternalData, InternalDataVecMut,
+    LenBytes, ToBytes,
 };
-use cryptopals::crypto_vecs::{self, Base64, BlockBytes, BytesType, Unicode};
+use cryptopals::crypto_vecs::{self, Base64, BlockBytes, Bytes, Unicode};
 use cryptopals::{constants, oracles};
 use rand::rand_core::block;
-use rayon::str::Bytes;
 
 // ================
 
@@ -64,7 +63,7 @@ fn challenge_13() {
     //                   f61352a4 294fefc0 95b74da4 d51404e4
     //                   33c0df83 dbe10178 98360f25 51a9a23c !!!
 
-    let oracle = oracles::AesEcbCookieCutter::from_key(BytesType::from_hex_literal(
+    let oracle = oracles::AesEcbCookieCutter::from_key(Bytes::from_hex_literal(
         "7442f9fc 87041483 6ae3dbbe a79dccea",
     ));
 
@@ -77,14 +76,14 @@ fn challenge_13() {
     let email_address =
         "1234567890admin\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B@bar.com";
     let cypher = oracle
-        .encrypt(BytesType::from_unicode_literal(email_address))
+        .encrypt(Bytes::from_unicode_literal(email_address))
         .unwrap()
         .to_bytes();
 
     println!();
     println!("cypher: {}", cypher);
 
-    let plain = oracle.decrypt(&BytesType::from_hex_literal(
+    let plain = oracle.decrypt(&Bytes::from_hex_literal(
         "
         2ddc9547 da54a918 e36a3af3 50f05d46
         f61352a4 294fefc0 95b74da4 d51404e4
@@ -99,9 +98,9 @@ fn challenge_13() {
     let size_max = detected_block_size;
 
     println!();
-    for current in BytesType::new_auto_probe_mover(
-        BytesType::from_unicode_literal("This is going to be fun"),
-        BytesType::from_unicode_literal("_X_"),
+    for current in Bytes::new_auto_probe_mover(
+        Bytes::from_unicode_literal("This is going to be fun"),
+        Bytes::from_unicode_literal("_X_"),
     ) {
         println!("{}", current.to_codepage_1252());
     }
@@ -119,7 +118,7 @@ fn challenge_06() {
     // fix incorrect last character before padding
     base64_string = Unicode::replace_suffix(&base64_string, "M=\n", "A=");
 
-    let cypher = BytesType::from_base64_literal(&base64_string);
+    let cypher = Bytes::from_base64_literal(&base64_string);
 
     let keysize_range = 2..41;
     let mut scores =
@@ -141,7 +140,7 @@ fn challenge_06() {
 
     let keysize = score.keysize;
     let transposed_blocks = cypher.transpose(keysize);
-    let mut proposed_key = BytesType::default();
+    let mut proposed_key = Bytes::default();
 
     for (index, block) in transposed_blocks.iter().enumerate() {
         let mut scores = cryptopals::find_lowest_score_xor(block);
@@ -168,7 +167,7 @@ fn challenge_06() {
         proposed_key.extend(score.key.clone());
     }
 
-    let manual_key = BytesType::from_hex_literal(
+    let manual_key = Bytes::from_hex_literal(
         "5465726d696e61746f7220583a204272696e6720746865206e6f697365",
     );
 
@@ -187,8 +186,8 @@ fn challenge_06() {
 
 fn play_with_xor() {
     let plain =
-        BytesType::from_unicode_literal("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");
-    let key = BytesType::from_unicode_literal("ESWAREINMAL");
+        Bytes::from_unicode_literal("einawsdlijjjeinalsdkjlkjeinpe;lrfeinasdjo;nein");
+    let key = Bytes::from_unicode_literal("ESWAREINMAL");
 
     let cypher = plain.fixed_xor(&key);
 

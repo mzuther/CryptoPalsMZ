@@ -9,15 +9,15 @@ use std::{cmp, collections::HashMap, ops};
 use crate::crypto_vecs::traits::{
     AutoProbe, EncryptionOracle, InternalData, InternalDataVecMut, LenBytes, ToBytes,
 };
-use crate::crypto_vecs::{BlockBytes, BytesType};
+use crate::crypto_vecs::{BlockBytes, Bytes};
 
 // ================
 
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct ScoreXOR {
     pub score: f64,
-    pub key: BytesType,
-    pub plain_text: BytesType,
+    pub key: Bytes,
+    pub plain_text: Bytes,
 }
 
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -28,11 +28,11 @@ pub struct ScoreKeysize {
 
 // ================
 
-pub fn find_lowest_score_xor(bytes: &BytesType) -> Vec<ScoreXOR> {
+pub fn find_lowest_score_xor(bytes: &Bytes) -> Vec<ScoreXOR> {
     let key_range = 0x00..0xff;
 
     let all_keys = key_range.fold(Vec::default(), |mut acc, key_byte| {
-        acc.push(BytesType::new_from(vec![key_byte]));
+        acc.push(Bytes::new_from(vec![key_byte]));
         acc
     });
 
@@ -51,7 +51,7 @@ pub fn find_lowest_score_xor(bytes: &BytesType) -> Vec<ScoreXOR> {
     })
 }
 
-fn get_letter_frequencies(bytes: &BytesType) -> HashMap<u8, f64> {
+fn get_letter_frequencies(bytes: &Bytes) -> HashMap<u8, f64> {
     let percent_per_byte = 1.0 / (bytes.len_bytes() as f64);
 
     bytes.iter().fold(Default::default(), |mut acc, &byte| {
@@ -74,8 +74,8 @@ fn get_letter_frequencies(bytes: &BytesType) -> HashMap<u8, f64> {
 }
 
 pub fn print_histogram(
-    key: &BytesType,
-    bytes: &BytesType,
+    key: &Bytes,
+    bytes: &Bytes,
     y_max: f64,
     magnification_factor: f64,
     rotate_histogram: bool,
@@ -173,7 +173,7 @@ pub fn print_histogram(
     println!();
 }
 
-fn score_letter_frequencies(bytes: &BytesType) -> f64 {
+fn score_letter_frequencies(bytes: &Bytes) -> f64 {
     let letter_frequencies = get_letter_frequencies(bytes);
     let english_letter_frequencies = &constants::ENGLISH_LETTER_FREQUENCIES;
 
@@ -208,7 +208,7 @@ fn score_letter_frequencies(bytes: &BytesType) -> f64 {
 }
 
 pub fn guess_keysize_from_hamming_distance(
-    bytes: &BytesType,
+    bytes: &Bytes,
     keysize_range: &ops::Range<usize>,
     number_of_samples: usize,
 ) -> Vec<ScoreKeysize> {
@@ -331,7 +331,7 @@ pub fn decypher_aes_ecb_via_oracle(oracle: &oracles::AesEcbSuffix) -> BlockBytes
 
     // create distinct and recognizable block: 0x00 0x01 0x02 0x03 ...
     let ecb_probe_block: Vec<_> = (0x00_u8..).take(detected_block_size).collect();
-    let ecb_probe = BytesType::new_from(ecb_probe_block.repeat(3));
+    let ecb_probe = Bytes::new_from(ecb_probe_block.repeat(3));
     let ecb_probe_blocks = ecb_probe.to_blocks(detected_block_size);
 
     let aes_mode = crate::detect_aes_mode(&ecb_probe_blocks);
@@ -364,13 +364,13 @@ fn decypher_aes_ecb_block_via_oracle(
     plain_part: &BlockBytes,
     block_size: usize,
     current_block_index: usize,
-) -> BytesType {
+) -> Bytes {
     let bytes_to_skip = block_size * current_block_index;
     let mut current_pkcs7_byte = None;
 
     // decypyher block, byte by byte
-    BytesType::new_auto_probe_repeat(b'A', block_size - 1, 0).fold(
-        BytesType::default(),
+    Bytes::new_auto_probe_repeat(b'A', block_size - 1, 0).fold(
+        Bytes::default(),
         |mut acc, probe_padding| {
             let cypher_block_padding = oracle
                 .encrypt(probe_padding.clone())
@@ -452,10 +452,10 @@ mod tests {
 
     #[test]
     fn unit_library_fixed_xor_unicode() {
-        let plain = BytesType::from_unicode_literal("Cooking MCs");
-        let key = BytesType::from_unicode_literal("X");
+        let plain = Bytes::from_unicode_literal("Cooking MCs");
+        let key = Bytes::from_unicode_literal("X");
 
-        let expected_result = BytesType::new_from(vec![
+        let expected_result = Bytes::new_from(vec![
             0x1b, 0x37, 0x37, 0x33, 0x31, 0x36, 0x3f, 0x78, 0x15, 0x1b, 0x2b,
         ]);
 
@@ -468,8 +468,8 @@ mod tests {
 
     #[test]
     fn unit_library_hamming_distance_unicode() {
-        let bytes = BytesType::from_unicode_literal("this is a test");
-        let other = BytesType::from_unicode_literal("wokka wokka!!!");
+        let bytes = Bytes::from_unicode_literal("this is a test");
+        let other = Bytes::from_unicode_literal("wokka wokka!!!");
 
         let expected_result = 37;
         let expected_result_relative = expected_result as f64 / 112.0;

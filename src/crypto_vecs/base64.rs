@@ -1,8 +1,8 @@
 use regex::Regex;
 use std::{convert, fmt};
 
+use crate::crypto_vecs::Bytes;
 use crate::crypto_vecs::traits::{InternalData, InternalDataVecMut, LenBytes, ToBytes};
-use crate::crypto_vecs::{Bytes, BytesType};
 
 // ================
 
@@ -194,8 +194,8 @@ impl convert::AsRef<str> for Base64 {
 
 // ----------------
 
-impl convert::From<&BytesType> for Base64 {
-    fn from(bytes: &BytesType) -> Self {
+impl convert::From<&Bytes> for Base64 {
+    fn from(bytes: &Bytes) -> Self {
         let base64_segments = Self::split_bytes_into_segments(bytes, 6);
 
         let base64_string =
@@ -304,10 +304,7 @@ impl Base64 {
 
     // ----------------
 
-    fn split_bytes_into_segments(
-        bytes: &BytesType,
-        bits_per_segment: u8,
-    ) -> Vec<Option<u8>> {
+    fn split_bytes_into_segments(bytes: &Bytes, bits_per_segment: u8) -> Vec<Option<u8>> {
         let bits_per_byte = 8;
         let mut bits_with_value = 0;
         let mut remainder = 0;
@@ -400,7 +397,7 @@ mod tests {
 
     #[test]
     fn unit_base64_to_base64() {
-        let bytes = BytesType::new_from_elements(&Base64::COMPLETE_ALPHABET_BYTES);
+        let bytes = Bytes::new_from_elements(&Base64::COMPLETE_ALPHABET_BYTES);
         let expected_result = Base64::from_literal(Base64::COMPLETE_ALPHABET);
 
         let result = bytes.to_base64();
@@ -414,7 +411,7 @@ mod tests {
         bytes_raw.push(0x10);
         bytes_raw.push(0x10);
 
-        let bytes = BytesType::new_from(bytes_raw);
+        let bytes = Bytes::new_from(bytes_raw);
         let expected_result =
             Base64::from_literal(&format!("{}EBA=", Base64::COMPLETE_ALPHABET));
 
@@ -428,7 +425,7 @@ mod tests {
         let mut bytes_raw = Base64::COMPLETE_ALPHABET_BYTES.to_vec();
         bytes_raw.push(0x00);
 
-        let bytes = BytesType::new_from(bytes_raw);
+        let bytes = Bytes::new_from(bytes_raw);
         let expected_result =
             Base64::from_literal(&format!("{}AA==", Base64::COMPLETE_ALPHABET));
 
@@ -470,8 +467,7 @@ mod tests {
     #[test]
     fn unit_base64_to_bytes() {
         let base64 = Base64::from_literal(Base64::COMPLETE_ALPHABET);
-        let expected_result =
-            BytesType::new_from_elements(&Base64::COMPLETE_ALPHABET_BYTES);
+        let expected_result = Bytes::new_from_elements(&Base64::COMPLETE_ALPHABET_BYTES);
 
         let result = base64.to_bytes();
 
@@ -485,7 +481,7 @@ mod tests {
         expected_result_raw.push(0x10);
 
         let base64 = Base64::from_literal(&format!("{}EBA=", Base64::COMPLETE_ALPHABET));
-        let expected_result = BytesType::new_from(expected_result_raw);
+        let expected_result = Bytes::new_from(expected_result_raw);
 
         let result = base64.to_bytes();
 
@@ -498,7 +494,7 @@ mod tests {
         expected_result_raw.push(0x00);
 
         let base64 = Base64::from_literal(&format!("{}AA==", Base64::COMPLETE_ALPHABET));
-        let expected_result = BytesType::new_from(expected_result_raw);
+        let expected_result = Bytes::new_from(expected_result_raw);
 
         let result = base64.to_bytes();
 

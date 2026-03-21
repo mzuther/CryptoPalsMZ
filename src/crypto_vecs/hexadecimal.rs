@@ -1,8 +1,8 @@
 use hex;
 use std::{convert, fmt};
 
+use crate::crypto_vecs::Bytes;
 use crate::crypto_vecs::traits::{InternalData, LenBytes, ToBytes};
-use crate::crypto_vecs::{Bytes, BytesType};
 
 // ================
 
@@ -169,8 +169,8 @@ impl convert::AsRef<str> for Hexadecimal {
 
 // ----------------
 
-impl convert::From<&BytesType> for Hexadecimal {
-    fn from(bytes: &BytesType) -> Self {
+impl convert::From<&Bytes> for Hexadecimal {
+    fn from(bytes: &Bytes) -> Self {
         Self::new_from(hex::encode(bytes.as_ref()))
     }
 }
@@ -202,7 +202,7 @@ mod tests {
 
     #[test]
     fn unit_hexadecimal_to_hexadecimal() {
-        let bytes = BytesType::new_from(vec![0x3b, 0x44, 0x2c, 0x4e, 0xcc, 0x0f]);
+        let bytes = Bytes::new_from(vec![0x3b, 0x44, 0x2c, 0x4e, 0xcc, 0x0f]);
         let expected_result = Hexadecimal::from_literal("3b442c4ecc0f");
 
         let result = bytes.to_hexadecimal();
@@ -219,8 +219,7 @@ mod tests {
     #[test]
     fn unit_hexadecimal_to_bytes_lowercase() {
         let hexadecimal = Hexadecimal::from_literal("41c3bce4bda0");
-        let expected_result =
-            BytesType::new_from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
+        let expected_result = Bytes::new_from(vec![0x41, 0xc3, 0xbc, 0xe4, 0xbd, 0xa0]);
 
         let result = hexadecimal.to_bytes();
 
@@ -230,8 +229,7 @@ mod tests {
     #[test]
     fn unit_hexadecimal_to_bytes_uppercase() {
         let hexadecimal = Hexadecimal::from_literal("21A3DCF4DBA1");
-        let expected_result =
-            BytesType::new_from(vec![0x21, 0xa3, 0xdc, 0xf4, 0xdb, 0xa1]);
+        let expected_result = Bytes::new_from(vec![0x21, 0xa3, 0xdc, 0xf4, 0xdb, 0xa1]);
 
         let result = hexadecimal.to_bytes();
 

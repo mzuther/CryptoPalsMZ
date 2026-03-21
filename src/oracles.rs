@@ -1,6 +1,6 @@
 use crate::constants;
-use crate::crypto_vecs::traits::{DecryptionOracle, EncryptionOracle, ToBytes};
-use crate::crypto_vecs::{self, BlockBytes, BytesType, traits::LenBytes};
+use crate::crypto_vecs::traits::{DecryptionOracle, EncryptionOracle, LenBytes, ToBytes};
+use crate::crypto_vecs::{self, BlockBytes, Bytes};
 
 // ----------------
 
@@ -45,14 +45,14 @@ impl<R, H> OracleResponse<R, H> {
 
 pub struct AesEcbDetection {
     block_size: usize,
-    key: BytesType,
+    key: Bytes,
 }
 
 // ----------------
 
 impl AesEcbDetection {
     // move "key" into struct so it cannot be read from calling code
-    pub fn from_key(key: BytesType) -> Self {
+    pub fn from_key(key: Bytes) -> Self {
         Self {
             block_size: key.len_bytes(),
             key,
@@ -60,7 +60,7 @@ impl AesEcbDetection {
     }
 
     pub fn new(block_size: usize) -> Self {
-        Self::from_key(BytesType::create_random_key(block_size))
+        Self::from_key(Bytes::create_random_key(block_size))
     }
 
     pub fn new_bits(block_size_bits: usize) -> Self {
@@ -73,10 +73,7 @@ impl AesEcbDetection {
 // ----------------
 
 impl EncryptionOracle<constants::AesMode> for AesEcbDetection {
-    fn encrypt(
-        &self,
-        plain: BytesType,
-    ) -> OracleResponse<BlockBytes, constants::AesMode> {
+    fn encrypt(&self, plain: Bytes) -> OracleResponse<BlockBytes, constants::AesMode> {
         let mut rng = rand::rng();
 
         let plain_padded_blocks = plain
@@ -90,7 +87,7 @@ impl EncryptionOracle<constants::AesMode> for AesEcbDetection {
                 hint: Some(constants::AesMode::ECB),
             }
         } else {
-            let initialization_vector = BytesType::create_random_key(self.block_size);
+            let initialization_vector = Bytes::create_random_key(self.block_size);
 
             OracleResponse {
                 response: plain_padded_blocks
@@ -105,15 +102,15 @@ impl EncryptionOracle<constants::AesMode> for AesEcbDetection {
 
 pub struct AesEcbSuffix {
     block_size: usize,
-    key: BytesType,
-    plain_suffix: BytesType,
+    key: Bytes,
+    plain_suffix: Bytes,
 }
 
 // ----------------
 
 impl AesEcbSuffix {
     // move "key" and "plain_suffix" into struct so they cannot be read from calling code
-    pub fn from_key(key: BytesType, plain_suffix: BytesType) -> Self {
+    pub fn from_key(key: Bytes, plain_suffix: Bytes) -> Self {
         Self {
             block_size: key.len_bytes(),
             key,
@@ -122,12 +119,12 @@ impl AesEcbSuffix {
     }
 
     // move "plain_suffix" into struct
-    pub fn new(block_size: usize, plain_suffix: BytesType) -> Self {
-        Self::from_key(BytesType::create_random_key(block_size), plain_suffix)
+    pub fn new(block_size: usize, plain_suffix: Bytes) -> Self {
+        Self::from_key(Bytes::create_random_key(block_size), plain_suffix)
     }
 
     // move "plain_suffix" into struct
-    pub fn new_bits(block_size_bits: usize, plain_suffix: BytesType) -> Self {
+    pub fn new_bits(block_size_bits: usize, plain_suffix: Bytes) -> Self {
         let block_size = crypto_vecs::bits_to_bytes(block_size_bits);
 
         Self::new(block_size, plain_suffix)
@@ -137,7 +134,7 @@ impl AesEcbSuffix {
 // ----------------
 
 impl EncryptionOracle<()> for AesEcbSuffix {
-    fn encrypt(&self, mut plain: BytesType) -> OracleResponse<BlockBytes, ()> {
+    fn encrypt(&self, mut plain: Bytes) -> OracleResponse<BlockBytes, ()> {
         plain.extend(&self.plain_suffix);
 
         OracleResponse {
@@ -151,14 +148,14 @@ impl EncryptionOracle<()> for AesEcbSuffix {
 
 pub struct AesEcbCookieCutter {
     block_size: usize,
-    key: BytesType,
+    key: Bytes,
 }
 
 // ----------------
 
 impl AesEcbCookieCutter {
     // move "key" into struct so it cannot be read from calling code
-    pub fn from_key(key: BytesType) -> Self {
+    pub fn from_key(key: Bytes) -> Self {
         Self {
             block_size: key.len_bytes(),
             key,
@@ -166,7 +163,7 @@ impl AesEcbCookieCutter {
     }
 
     pub fn new(block_size: usize) -> Self {
-        Self::from_key(BytesType::create_random_key(block_size))
+        Self::from_key(Bytes::create_random_key(block_size))
     }
 
     // move "plain_suffix" into struct
@@ -229,12 +226,12 @@ impl AesEcbCookieCutter {
 // ----------------
 
 impl EncryptionOracle<()> for AesEcbCookieCutter {
-    fn encrypt(&self, email_address: BytesType) -> OracleResponse<BlockBytes, ()> {
+    fn encrypt(&self, email_address: Bytes) -> OracleResponse<BlockBytes, ()> {
         let email_address_string = self.profile_for(email_address.to_unicode().as_ref());
 
         OracleResponse {
             response: match email_address_string {
-                Some(x) => BytesType::from_unicode_literal(&x)
+                Some(x) => Bytes::from_unicode_literal(&x)
                     .to_blocks(self.block_size)
                     .aes_ecb_encrypt(&self.key),
                 None => Ok(BlockBytes::new(self.block_size)),
@@ -247,7 +244,7 @@ impl EncryptionOracle<()> for AesEcbCookieCutter {
 // ----------------
 
 impl DecryptionOracle<BlockBytes, ()> for AesEcbCookieCutter {
-    fn decrypt(&self, cypher: &BytesType) -> self::OracleResponse<BlockBytes, ()> {
+    fn decrypt(&self, cypher: &Bytes) -> self::OracleResponse<BlockBytes, ()> {
         let plain = cypher.to_blocks(self.block_size).aes_ecb_decrypt(&self.key);
 
         OracleResponse {

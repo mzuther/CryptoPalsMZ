@@ -29,7 +29,7 @@ where
 
     // ----------------
 
-    fn elements(&self) -> impl Iterator<Item = Self::Element>;
+    fn elements(&self) -> impl Iterator<Item = &Self::Element>;
 
     // clone of underlying collection
     fn collection(&self) -> Self::Collection;
@@ -59,7 +59,7 @@ where
     // ----------------
 
     fn to_elements(&self) -> Vec<Self::Element> {
-        self.elements().collect::<Vec<Self::Element>>()
+        self.elements().cloned().collect::<Vec<Self::Element>>()
     }
 
     fn len(&self) -> usize {
@@ -73,7 +73,7 @@ where
     // ----------------
 
     // get nth logical element
-    fn get(&self, index: usize) -> Option<Self::Element> {
+    fn get(&self, index: usize) -> Option<&Self::Element> {
         self.elements().nth(index)
     }
 }

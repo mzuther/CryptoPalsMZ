@@ -52,8 +52,8 @@ impl InternalData for Unicode {
     // ----------------
 
     // iterate over single characters (graphemes)
-    fn elements(&self) -> impl Iterator<Item = Self::Element> {
-        self.element_cache.iter().cloned()
+    fn elements(&self) -> impl Iterator<Item = &Self::Element> {
+        self.element_cache.iter()
     }
 
     fn collection(&self) -> Self::Collection {

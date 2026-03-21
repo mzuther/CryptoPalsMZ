@@ -89,8 +89,8 @@ impl InternalData for Hexadecimal {
     // ----------------
 
     // iterate over bytes (Strings of two characters)
-    fn elements(&self) -> impl Iterator<Item = Self::Element> {
-        self.element_cache.iter().cloned()
+    fn elements(&self) -> impl Iterator<Item = &Self::Element> {
+        self.element_cache.iter()
     }
 
     // performance
@@ -130,7 +130,7 @@ impl InternalData for Hexadecimal {
         let hex_blocks = self.elements().enumerate().fold(
             String::default(),
             |mut acc, (index, element)| {
-                acc.push_str(&element);
+                acc.push_str(element);
 
                 // separate blocks
                 if index % block_size == block_size - 1 {

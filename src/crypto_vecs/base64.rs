@@ -115,8 +115,8 @@ impl InternalData for Base64 {
     // ----------------
 
     // iterate over single characters (6 bits each)
-    fn elements(&self) -> impl Iterator<Item = Self::Element> {
-        self.element_cache.iter().cloned()
+    fn elements(&self) -> impl Iterator<Item = &Self::Element> {
+        self.element_cache.iter()
     }
 
     fn collection(&self) -> Self::Collection {
@@ -151,7 +151,7 @@ impl InternalData for Base64 {
         let base64_blocks: String = self.elements().enumerate().fold(
             Default::default(),
             |mut acc, (index, char)| {
-                acc.push(char);
+                acc.push(*char);
 
                 // separate blocks
                 if index % block_size == block_size - 1 {

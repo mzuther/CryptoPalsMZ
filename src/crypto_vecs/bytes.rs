@@ -54,8 +54,8 @@ impl InternalData for Bytes {
     // ----------------
 
     // iterate over bytes
-    fn elements(&self) -> impl Iterator<Item = Self::Element> {
-        self.bytes.iter().copied()
+    fn elements(&self) -> impl Iterator<Item = &Self::Element> {
+        self.bytes.iter()
     }
 
     fn collection(&self) -> Self::Collection {

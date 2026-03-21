@@ -57,7 +57,7 @@ where
 
     // ----------------
 
-    fn elements(&self) -> impl Iterator<Item = Self::Element> {
+    fn elements(&self) -> impl Iterator<Item = &Self::Element> {
         self.collection.elements()
     }
 

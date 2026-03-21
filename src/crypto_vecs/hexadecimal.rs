@@ -2,7 +2,7 @@ use hex;
 use std::{convert, fmt};
 
 use crate::crypto_vecs::Bytes;
-use crate::crypto_vecs::traits::{InternalData, LenBytes, ToBytes};
+use crate::crypto_vecs::traits::{CryptoVec, LenBytes, ToBytes};
 
 // ================
 
@@ -14,7 +14,7 @@ pub struct Hexadecimal {
 
 // ================
 
-impl InternalData for Hexadecimal {
+impl CryptoVec for Hexadecimal {
     type Element = String;
     type Collection = String;
 

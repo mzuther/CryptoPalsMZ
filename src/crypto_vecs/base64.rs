@@ -2,7 +2,7 @@ use regex::Regex;
 use std::{convert, fmt};
 
 use crate::crypto_vecs::Bytes;
-use crate::crypto_vecs::traits::{InternalData, InternalDataVecMut, LenBytes, ToBytes};
+use crate::crypto_vecs::traits::{CryptoVec, CryptoVecMut, LenBytes, ToBytes};
 
 // ================
 
@@ -14,7 +14,7 @@ pub struct Base64 {
 
 // ================
 
-impl InternalData for Base64 {
+impl CryptoVec for Base64 {
     type Element = char;
     type Collection = String;
 

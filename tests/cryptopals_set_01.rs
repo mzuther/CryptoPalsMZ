@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs};
 
-use cryptopals::crypto_vecs::traits::{InternalData, ToBytes};
+use cryptopals::crypto_vecs::traits::{CryptoVec, ToBytes};
 use cryptopals::crypto_vecs::{Base64, BlockBytes, Bytes, Hexadecimal, Unicode};
 
 // ================

@@ -5,8 +5,8 @@
 use std::fs;
 
 use cryptopals::crypto_vecs::traits::{
-    AutoProbe, DecryptionOracle, EncryptionOracle, InternalData, InternalDataVecMut,
-    LenBytes, ToBytes,
+    AutoProbe, CryptoVec, CryptoVecMut, DecryptionOracle, EncryptionOracle, LenBytes,
+    ToBytes,
 };
 use cryptopals::crypto_vecs::{self, Base64, BlockBytes, Bytes, Unicode};
 use cryptopals::{constants, oracles};

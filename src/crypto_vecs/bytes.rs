@@ -2,9 +2,7 @@ use openssl::{cipher, cipher_ctx};
 use rand::prelude::*;
 use std::{convert, fmt, slice, sync, vec};
 
-use crate::crypto_vecs::traits::{
-    AutoProbe, InternalData, InternalDataVecMut, LenBytes, ToBytes,
-};
+use crate::crypto_vecs::traits::{AutoProbe, CryptoVec, CryptoVecMut, LenBytes, ToBytes};
 use crate::crypto_vecs::{self, Base64, BlockBytes, Hexadecimal, Unicode};
 
 // ================
@@ -44,7 +42,7 @@ impl<'a, E> ExactSizeIterator for CryptoVecIter<'a, E> {
 
 // ================
 
-impl InternalData for Bytes {
+impl CryptoVec for Bytes {
     type Element = u8;
     type Collection = Vec<u8>;
 
@@ -93,7 +91,7 @@ impl InternalData for Bytes {
     fn chunks(
         &self,
         chunk_size: usize,
-    ) -> slice::Chunks<'_, <Self as InternalData>::Element> {
+    ) -> slice::Chunks<'_, <Self as CryptoVec>::Element> {
         assert!(chunk_size > 0, "chunk size must be non-zero");
 
         self.bytes.chunks(chunk_size)
@@ -102,7 +100,7 @@ impl InternalData for Bytes {
     fn rchunks(
         &self,
         chunk_size: usize,
-    ) -> slice::RChunks<'_, <Self as InternalData>::Element> {
+    ) -> slice::RChunks<'_, <Self as CryptoVec>::Element> {
         assert!(chunk_size > 0, "chunk size must be non-zero");
 
         self.bytes.rchunks(chunk_size)
@@ -121,12 +119,12 @@ impl InternalData for Bytes {
 
 // ----------------
 
-impl InternalDataVecMut for Bytes {
-    fn data_mut(&mut self) -> &mut Vec<<Self as InternalData>::Element> {
+impl CryptoVecMut for Bytes {
+    fn data_mut(&mut self) -> &mut Vec<<Self as CryptoVec>::Element> {
         &mut self.bytes
     }
 
-    fn push(&mut self, value: <Self as InternalData>::Element) {
+    fn push(&mut self, value: <Self as CryptoVec>::Element) {
         self.bytes.push(value)
     }
 }

@@ -1,7 +1,7 @@
 use std::{convert, fmt};
 
 use crate::crypto_vecs::Bytes;
-use crate::crypto_vecs::traits::{InternalData, LenBytes, ToBytes};
+use crate::crypto_vecs::traits::{CryptoVec, LenBytes, ToBytes};
 
 // ================
 
@@ -13,7 +13,7 @@ pub struct Unicode {
 
 // ================
 
-impl InternalData for Unicode {
+impl CryptoVec for Unicode {
     type Element = char;
     type Collection = String;
 

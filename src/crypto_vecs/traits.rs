@@ -5,7 +5,7 @@ use crate::oracles;
 
 // ================
 
-pub trait InternalData
+pub trait CryptoVec
 where
     Self: LenBytes + Sized,
     Self::Element: Clone,
@@ -158,9 +158,9 @@ where
 
 // ----------------
 
-pub trait InternalDataVecMut: InternalData
+pub trait CryptoVecMut: CryptoVec
 where
-    Self: InternalData<Collection = Vec<<Self as InternalData>::Element>>,
+    Self: CryptoVec<Collection = Vec<<Self as CryptoVec>::Element>>,
     Self::Element: Clone,
 {
     fn data_mut(&mut self) -> &mut Vec<Self::Element>;
@@ -214,7 +214,7 @@ pub trait ToBytes {
 
 pub trait AutoProbe
 where
-    Self: Default + Extend<Self::Element> + InternalDataVecMut + LenBytes,
+    Self: Default + Extend<Self::Element> + CryptoVecMut + LenBytes,
     Self::Element: Clone,
 {
     fn new_auto_probe(

@@ -146,15 +146,15 @@ impl self::ByteBlocks {
         self.blocks.to_vec()
     }
 
-    fn get_nth_block(&self, n: usize) -> Option<&Bytes> {
+    pub fn get_nth_block(&self, n: usize) -> Option<&Bytes> {
         self.blocks.get(n)
     }
 
-    fn get_last_block(&self) -> &Bytes {
+    pub fn get_last_block(&self) -> &Bytes {
         self.iter().last().expect("BlockBytes must not be empty")
     }
 
-    fn get_last_block_mut(&mut self) -> &mut Bytes {
+    pub fn get_last_block_mut(&mut self) -> &mut Bytes {
         self.iter_mut()
             .last()
             .expect("BlockBytes must not be empty")

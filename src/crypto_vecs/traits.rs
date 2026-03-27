@@ -341,11 +341,11 @@ pub trait EncryptionOracle<H> {
 
     fn detect_block_size(&self) -> Result<(usize, usize), String> {
         // ensure last block is full before detecting block size
-        let bytes_to_new_block = self.bytes_missing_in_last_block(0)?;
+        let unused_bytes_in_block = self.bytes_missing_in_last_block(0)?;
 
-        let block_size = self.bytes_missing_in_last_block(bytes_to_new_block)?;
+        let block_size = self.bytes_missing_in_last_block(unused_bytes_in_block)?;
 
-        Ok((bytes_to_new_block, block_size))
+        Ok((block_size, unused_bytes_in_block))
     }
 }
 

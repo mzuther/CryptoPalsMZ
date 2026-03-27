@@ -22,20 +22,15 @@ fn main() {
 
 // ECB cut-and-paste
 fn challenge_13() {
-    // 1. find block size and probe (email) length needed to create new block
-    //
-    //    missing bytes:  9
-    //    block size:     16
-
+    // find block size and probe length needed to create new block
     let oracle = oracles::AesEcbCookieCutter::from_key(Bytes::from_hex_literal(
         "7442f9fc 87041483 6ae3dbbe a79dccea",
     ));
 
-    let (bytes_to_new_block, detected_block_size) = oracle.detect_block_size().unwrap();
+    let (block_size, unused_bytes_in_block) = oracle.detect_block_size().unwrap();
 
-    println!();
-    println!("bytes to new block:  {}", bytes_to_new_block);
-    println!("block size:          {}", detected_block_size);
+    assert_eq!(unused_bytes_in_block, 9);
+    assert_eq!(block_size, 16);
 
     // 2. find length of prefix before email address
     //
@@ -71,7 +66,7 @@ fn challenge_13() {
             let splitting_point = index + 1;
 
             block_after_prefix = changed_blocks[1];
-            prefix_size = block_after_prefix * detected_block_size - splitting_point;
+            prefix_size = block_after_prefix * block_size - splitting_point;
 
             break;
         }
@@ -91,8 +86,8 @@ fn challenge_13() {
     let mut probe_user_block =
         Bytes::new_from(vec![
             b'A';
-            detected_block_size + bytes_to_new_block + 4
-                - (email_suffix.len_bytes() % detected_block_size)
+            block_size + unused_bytes_in_block + 4
+                - (email_suffix.len_bytes() % block_size)
         ]);
     probe_user_block.extend(&email_suffix);
 
@@ -108,12 +103,8 @@ fn challenge_13() {
     //                   1234567890admin\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B@bar.com
     //    second block:  33c0df83 dbe10178 98360f25 51a9a23c
 
-    let mut probe_admin_block = Bytes::new_from(vec![
-        b'A';
-        detected_block_size
-            - (prefix_size
-                % detected_block_size)
-    ]);
+    let mut probe_admin_block =
+        Bytes::new_from(vec![b'A'; block_size - (prefix_size % block_size)]);
     probe_admin_block.extend(Bytes::from_unicode_literal("admin"));
     probe_admin_block.extend(Bytes::new_from(vec![11; 11]));
     probe_admin_block.extend(&email_suffix);

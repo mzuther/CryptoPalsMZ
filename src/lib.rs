@@ -324,15 +324,15 @@ pub fn detect_aes_mode(cypher_blocks: &ByteBlocks) -> constants::AesMode {
 }
 
 pub fn decypher_aes_ecb_via_oracle(oracle: &oracles::AesEcbSuffix) -> ByteBlocks {
-    let (_, detected_block_size) = oracle.detect_block_size().unwrap();
+    let (block_size, _) = oracle.detect_block_size().unwrap();
 
     // prevent overflow of ECB probe
-    assert!(detected_block_size < 256);
+    assert!(block_size < 256);
 
     // create distinct and recognizable block: 0x00 0x01 0x02 0x03 ...
-    let ecb_probe_block: Vec<_> = (0x00_u8..).take(detected_block_size).collect();
+    let ecb_probe_block: Vec<_> = (0x00_u8..).take(block_size).collect();
     let ecb_probe = Bytes::new_from(ecb_probe_block.repeat(3));
-    let ecb_probe_blocks = ecb_probe.to_blocks(detected_block_size);
+    let ecb_probe_blocks = ecb_probe.to_blocks(block_size);
 
     let aes_mode = crate::detect_aes_mode(&ecb_probe_blocks);
 
@@ -345,12 +345,12 @@ pub fn decypher_aes_ecb_via_oracle(oracle: &oracles::AesEcbSuffix) -> ByteBlocks
 
     // decypher block by block
     (0..blocks_in_cypher).fold(
-        ByteBlocks::new(detected_block_size),
+        ByteBlocks::new(block_size),
         |mut acc, current_block_index| {
             acc.push(crate::decypher_aes_ecb_block_via_oracle(
                 oracle,
                 &acc,
-                detected_block_size,
+                block_size,
                 current_block_index,
             ));
 

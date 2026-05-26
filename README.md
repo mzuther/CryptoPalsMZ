@@ -1,6 +1,17 @@
 # CryptoPalsMZ
 *My take on https://cryptopals.com/*
 
+
+## Disclaimer
+**This code is meant for learning cryptography and Rust. It**
+
+- **has never been**
+- **is not**
+- **and will never be**
+
+**secure or fit for use in real-world applications!!!**
+
+
 ## License
 Copyright (c) 2026 Martin Zuther
 

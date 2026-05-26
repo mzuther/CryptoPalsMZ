@@ -163,7 +163,7 @@ Did you stop? No, I just drove by\n",
 // ECB cut-and-paste
 #[test]
 fn integration_challenge_13() {
-    // find block size and probe length needed to create new block
+    // 1. find block size and probe length needed to create new block
     let oracle = oracles::AesEcbCookieCutter::from_key(Bytes::from_hex_literal(
         "7442f9fc 87041483 6ae3dbbe a79dccea",
     ));
@@ -173,7 +173,7 @@ fn integration_challenge_13() {
     assert_eq!(block_size, 16);
     assert_eq!(unused_bytes_in_block, 9);
 
-    // find length of content before email address
+    // 2. find length of content before email address
     //
     // always use a "valid" email address
     let valid_email_suffix = Bytes::from_unicode_literal("foo@bar.com");
@@ -225,42 +225,38 @@ fn integration_challenge_13() {
 
     assert_eq!(preceding_content_size, 6);
 
-    // 3. create probe to encrypt ["user" in bytes + 12 * 0x12]
-    //
-    //    probe length:  missing bytes to new block (9) + length of "user" (4) = 13
-    //    probe:         12foo@bar.com
-    //    cypher:        2ddc9547 da54a918 e36a3af3 50f05d46
-    //                   f61352a4 294fefc0 95b74da4 d51404e4
-    //                   22d1e11c 327d7d74 5f00d637 d2a6cde2
-    //    last block:    22d1e11c 327d7d74 5f00d637 d2a6cde2
+    // 3. create probe to shift string "user" to new block and then encrypt
+    //    ["user" (in bytes) + PKCS#7 padding (12 * 0x12)]
 
-    let mut probe_user_block =
-        Bytes::new_from(vec![
-            b'A';
-            block_size + unused_bytes_in_block + 4
-                - (valid_email_suffix.len_bytes() % block_size)
-        ]);
+    // "user" = 4 bytes
+    let probe_user_block_size = unused_bytes_in_block + 4;
+
+    // ensure that padding is not negative
+    let user_block_padding_size = block_size + probe_user_block_size
+        - (valid_email_suffix.len_bytes() % block_size);
+
+    let mut probe_user_block = Bytes::new_from(vec![b'A'; user_block_padding_size]);
     probe_user_block.extend(&valid_email_suffix);
 
     let cypher_user_block = oracle.encrypt(probe_user_block);
-    let user_block = cypher_user_block.unwrap().get_last_block();
 
-    println!();
-    println!("user block:          {}", user_block);
+    assert_eq!(user_block_padding_size, 18);
 
-    // 4. create last block for admin user
-    //
-    //    probe:         [(16 - 6 = 10 * digit because of prefix) + ("admin" + 11 * 0x0B) + "@bar.com"]
-    //                   1234567890admin\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B\x0B@bar.com
-    //    second block:  33c0df83 dbe10178 98360f25 51a9a23c
+    // 4. create padding to start new block and then encode admin user block
+    //    ["admin" (in bytes) + PKCS#7 padding (11 * 0x11)]
+    //    by inserting it into email address
 
-    let mut probe_admin_block =
-        Bytes::new_from(vec![
-            b'A';
-            block_size - (preceding_content_size % block_size)
-        ]);
+    // ensure that padding is not negative
+    let admin_block_padding_size = block_size - (preceding_content_size % block_size);
+    let mut probe_admin_block = Bytes::new_from(vec![b'A'; admin_block_padding_size]);
+
+    // admin block: user name
     probe_admin_block.extend(Bytes::from_unicode_literal("admin"));
+
+    // admin block: PKCS#7 padding
     probe_admin_block.extend(Bytes::new_from(vec![11; 11]));
+
+    // finalize probe
     probe_admin_block.extend(&valid_email_suffix);
 
     let cypher_admin_block = oracle.encrypt(probe_admin_block);
@@ -269,8 +265,6 @@ fn integration_challenge_13() {
         .unwrap()
         .get_nth_block(block_id_after_preceding_content)
         .unwrap();
-
-    println!("admin block:         {}", admin_block);
 
     // 5. use cypher from (3), but change last to block to second block of (4)
     //
@@ -286,12 +280,12 @@ fn integration_challenge_13() {
     cypher_faked_cookie.push(admin_block.clone());
 
     let plain = oracle.decrypt(&cypher_faked_cookie.to_bytes());
+    let plain_cookie = plain.unwrap().to_bytes().to_codepage_1252();
 
     println!();
-    println!(
-        "cookie faked:        {}",
-        plain.unwrap().to_bytes().to_codepage_1252()
-    );
+    println!("cookie faked:        {}", plain_cookie);
+
+    assert!(plain_cookie.ends_with("&role=admin"));
 
     println!();
 }

@@ -137,7 +137,7 @@ Did you stop? No, I just drove by\n",
 
 // ECB cut-and-paste
 #[test]
-fn challenge_13() {
+fn integration_challenge_13() {
     // find block size and probe length needed to create new block
     let oracle = oracles::AesEcbCookieCutter::from_key(Bytes::from_hex_literal(
         "7442f9fc 87041483 6ae3dbbe a79dccea",
@@ -145,50 +145,60 @@ fn challenge_13() {
 
     let (block_size, unused_bytes_in_block) = oracle.detect_block_size().unwrap();
 
-    assert_eq!(unused_bytes_in_block, 9);
     assert_eq!(block_size, 16);
+    assert_eq!(unused_bytes_in_block, 9);
 
-    // 2. find length of prefix before email address
+    // find length of content before email address
     //
-    //    -> compare encryption of probe AAAAAAAAAAAAAAAAfoo@bar.com
-    //                          to probe AAAAAAAAAxyAAAAAfoo@bar.com (move "xy")
-    //    -> *two* blocks change when "xy" is split between two blocks
-    //
-    //    splitting point:  10
-    //    prefix length:    (16 - splitting point) % 16 = 6
+    // always use a "valid" email address
+    let valid_email_suffix = Bytes::from_unicode_literal("foo@bar.com");
 
-    let email_suffix = Bytes::from_unicode_literal("foo@bar.com");
+    // block size *plus one* handles preceding content that is a multiple of
+    // the block size (and empty content as well)
+    let autoprobe_length = block_size + 1;
 
-    let mut probe_prefix = Bytes::from_unicode_literal("AAAAAAAAAAAAAAAAA");
-    probe_prefix.extend(&email_suffix);
+    let mut fixed_email_probe =
+        Bytes::from_unicode_literal(&"A".repeat(autoprobe_length));
+    fixed_email_probe.extend(&valid_email_suffix);
+    let cypher_fixed_email_probe = oracle.encrypt(fixed_email_probe);
 
-    let cypher_prefix = oracle.encrypt(probe_prefix);
+    // when "xy" (*two* bytes) is split into two blocks, *two* blocks change
+    // instead of just one
+    let moving_part = Bytes::from_unicode_literal("xy");
 
-    let mut block_after_prefix = 0;
-    let mut prefix_size = 0;
+    let email_autoprobe = Bytes::new_auto_probe_mover(
+        Bytes::from_unicode_literal(
+            &"A".repeat(autoprobe_length - moving_part.len_bytes()),
+        ),
+        moving_part,
+    );
 
-    for (index, mut email_prefix_probe) in Bytes::new_auto_probe_mover(
-        Bytes::from_unicode_literal("AAAAAAAAAAAAAAA"),
-        Bytes::from_unicode_literal("xy"),
-    )
-    .enumerate()
-    {
-        email_prefix_probe.extend(&email_suffix);
+    let mut preceding_content_size = 0;
+    let mut block_id_after_preceding_content = 0;
 
-        let probe = oracle.encrypt(email_prefix_probe);
-        let changed_blocks = cypher_prefix.unwrap().find_changed_blocks(probe.unwrap());
+    // compare encryption of probe "AAAAAA...foo@bar.com"
+    //                    to probe "AAxyAA...foo@bar.com" (and move "xy")
+    for (index, mut email_autoprobe) in email_autoprobe.enumerate() {
+        email_autoprobe.extend(&valid_email_suffix);
 
-        if changed_blocks.len() == 2 {
+        let cypher_autoprobe = oracle.encrypt(email_autoprobe);
+        let changed_block_ids = cypher_fixed_email_probe
+            .unwrap()
+            .find_changed_blocks(cypher_autoprobe.unwrap());
+
+        if changed_block_ids.len() == 2 {
+            // add one: new block starts after "x" of moving block
             let splitting_point = index + 1;
 
-            block_after_prefix = changed_blocks[1];
-            prefix_size = block_after_prefix * block_size - splitting_point;
+            block_id_after_preceding_content = changed_block_ids[1];
+            preceding_content_size =
+                block_id_after_preceding_content * block_size - splitting_point;
 
             break;
         }
     }
 
-    println!("prefix size:         {}", prefix_size);
+    assert_eq!(preceding_content_size, 6);
 
     // 3. create probe to encrypt ["user" in bytes + 12 * 0x12]
     //
@@ -203,9 +213,9 @@ fn challenge_13() {
         Bytes::new_from(vec![
             b'A';
             block_size + unused_bytes_in_block + 4
-                - (email_suffix.len_bytes() % block_size)
+                - (valid_email_suffix.len_bytes() % block_size)
         ]);
-    probe_user_block.extend(&email_suffix);
+    probe_user_block.extend(&valid_email_suffix);
 
     let cypher_user_block = oracle.encrypt(probe_user_block);
     let user_block = cypher_user_block.unwrap().get_last_block();
@@ -220,16 +230,19 @@ fn challenge_13() {
     //    second block:  33c0df83 dbe10178 98360f25 51a9a23c
 
     let mut probe_admin_block =
-        Bytes::new_from(vec![b'A'; block_size - (prefix_size % block_size)]);
+        Bytes::new_from(vec![
+            b'A';
+            block_size - (preceding_content_size % block_size)
+        ]);
     probe_admin_block.extend(Bytes::from_unicode_literal("admin"));
     probe_admin_block.extend(Bytes::new_from(vec![11; 11]));
-    probe_admin_block.extend(&email_suffix);
+    probe_admin_block.extend(&valid_email_suffix);
 
     let cypher_admin_block = oracle.encrypt(probe_admin_block);
 
     let admin_block = cypher_admin_block
         .unwrap()
-        .get_nth_block(block_after_prefix)
+        .get_nth_block(block_id_after_preceding_content)
         .unwrap();
 
     println!("admin block:         {}", admin_block);
